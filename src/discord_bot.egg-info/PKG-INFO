@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: discord-bot
+Version: 0.1.0
+Summary: ...
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+
+# SWP-Discord-Bot
+School Project - Small Discord Bot with Web Interface

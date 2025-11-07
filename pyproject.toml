@@ -1,0 +1,28 @@
+[project]
+name = "discord-bot"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "..."
+readme = "README.md"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["discord-bot*"]  # optional but nice
+
+[tool.setuptools.package-data]
+"discord-bot" = ["py.typed"]
+
+[tool.setuptools]
+include-package-data = true
+
+# Optional: keep mypy config here instead of mypy.ini
+[tool.mypy]
+files = ["src/discord-bot"]
+mypy_path = "src"
+explicit_package_bases = true
+check_untyped_defs = true
+python_version = "3.13"
