@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 class DatabasePort(ABC):
     @abstractmethod
-    def get_data(table: str, query: dict) -> list[dict]: # what does list do
+    def get_data(self, table: str, query: dict) -> list[dict]: # what does list do
         """Fetch data from the specified table based on the query.
 
         Args:
@@ -17,7 +17,7 @@ class DatabasePort(ABC):
         ...
     
     @abstractmethod
-    def insert_data(table: str, data: dict) -> bool:
+    def insert_data(self, table: str, data: dict) -> bool:
         """Insert data into the specified table.
 
         Args:
@@ -30,7 +30,7 @@ class DatabasePort(ABC):
         ...
     
     @abstractmethod
-    def update_data(table: str, query: dict, data: dict) -> bool:
+    def update_data(self, table: str, query: dict, data: dict) -> bool:
         """Update data in the specified table based on the query.
 
         Args:
@@ -44,7 +44,7 @@ class DatabasePort(ABC):
         ...
 
     @abstractmethod
-    def delete_data(table: str, query: dict) -> bool:
+    def delete_data(self, table: str, query: dict) -> bool:
         """Delete data from the specified table based on the query.
 
         Args:
@@ -57,7 +57,7 @@ class DatabasePort(ABC):
         ...
 
     @abstractmethod
-    def get_random_entry(table: str, category: str = None) -> dict:
+    def get_random_entry(self, table: str, category: str | None) -> dict:
         """Fetch a random entry from the specified table and category.
 
         Args:
@@ -71,16 +71,16 @@ class DatabasePort(ABC):
 
 class ModelPort(ABC):
     @abstractmethod
-    def logging():
+    def logging(self):
         ...
 
     @abstractmethod
-    def execute_function(): # multiple dispatch
+    def execute_function(self): # multiple dispatch
         ...
 
 class TranslatePort(ABC, ModelPort):
     @abstractmethod
-    def execute_function(message_id: int, target_language: str) -> str: # use for auto translate to? add param
+    def execute_function(self, message_id: int, target_language: str) -> str: # use for auto translate to? add param
         """Translate the message with the given ID to the target language.
 
         Args:
@@ -104,7 +104,7 @@ class FunFactPort(ABC, ModelPort):
 
 class DishPort(ABC, ModelPort):
     @abstractmethod
-    def execute_function(category: str) -> str:
+    def execute_function(self, category: str) -> str:
         """Suggest a dish based on the provided ingredients.
 
         Args:
@@ -116,7 +116,7 @@ class DishPort(ABC, ModelPort):
 
 class ControllerPort(ABC):
     @abstractmethod
-    def handle_command(server_id: int, channel_id: int, command: str, args: list[str]) -> bool:
+    def handle_command(self, server_id: int, channel_id: int, command: str, args: list[str]) -> bool:
         """Handle a command issued in the Discord server.
 
         Args:
@@ -131,7 +131,7 @@ class ControllerPort(ABC):
         ...
 
     @abstractmethod
-    def handle_message(server_id: int, channel_id: int, message: str) -> bool:
+    def handle_message(self, server_id: int, channel_id: int, message: str) -> bool:
         """Handle a message sent in the Discord server.
 
         Args:
@@ -155,7 +155,7 @@ class ControllerPort(ABC):
 
 class ViewPort(ABC):
     @abstractmethod
-    def render_interface(data: dict) -> str:
+    def render_interface(self, data: dict) -> str:
         """Render the user interface based on the provided data.
 
         Args:
@@ -167,7 +167,7 @@ class ViewPort(ABC):
         ...
 
     @abstractmethod
-    def get_user_input(interactable_element: str) -> str:
+    def get_user_input(self, interactable_element: str) -> str:
         """Get user input from the specified interactable element.
 
         Args:
@@ -177,4 +177,3 @@ class ViewPort(ABC):
             str: The user input as a string.
         """
         ...
-        
