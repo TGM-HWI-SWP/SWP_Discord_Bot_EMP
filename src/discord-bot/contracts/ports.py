@@ -71,7 +71,7 @@ class DatabasePort(ABC):
 
 class ModelPort(ABC):
     @abstractmethod
-    def logging()
+    def logging():
         ...
 
     @abstractmethod
