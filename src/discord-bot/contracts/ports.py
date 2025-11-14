@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 class DatabasePort(ABC):
     @abstractmethod
-    def get_data(self, table: str, query: dict) -> list[dict]: # what does list do
+    def get_data(self, table: str, query: dict) -> list[dict]:
         """Fetch data from the specified table based on the query.
 
         Args:
@@ -72,6 +72,7 @@ class DatabasePort(ABC):
 class ModelPort(ABC):
     @abstractmethod
     def logging(self):
+        """Log model activities and interactions."""
         ...
 
     @abstractmethod
