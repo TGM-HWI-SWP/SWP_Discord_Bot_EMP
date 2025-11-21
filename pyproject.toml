@@ -1,9 +1,11 @@
 [project]
 name = "discord_bot"
 version = "0.1.0"
-authors = [{ name = "xxx", email = "xxx@xxx.at" }]
+authors = [{ name = "Emir Keser", email = "ekeser@student.tgm.ac.at" },
+           { name = "Paul Hinterbauer", email = "phinterbauer@student.tgm.ac.at" },
+           { name = "Mateja Gvozdenac", email = "mgvozdenac@student.tgm.ac.at" }]
 requires-python = ">=3.11"
-description = "A sample project"
+description = "A Discord bot for various functionalities."
 readme = "README.md"
 dependencies = [
     "pydantic>=2.0",
