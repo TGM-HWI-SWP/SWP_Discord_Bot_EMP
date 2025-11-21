@@ -1,6 +1,8 @@
 .venv
 .vscode
 src/discord_bot.egg-info/
+discord_bot.egg-info/
+*.egg-info/
 dist/
 build/
 __pypackages__/
