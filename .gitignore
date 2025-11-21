@@ -6,3 +6,4 @@ discord_bot.egg-info/
 dist/
 build/
 __pypackages__/
+/src/discord_bot.egg-info
