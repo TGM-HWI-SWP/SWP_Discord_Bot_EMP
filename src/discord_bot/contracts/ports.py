@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from typing import overload, Any
-from multipledispatch import dispatch
 
 class DatabasePort(ABC):
     @abstractmethod
