@@ -1,6 +1,8 @@
 """This module defines abstract base classes (ports) for various components of the Discord bot architecture."""
 
 from abc import ABC, abstractmethod
+from typing import overload, Any
+from multipledispatch import dispatch
 
 class DatabasePort(ABC):
     @abstractmethod
@@ -76,17 +78,29 @@ class ModelPort(ABC):
         ...
 
     @abstractmethod
-    def execute_function(self): # multiple dispatch
+    def execute_function(self):
         ...
 
 class TranslatePort(ABC, ModelPort):
+    @overload
+    def execute_function(self, server_id: int, message_id: int, target_language: str) -> str:
+        """Single-message translation."""
+        ...
+
+    @overload
+    def execute_function(self, user_id: int, target_language: str) -> str:
+        """Auto translation for all messages from a user."""
+        ...
+
     @abstractmethod
-    def execute_function(self, message_id: int, target_language: str) -> str: # use for auto translate to? add param
+    def execute_function(self, *args: Any, **kwargs: Any) -> str:
         """Translate the message with the given ID to the target language.
 
         Args:
-            message_id (int): The ID of the message to be translated.
-            target_language (str): The language to translate the message into.
+            server_id (int): The ID of the Discord server. (single-message translation)
+            message_id (int): The ID of the message to be translated. (single-message translation)
+            user_id (int): The ID of the user whose messages are to be auto-translated. (auto translation)
+            target_language (str): The language to translate the message into. (both)
 
         Returns:
             str: The translated message.
