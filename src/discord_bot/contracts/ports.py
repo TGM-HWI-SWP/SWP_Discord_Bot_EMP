@@ -80,7 +80,7 @@ class ModelPort(ABC):
     def execute_function(self):
         ...
 
-class TranslatePort(ABC, ModelPort):
+class TranslatePort(ModelPort):
     @overload
     def execute_function(self, server_id: int, message_id: int, target_language: str) -> str:
         """Single-message translation."""
@@ -106,7 +106,7 @@ class TranslatePort(ABC, ModelPort):
         """
         ...
 
-class FunFactPort(ABC, ModelPort):
+class FunFactPort(ModelPort):
     @abstractmethod
     def execute_function() -> str:
         """Fetch a fun fact from the specified category.
@@ -116,7 +116,7 @@ class FunFactPort(ABC, ModelPort):
         """
         ...
 
-class DishPort(ABC, ModelPort):
+class DishPort(ModelPort):
     @abstractmethod
     def execute_function(self, category: str) -> str:
         """Suggest a dish based on the provided ingredients.
