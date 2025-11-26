@@ -1,4 +1,4 @@
-from gradio import gradio as gr
+import gradio as gr
 from discord_bot.contracts.ports import ControllerPort, ViewPort
 
 class DiscordBotView(ViewPort):
@@ -36,19 +36,20 @@ class DiscordBotView(ViewPort):
         
         with gr.Blocks() as interface:
             gr.Markdown(f"# {title}")
+            server_id = gr.Number(label="Server ID", value=0, precision=0)
+            channel_id = gr.Number(label="Channel ID", value=0, precision=0)
             message_input = gr.Textbox(label="Enter your message")
             test_btn = gr.Button("Send")
             output = gr.Textbox(label="Output", interactive=False)
             
             test_btn.click(
                 fn=self.controller.handle_message,
-                inputs=[0, 0, message_input],
+                inputs=[server_id, channel_id, message_input],
                 outputs=output
             )
-            
-            test_btn.click(test_btn, inputs=message_input, outputs=output)
-            interface.launch(port=port, share=share)
-            return f"Interface rendered successfully.(port: {port})"
+        
+        interface.launch(server_port=port, share=share)
+        return f"Interface rendered successfully (port: {port})"
     
     def get_user_input(self, interactable_element: str) -> str:
         """Get user input from a specific interactable element.
@@ -63,7 +64,18 @@ class DiscordBotView(ViewPort):
 
 
 if __name__ == "__main__":
-    view = DiscordBotView(controller=None)
+    
+    class DummyController(ControllerPort):
+        def handle_command(self, server_id: int, channel_id: int, command: str, args: list[str]) -> bool:
+            return True
+
+        def handle_message(self, server_id: int, channel_id: int, message: str) -> bool:
+            return f"Handled message: {message}"
+
+        def get_server_info() -> list[dict]:
+            return [{"id": 1, "name": "Test Server"}]
+    
+    view = DiscordBotView(controller=DummyController())
     view.render_interface({
         "title": "Test Bot Admin",
         "port": 7860,
