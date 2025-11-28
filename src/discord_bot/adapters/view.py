@@ -1,4 +1,5 @@
 import gradio as gr
+import os
 from discord_bot.contracts.ports import ControllerPort, ViewPort
 
 class DiscordBotView(ViewPort):
@@ -28,8 +29,9 @@ class DiscordBotView(ViewPort):
                 port number where the interface is launched.
         """
         title = data.get("title", "Interface")
-        port = data.get("port", 7860)
+        port = int(os.getenv("GRADIO_SERVER_PORT", data.get("port", 7860)))
         share = data.get("share", False)
+        server_name = os.getenv("GRADIO_SERVER_NAME", "0.0.0.0")
         
         with gr.Blocks() as interface:
             gr.Markdown(f"# {title}")
@@ -46,10 +48,10 @@ class DiscordBotView(ViewPort):
             )
         
         interface.launch(
-            server_port=port, 
-            share=share, 
-            server_name="127.0.0.1"
-            )
+            server_port=port,
+            share=share,
+            server_name=server_name
+        )
         return f"Interface rendered successfully (port: {port})"
     
     def get_user_input(self, interactable_element: str) -> str:
@@ -81,6 +83,6 @@ if __name__ == "__main__":
     view = DiscordBotView(controller=DummyController())
     view.render_interface({
         "title": "Test Bot Admin",
-        "port": 7860,
+        "port": int(os.getenv("GRADIO_SERVER_PORT", "7860")),
         "share": False
     })
