@@ -3,6 +3,7 @@ import numpy as np
 
 from discord_bot.contracts.ports import DatabasePort
 
+#  TEST
 LOCAL = False
 
 if LOCAL:
@@ -36,7 +37,7 @@ funfacts_collection.insert_one({
     "Text": "Honey never spoils. Archaeologists have found perfectly edible honey in ancient Egyptian tombs.",
     "Text": "Octopuses have three hearts. Two pump blood to the gills, and one pumps it to the rest of the body.",
     "Text": "There are more stars in the universe than grains of sand on all Earths beaches. The observable universe contains an estimated 1,000,000,000,000,000,000,000,000 stars."})
-
+# TEST
 
 class DBMS(DatabasePort):
     def __init__(self):
