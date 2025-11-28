@@ -42,17 +42,24 @@ class DBMS(DatabasePort):
     def __init__(self):
         ...
 
-    def get_table_size(self, table: str) -> int:
+    def get_table_size(self, table: str, category: str | None = None) -> int:
         collection = db[table]
-        return collection.count_documents({})
+        query = {"category": category} if category is not None else {}
+        return collection.count_documents(query)
     
     def get_random_entry(self, table: str, category: str | None) -> dict:
-        table_size = self.get_table_size(table)
-        random_index = np.random.randint(0, table_size)
         collection = db[table]
-        random_entry = collection.find().limit(1).skip(random_index)
-        for entry in random_entry:
+        query = {"category": category} if category is not None else {}
+
+        table_size = self.get_table_size(table, category)
+        if table_size == 0:
+            return {}
+
+        random_index = int(np.random.randint(0, table_size))
+        cursor = collection.find(query).skip(random_index).limit(1)
+        for entry in cursor:
             return entry
+        return {}
         
     def get_data(self, table: str, query: dict) -> list[dict]:
         collection = db[table]

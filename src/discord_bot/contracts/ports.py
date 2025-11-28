@@ -71,14 +71,15 @@ class DatabasePort(ABC):
         ...
     
     @abstractmethod
-    def get_table_size(self, table: str) -> int:
-        """Get the size of the specified table.
+    def get_table_size(self, table: str, category: str | None = None) -> int:
+        """Get the size of the specified table, optionally filtered by category.
 
         Args:
             table (str): The name of the table.
+            category (str | None): The category to filter by. If None, count all entries.
 
         Returns:
-            int: The number of entries in the table.
+            int: The number of entries in the table (or in the specified category).
         """
         ...
 
