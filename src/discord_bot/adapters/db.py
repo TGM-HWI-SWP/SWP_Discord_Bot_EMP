@@ -6,8 +6,15 @@ import time
 
 from discord_bot.contracts.ports import DatabasePort
 
+# FIX AND SIMPLIFIE
+# Detect container to choose default host
+IN_DOCKER = os.path.exists("/.dockerenv")
+DEFAULT_URI_DOCKER = "mongodb://root:example@mongo:27017/"
+DEFAULT_URI_LOCAL = "mongodb://root:example@localhost:27017/"
+
+# FIX THIS AND SIMPLIFIE
 # Connection settings (read from environment; provide sensible defaults)
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://root:example@mongo:27017/")
+MONGO_URI = os.getenv("MONGO_URI", DEFAULT_URI_DOCKER if IN_DOCKER else DEFAULT_URI_LOCAL)
 DB_NAME = os.getenv("DB_NAME", "discord_bot_db")
 MONGO_CONNECT_TIMEOUT_SEC = int(os.getenv("MONGO_CONNECT_TIMEOUT_SEC", "10"))
 MONGO_MAX_RETRIES = int(os.getenv("MONGO_MAX_RETRIES", "5"))
@@ -47,6 +54,8 @@ except ConnectionFailure:
     # Allow lazy retry later inside DBMS if initial import happens before Mongo is ready
     pass
 
+
+# EXPAND THIS AS NEEDED
 class DBMS(DatabasePort):
     """
     MongoDB adapter implementing DatabasePort.
