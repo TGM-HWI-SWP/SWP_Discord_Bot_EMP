@@ -1,9 +1,11 @@
 FROM python:3.13.7-slim
-
 WORKDIR /usr/src/discord_bot
-COPY . .
-RUN pip install --no-cache-dir gradio
-EXPOSE 7860
-ENV GRADIO_SERVER_NAME="0.0.0.0"
 
-CMD ["python", "app.py"]
+COPY . .
+RUN python -m venv .venv \
+    && ./.venv/bin/pip install --upgrade pip \
+    && ./.venv/bin/pip install --no-cache-dir -e .[dev]
+
+EXPOSE 7860
+ENV GRADIO_SERVER_NAME=0.0.0.0
+CMD ["/usr/src/discord_bot/.venv/bin/python", "app.py"]
