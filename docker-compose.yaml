@@ -32,3 +32,4 @@ services:
     depends_on:
       - mongo
     restart: always
+    

@@ -65,8 +65,6 @@ class DiscordBotView(ViewPort):
         """
         return self.inputs.get(interactable_element, "")
 
-
-
 if __name__ == "__main__":
     
     class DummyController(ControllerPort):
@@ -86,3 +84,4 @@ if __name__ == "__main__":
         "port": int(os.getenv("GRADIO_SERVER_PORT", "7860")),
         "share": False
     })
+    
