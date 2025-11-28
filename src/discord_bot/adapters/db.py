@@ -1,8 +1,18 @@
 from pymongo import MongoClient
-# from contracts.ports import DatabasePort
+import numpy as np
 
-Mongo_URI = "mongodb://localhost:27017/" # "mongodb+srv://admin:<db_password>@discord-bot.ps1eipx.mongodb.net/"
-DB_NAME = "Test" # "discord_bot_db"#
+from discord_bot.contracts.ports import DatabasePort
+
+#  TEST
+LOCAL = False
+
+if LOCAL:
+    Mongo_URI = "mongodb://localhost:27017/" 
+    DB_NAME = "Test" 
+else:
+    Mongo_URI =  "mongodb+srv://admin:admin@discord-bot.ps1eipx.mongodb.net/"
+    DB_NAME = "discord_bot_db"
+
 
 client = MongoClient(Mongo_URI)
 db= client[DB_NAME]
@@ -15,28 +25,59 @@ auto_translate_collection = db["auto_translate"]
 dishes_collection = db["dishes"]
 
 
-
 users_collection.insert_one({
-    "user_id": 123456789,
     "username": "example_user",
     "role": "member"})
 
+
 funfacts_collection.insert_one({
-    "id": 1 ,  
-    "Text": "Did you know? The Eiffel Tower can be 15 cm taller during the summer, due to the expansion of iron in the heat."})
+    "Text": "Did you know? The Eiffel Tower can be 15 cm taller during the summer, due to the expansion of iron in the heat.",
+    "Text": "Bananas are berries, but strawberries arent. Botanically speaking, bananas qualify as berries—while strawberries do not!",
+    "Text": "A day on Venus is longer than a year on Venus. Venus rotates so slowly that one full rotation takes longer than its orbit around the Sun.",
+    "Text": "Honey never spoils. Archaeologists have found perfectly edible honey in ancient Egyptian tombs.",
+    "Text": "Octopuses have three hearts. Two pump blood to the gills, and one pumps it to the rest of the body.",
+    "Text": "There are more stars in the universe than grains of sand on all Earths beaches. The observable universe contains an estimated 1,000,000,000,000,000,000,000,000 stars."})
+# TEST
 
+class DBMS(DatabasePort):
+    def __init__(self):
+        ...
 
-
-# class MongoDBAdapter(DatabasePort):
-#     def get_user(self, user_id: int) -> dict | None:
-#         return users_collection.find_one({"user_id": user_id})
-
-#     def add_user(self, user_data: dict) -> None:
-#         users_collection.insert_one(user_data)
-
-#     def log_command(self, command_data: dict) -> None:
-#         command_logs_collection.insert_one(command_data)
-
-#     def get_fun_fact(self, fact_id: int) -> dict | None:
-#         return funfacts_collection.find_one({"id": fact_id})
+    def get_table_size(self, table: str, category: str | None = None) -> int:
+        collection = db[table]
+        query = {"category": category} if category is not None else {}
+        return collection.count_documents(query)
     
+    def get_random_entry(self, table: str, category: str | None) -> dict:
+        collection = db[table]
+        query = {"category": category} if category is not None else {}
+
+        table_size = self.get_table_size(table, category)
+        if table_size == 0:
+            return {}
+
+        random_index = int(np.random.randint(0, table_size))
+        cursor = collection.find(query).skip(random_index).limit(1)
+        for entry in cursor:
+            return entry
+        return {}
+        
+    def get_data(self, table: str, query: dict) -> list[dict]:
+        collection = db[table]
+        results = collection.find(query)
+        return [result for result in results]
+    
+    def insert_data(self, table: str, data: dict) -> bool:
+        collection = db[table]
+        result = collection.insert_one(data)
+        return result.acknowledged
+    
+    def update_data(self, table: str, query: dict, data: dict) -> bool:
+        collection = db[table]
+        result = collection.update_many(query, {"$set": data})
+        return result.acknowledged
+    
+    def delete_data(self, table: str, query: dict) -> bool:
+        collection = db[table]
+        result = collection.delete_many(query)
+        return result.acknowledged
