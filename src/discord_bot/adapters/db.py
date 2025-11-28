@@ -7,7 +7,7 @@ import time
 from discord_bot.contracts.ports import DatabasePort
 
 # Connection settings (read from environment; provide sensible defaults)
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://root:example@mongo:27017/?authSource=admin")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://root:example@mongo:27017/")
 DB_NAME = os.getenv("DB_NAME", "discord_bot_db")
 MONGO_CONNECT_TIMEOUT_SEC = int(os.getenv("MONGO_CONNECT_TIMEOUT_SEC", "10"))
 MONGO_MAX_RETRIES = int(os.getenv("MONGO_MAX_RETRIES", "5"))
