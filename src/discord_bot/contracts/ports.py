@@ -69,6 +69,18 @@ class DatabasePort(ABC):
             dict: A dictionary representing the random entry.
         """
         ...
+    
+    @abstractmethod
+    def get_table_size(self, table: str) -> int:
+        """Get the size of the specified table.
+
+        Args:
+            table (str): The name of the table.
+
+        Returns:
+            int: The number of entries in the table.
+        """
+        ...
 
 class ModelPort(ABC):
     @abstractmethod

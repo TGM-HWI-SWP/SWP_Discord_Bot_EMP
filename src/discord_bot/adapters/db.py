@@ -1,5 +1,7 @@
 from pymongo import MongoClient
-# from contracts.ports import DatabasePort
+import numpy as np
+
+from discord_bot.contracts.ports import DatabasePort
 
 LOCAL = False
 
@@ -36,6 +38,18 @@ funfacts_collection.insert_one({
     "Text": "There are more stars in the universe than grains of sand on all Earths beaches. The observable universe contains an estimated 1,000,000,000,000,000,000,000,000 stars."})
 
 
+class DBMS(DatabasePort):
+    def __init__(self):
+        ...
 
-
+    def get_table_size(self, table: str) -> int:
+        collection = db[table]
+        return collection.count_documents({})
     
+    def get_random_entry(self, table: str, category: str | None) -> dict:
+        table_size = self.get_table_size(table)
+        random_index = np.random.randint(0, table_size)
+        collection = db[table]
+        random_entry = collection.find().limit(1).skip(random_index)
+        for entry in random_entry:
+            return entry
