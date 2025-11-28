@@ -1,8 +1,15 @@
 from pymongo import MongoClient
 # from contracts.ports import DatabasePort
 
-Mongo_URI = "mongodb://localhost:27017/" # "mongodb+srv://admin:<db_password>@discord-bot.ps1eipx.mongodb.net/"
-DB_NAME = "Test" # "discord_bot_db"#
+LOCAL = False
+
+if LOCAL:
+    Mongo_URI = "mongodb://localhost:27017/" 
+    DB_NAME = "Test" 
+else:
+    Mongo_URI =  "mongodb+srv://admin:admin@discord-bot.ps1eipx.mongodb.net/"
+    DB_NAME = "discord_bot_db"
+
 
 client = MongoClient(Mongo_URI)
 db= client[DB_NAME]
@@ -15,28 +22,20 @@ auto_translate_collection = db["auto_translate"]
 dishes_collection = db["dishes"]
 
 
-
 users_collection.insert_one({
-    "user_id": 123456789,
     "username": "example_user",
     "role": "member"})
 
+
 funfacts_collection.insert_one({
-    "id": 1 ,  
-    "Text": "Did you know? The Eiffel Tower can be 15 cm taller during the summer, due to the expansion of iron in the heat."})
+    "Text": "Did you know? The Eiffel Tower can be 15 cm taller during the summer, due to the expansion of iron in the heat.",
+    "Text": "Bananas are berries, but strawberries arent. Botanically speaking, bananas qualify as berries—while strawberries do not!",
+    "Text": "A day on Venus is longer than a year on Venus. Venus rotates so slowly that one full rotation takes longer than its orbit around the Sun.",
+    "Text": "Honey never spoils. Archaeologists have found perfectly edible honey in ancient Egyptian tombs.",
+    "Text": "Octopuses have three hearts. Two pump blood to the gills, and one pumps it to the rest of the body.",
+    "Text": "There are more stars in the universe than grains of sand on all Earths beaches. The observable universe contains an estimated 1,000,000,000,000,000,000,000,000 stars."})
 
 
 
-# class MongoDBAdapter(DatabasePort):
-#     def get_user(self, user_id: int) -> dict | None:
-#         return users_collection.find_one({"user_id": user_id})
 
-#     def add_user(self, user_data: dict) -> None:
-#         users_collection.insert_one(user_data)
-
-#     def log_command(self, command_data: dict) -> None:
-#         command_logs_collection.insert_one(command_data)
-
-#     def get_fun_fact(self, fact_id: int) -> dict | None:
-#         return funfacts_collection.find_one({"id": fact_id})
     
