@@ -53,3 +53,23 @@ class DBMS(DatabasePort):
         random_entry = collection.find().limit(1).skip(random_index)
         for entry in random_entry:
             return entry
+        
+    def get_data(self, table: str, query: dict) -> list[dict]:
+        collection = db[table]
+        results = collection.find(query)
+        return [result for result in results]
+    
+    def insert_data(self, table: str, data: dict) -> bool:
+        collection = db[table]
+        result = collection.insert_one(data)
+        return result.acknowledged
+    
+    def update_data(self, table: str, query: dict, data: dict) -> bool:
+        collection = db[table]
+        result = collection.update_many(query, {"$set": data})
+        return result.acknowledged
+    
+    def delete_data(self, table: str, query: dict) -> bool:
+        collection = db[table]
+        result = collection.delete_many(query)
+        return result.acknowledged
