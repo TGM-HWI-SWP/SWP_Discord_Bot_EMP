@@ -48,8 +48,8 @@ class DiscordBotView(ViewPort):
         interface.launch(
             server_port=port, 
             share=share, 
-            server_name="0.0.0.0"  # Important for Docker - bind to all interfaces
-        )
+            server_name="127.0.0.1"
+            )
         return f"Interface rendered successfully (port: {port})"
     
     def get_user_input(self, interactable_element: str) -> str:
