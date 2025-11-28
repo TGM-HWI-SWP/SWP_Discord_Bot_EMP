@@ -19,16 +19,13 @@ class DiscordBotView(ViewPort):
         self.inputs = {} 
     
     def render_interface(self, data: dict) -> str:
-        """Render and launch the Gradio web interface.
-        
-        Args:
-            data: Configuration dictionary containing:
-                - title (str): The title of the interface. Defaults to "Interface".
-                - port (int): The port number to run the server on. Defaults to 7860.
-                - share (bool): Whether to create a public shareable link. Defaults to False.
-        
-        Returns:
-            str: A status message indicating successful launch with port information.
+        """ Render and launch the Gradio web interface.
+            
+            Args:
+                data: The data to be used for rendering the interface.
+            
+            Returns:
+                port number where the interface is launched.
         """
         title = data.get("title", "Interface")
         port = data.get("port", 7860)
@@ -36,7 +33,7 @@ class DiscordBotView(ViewPort):
         
         with gr.Blocks() as interface:
             gr.Markdown(f"# {title}")
-            server_id = gr.Number(label="Server ID", value=0, precision=0)
+            server_choice = gr.Dropdown(label="Server", choices=["Server 1", "Server 2"], interactive=True)
             channel_id = gr.Number(label="Channel ID", value=0, precision=0)
             message_input = gr.Textbox(label="Enter your message")
             test_btn = gr.Button("Send")
@@ -44,11 +41,15 @@ class DiscordBotView(ViewPort):
             
             test_btn.click(
                 fn=self.controller.handle_message,
-                inputs=[server_id, channel_id, message_input],
+                inputs=[server_choice, channel_id, message_input],
                 outputs=output
             )
         
-        interface.launch(server_port=port, share=share)
+        interface.launch(
+            server_port=port, 
+            share=share, 
+            server_name="0.0.0.0"  # Important for Docker - bind to all interfaces
+        )
         return f"Interface rendered successfully (port: {port})"
     
     def get_user_input(self, interactable_element: str) -> str:
@@ -63,17 +64,19 @@ class DiscordBotView(ViewPort):
         return self.inputs.get(interactable_element, "")
 
 
+
 if __name__ == "__main__":
     
     class DummyController(ControllerPort):
         def handle_command(self, server_id: int, channel_id: int, command: str, args: list[str]) -> bool:
             return True
 
-        def handle_message(self, server_id: int, channel_id: int, message: str) -> bool:
+        def handle_message(self, server, channel_id: int, message: str) -> bool:
             return f"Handled message: {message}"
 
         def get_server_info() -> list[dict]:
             return [{"id": 1, "name": "Test Server"}]
+
     
     view = DiscordBotView(controller=DummyController())
     view.render_interface({
