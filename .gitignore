@@ -7,3 +7,11 @@ dist/
 build/
 __pypackages__/
 /src/discord_bot.egg-info
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg

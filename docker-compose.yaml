@@ -1,24 +1,29 @@
 services:
   mongo:
-    image: mongo
+    image: mongo:latest
+    container_name: swp_discord_bot_mongo
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
-      - 27017:27017
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
 
   mongo-express:
-    image: mongo-express
+    image: mongo-express:latest
+    container_name: swp_discord_bot_mongo_express
     restart: always
     ports:
-      - 8081:8081
+      - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
-      ME_CONFIG_BASICAUTH_ENABLED: true
-      ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
-      ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
-      
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
+    depends_on:
+      - mongo
+
   gradio:
     build:
       context: .
@@ -26,7 +31,7 @@ services:
     ports:
       - "7860:7860"
     environment:
-      MONGO_URI: mongodb://root:example@mongo:27017/
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
       GRADIO_SERVER_NAME: 0.0.0.0
       GRADIO_SERVER_PORT: 7860
     volumes:
