@@ -18,3 +18,4 @@ if __name__ == "__main__":
     db.connect()
     fun_fact_selector = FunFactSelector(dbms=db)
     print(fun_fact_selector.execute_function())
+    
