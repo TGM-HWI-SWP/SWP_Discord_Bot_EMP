@@ -1,7 +1,7 @@
 services:
   mongo:
     image: mongo:latest
-    container_name: swp_discord_bot_mongo
+    container_name: swp_discord_bot_emp_mongo
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
@@ -13,7 +13,7 @@ services:
 
   mongo-express:
     image: mongo-express:latest
-    container_name: swp_discord_bot_mongo_express
+    container_name: swp_discord_bot_emp_mongo_express
     restart: always
     ports:
       - "8081:8081"
@@ -21,6 +21,8 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
       ME_CONFIG_MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
     depends_on:
       - mongo
 
@@ -39,4 +41,6 @@ services:
     depends_on:
       - mongo
     restart: always
-    
+  
+volumes:
+  mongo_data:

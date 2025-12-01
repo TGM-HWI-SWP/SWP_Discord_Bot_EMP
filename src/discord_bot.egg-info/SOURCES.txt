@@ -14,8 +14,10 @@ src/discord_bot/adapters/controller/__init__.py
 src/discord_bot/app/__init__.py
 src/discord_bot/app/main.py
 src/discord_bot/business_logic/__init__.py
+src/discord_bot/business_logic/config_loader.py
 src/discord_bot/business_logic/dish_selector.py
 src/discord_bot/business_logic/fun_fact_selector.py
+src/discord_bot/business_logic/model.py
 src/discord_bot/business_logic/translator.py
 src/discord_bot/contracts/__init__.py
 src/discord_bot/contracts/models.py

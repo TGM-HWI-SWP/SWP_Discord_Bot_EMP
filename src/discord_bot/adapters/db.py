@@ -2,18 +2,14 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.database import Database
 import numpy as np
-import os
 
 from discord_bot.contracts.ports import DatabasePort
-
-IN_DOCKER = os.path.exists("/.dockerenv")
-DEFAULT_URI_DOCKER = "mongodb://root:example@mongo:27017/"
-DEFAULT_URI_LOCAL = "mongodb://root:example@localhost:27017/"
+from discord_bot.business_logic.config_loader import DatabaseConfig
 
 class DBMS(DatabasePort):
-    def __init__(self, uri: str | None = None, db_name: str | None = None): # FIX db_name parameter unused
-        self.uri = uri or os.getenv("MONGO_URI", DEFAULT_URI_DOCKER if IN_DOCKER else DEFAULT_URI_LOCAL)
-        self.db_name = "swp_discord_bot"
+    def __init__(self, uri: str | None = None, db_name: str | None = None):
+        self.uri = uri or DatabaseConfig.MONGO_URI
+        self.db_name = db_name or DatabaseConfig.DB_NAME
         self.client: MongoClient | None = None
         self.db: Database | None = None
 
