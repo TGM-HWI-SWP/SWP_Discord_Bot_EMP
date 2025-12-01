@@ -91,6 +91,7 @@ class ModelPort(ABC):
 
     @abstractmethod
     def execute_function(self):
+        """Execute the primary function of the model."""
         ...
 
 class TranslatePort(ModelPort):
