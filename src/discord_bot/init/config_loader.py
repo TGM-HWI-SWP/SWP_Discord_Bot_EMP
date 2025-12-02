@@ -46,6 +46,7 @@ DISCORD_TOKEN={config.get('discord', 'discord_token', fallback='')}
         print(f"Generated .env from config.ini at {env_path}")
 
 class DiscordConfig:
+    TARGET_LANGUAGE = os.getenv("TARGET_LANGUAGE", config.get('discord', 'target_language', fallback='en'))
     DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", config.get('discord', 'discord_token', fallback=''))
 
 if __name__ == "__main__":

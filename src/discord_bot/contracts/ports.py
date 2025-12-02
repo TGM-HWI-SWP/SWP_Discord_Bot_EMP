@@ -1,7 +1,7 @@
 """This module defines abstract base classes (ports) for various components of the Discord bot architecture."""
 
 from abc import ABC, abstractmethod
-from typing import overload, Any
+from typing import overload
 
 class DatabasePort(ABC):
     @abstractmethod
@@ -96,30 +96,15 @@ class ModelPort(ABC):
 
 class TranslatePort(ModelPort):
     @overload
-    def execute_function(self, server_id: int, message_id: int, target_language: str) -> str:
+    def execute_function(self, text: str) -> str:
         """Single-message translation.
         
         Args:
-            server_id (int): The ID of the Discord server.
-            message_id (int): The ID of the message to translate.
-            target_language (str): The target language for translation.
+            text (str): The text to translate.
         
         Returns:
             str: The translated message.
         """
-        ...
-
-    @overload
-    def execute_function(self, server_id: int, user_id: int, target_language: str) -> bool:
-        """Auto translation for all messages from a user.
-        
-        Args:
-            server_id (int): The ID of the Discord server.
-            user_id (int): The ID of the user whose messages to translate.
-            target_language (str): The target language for translation.
-        
-        Returns:
-            bool: Confirmation of auto-translation setup."""
         ...
 
 class FunFactPort(ModelPort):

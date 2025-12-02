@@ -12,6 +12,7 @@ dependencies = [
     "gradio>=4.0",
     "multipledispatch>=0.6",
     "pymongo>=4.0",
+    "deep_translator>=1.8.1"
 ]
 
 [project.optional-dependencies]
