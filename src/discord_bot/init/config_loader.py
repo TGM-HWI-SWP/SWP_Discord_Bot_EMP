@@ -11,8 +11,8 @@ files_read = config.read(config_path)
 class DatabaseConfig:
     IN_DOCKER = os.path.exists("/.dockerenv")
     
-    MONGO_ROOT_USER = config.get('database', 'mongo_root_user', fallback='root')
-    MONGO_ROOT_PASSWORD = config.get('database', 'mongo_root_password', fallback='example')
+    MONGO_ROOT_USER = config.get('mongo', 'mongo_root_user', fallback='root')
+    MONGO_ROOT_PASSWORD = config.get('mongo', 'mongo_root_password', fallback='example')
 
     URI_DOCKER = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@mongo:27017/"
     URI_LOCAL = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@localhost:27017/"

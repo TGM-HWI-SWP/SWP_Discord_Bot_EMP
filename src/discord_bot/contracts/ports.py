@@ -171,18 +171,6 @@ class ControllerPort(ABC):
 
 class ViewPort(ABC):
     @abstractmethod
-    def render_interface(self, data: dict) -> str:
-        """Render the user interface based on the provided data.
-
-        Args:
-            data (dict): The data to be used for rendering the interface.
-
-        Returns:
-            str: The rendered interface as a string.
-        """
-        ...
-
-    @abstractmethod
     def get_user_input(self, interactable_element: str) -> str:
         """Get user input from the specified interactable element.
 
