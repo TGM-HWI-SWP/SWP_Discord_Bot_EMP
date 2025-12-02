@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 Emir Keser, Mateja Gvozdenac, Paul Hinterbauer
+Copyright (c) 2024-2025 Emir Keser, Mateja Gvozdenac, Paul Hinterbauer
 TGM - Die Schule der Technik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,7 +33,23 @@ and demonstration of software engineering principles.
 The authors are students at TGM and created this project as part of their
 curriculum in the 4BHWII class during the 2024/2025 academic year.
 
+PROJECT COMPONENTS:
+
+- Database Layer (MongoDB Integration): Emir Keser
+- View Layer (Gradio Web Interface): Mateja Gvozdenac  
+- Business Logic (Core Features): Paul Hinterbauer
+
+TECHNICAL ARCHITECTURE:
+
+This project implements Clean Architecture (Hexagonal Architecture) principles
+with clear separation between:
+- Ports (Abstract Interfaces) in contracts/ports.py
+- Adapters (Concrete Implementations) in adapters/
+- Business Logic (Core Domain) in business_logic/
+
 For questions regarding this project, please contact:
 - Emir Keser: ekeser@student.tgm.ac.at
 - Mateja Gvozdenac: mgvozdenac@student.tgm.ac.at
 - Paul Hinterbauer: phinterbauer@student.tgm.ac.at
+
+Project Repository: https://github.com/TGM-HWI-SWP/swp_discrod_bot_EMP
