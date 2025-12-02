@@ -283,24 +283,22 @@ class AdminPanel(ViewPort):
 
 
 if __name__ == "__main__":
-    class DummyDB(DatabasePort):
-        def get_data(self, table: str, query: dict) -> list[dict]:
-            return []
-        
-        def insert_data(self, table: str, data: dict) -> bool:
-            return True
-        
-        def update_data(self, table: str, query: dict, data: dict) -> bool:
-            return True
-        
-        def delete_data(self, table: str, query: dict) -> bool:
-            return True
-        
-        def get_random_entry(self, table: str, category: str | None) -> dict:
-            return {}
-        
-        def get_table_size(self, table: str, category: str | None = None) -> int:
-            return 0
+    from discord_bot.adapters.db import DBMS
+    from discord_bot.business_logic.dish_selector import DishSelector
+    from discord_bot.business_logic.fun_fact_selector import FunFactSelector
+    from discord_bot.business_logic.translator import Translator
     
-    panel = AdminPanel(dbms=DummyDB())
+    db = DBMS()
+    db.connect()
+    
+    dish_selector = DishSelector(dbms=db)
+    fun_fact_selector = FunFactSelector(dbms=db)
+    translator = Translator()
+    
+    panel = AdminPanel(
+        dbms=db,
+        dish_selector=dish_selector,
+        fun_fact_selector=fun_fact_selector,
+        translator=translator
+    )
     panel.launch()
