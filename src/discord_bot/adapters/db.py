@@ -4,7 +4,7 @@ from pymongo.database import Database
 import numpy as np
 
 from discord_bot.contracts.ports import DatabasePort
-from discord_bot.business_logic.config_loader import DatabaseConfig
+from discord_bot.init.config_loader import DatabaseConfig
 
 class DBMS(DatabasePort):
     def __init__(self, uri: str | None = None, db_name: str | None = None):
@@ -28,6 +28,7 @@ class DBMS(DatabasePort):
     def _collection(self, table: str):
         if self.db is None:
             raise RuntimeError("DBMS not connected. Call connect() first.")
+        
         return self.db[table]
 
     def get_table_size(self, table: str, category: str | None = None) -> int:
@@ -39,8 +40,10 @@ class DBMS(DatabasePort):
         size = self.get_table_size(table, category)
         if size == 0:
             return {}
+        
         idx = int(np.random.randint(0, size))
         cursor = self._collection(table).find(query).skip(idx).limit(1)
+
         for doc in cursor:
             return doc
         return {}
@@ -56,3 +59,22 @@ class DBMS(DatabasePort):
 
     def delete_data(self, table: str, query: dict) -> bool:
         return self._collection(table).delete_many(query).acknowledged
+
+    def upload_collection(self, db_name: str, collection_name: str, data: list[dict], drop_existing: bool = True) -> bool:
+        if self.client is None:
+            raise RuntimeError("DBMS not connected. Call connect() first.")
+        
+        try:
+            target_db = self.client[db_name]
+            collection = target_db[collection_name]
+            
+            if drop_existing:
+                collection.drop()
+            
+            if data:
+                collection.insert_many(data)
+                return True
+            return False
+        
+        except Exception as e:
+            raise RuntimeError(f"Error uploading collection: {e}")
