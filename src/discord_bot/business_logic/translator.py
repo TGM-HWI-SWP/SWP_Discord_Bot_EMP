@@ -9,8 +9,13 @@ class Translator(Model, TranslatePort):
         super().__init__(**kwargs)
 
     def execute_function(self, text: str) -> str:
-        translator = GoogleTranslator(source="auto", target=DiscordConfig.TARGET_LANGUAGE)
-        return translator.translate(text)
+        for attempt in range(10):
+            try:
+                translator = GoogleTranslator(source="auto", target=DiscordConfig.TARGET_LANGUAGE)
+                return translator.translate(text)
+            except Exception as e:
+                print(f"Translation error (attempt {attempt + 1}/10): {e}")
+        return text
 
 if __name__ == "__main__":
     translator = Translator()

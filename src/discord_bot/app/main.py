@@ -9,18 +9,18 @@ if __name__ == "__main__":
 
     # TESTING FUN FACT SELECTOR
     fun_fact_selector = FunFactSelector(dbms=db)
-    print("FUN FACT TEST")
+    print("=== FUN FACT TEST ===")
     print(fun_fact_selector.execute_function())
 
     # TESTING DISH SELECTOR
     dish_selector = DishSelector(dbms=db)
-    print("DISH SUGGESTION TEST")
+    print("=== DISH SUGGESTION TEST ===")
     print(dish_selector.execute_function(category="Italian"))
 
     # TESTING TRANSLATOR
     translator = Translator()
-    sample_text = "Hallo, wie geht's?"
+    sample_text = "Zdravo, kako si?"
     translated_text = translator.execute_function(sample_text)
-    print("TRANSLATION TEST")
+    print("=== TRANSLATION TEST ===")
     print(f"Original: {sample_text}")
     print(f"Translated: {translated_text}")
