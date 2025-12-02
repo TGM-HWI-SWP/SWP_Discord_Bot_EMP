@@ -2,6 +2,7 @@ from discord_bot.business_logic.fun_fact_selector import FunFactSelector
 from discord_bot.business_logic.dish_selector import DishSelector
 from discord_bot.adapters.db import DBMS
 from discord_bot.business_logic.translator import Translator
+from discord_bot.business_logic.discord_logic import run
 
 if __name__ == "__main__":
     db = DBMS()
@@ -24,3 +25,7 @@ if __name__ == "__main__":
     print("=== TRANSLATION TEST ===")
     print(f"Original: {sample_text}")
     print(f"Translated: {translated_text}")
+
+    # TESTING DISCORD BOT CONNECTION
+    print("=== DISCORD BOT TEST ===")
+    run()

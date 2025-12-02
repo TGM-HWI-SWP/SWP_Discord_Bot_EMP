@@ -1,27 +1,17 @@
 import discord
 from discord_bot.init.config_loader import DiscordConfig
 
-client = discord.Client(intents=discord.Intents.default())
-
-TARGET_USER_ID = 577154967740219403  # Hier die User ID eingeben
-
-@client.event
-async def on_ready():
-    print(f'Logged in as {client.user}')
+class DiscordBot:
+    def __init__(self):
+        self.client = discord.Client(intents=discord.Intents.default())
+        self.client.event(self.on_ready)
     
-    user = await client.fetch_user(TARGET_USER_ID)
-    await user.send("Oida, griass di! I bin der LeberkasLarry, dein persönlicher Jausen-Buddy aus’m schönen Österreich! 😎 Ob du Hunger auf a bissl Schmäh, a witzigen Fun-Fact oder a richtig g’scheite Portion Leberkas brauchst – i steh bereit. 🥖🧡 Schmeiß di auf die Couch, klick a bissl rum und lass uns gemeinsam de Zeit versüßen – versprochen, es werd lustig und liab! Ach ja, koa Angst – i bin halb Maschine, halb Fleischlaib, 100% leiwand. 😏 Pfiat di bis gleich! Dein Larry 🍀")
-
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
+    async def on_ready(self):
+        print(f'Logged in as {self.client.user}')
     
-    if message.content.startswith('!hello'):
-        await message.channel.send(f'Hello {message.author.mention}!')
-
-def run():
-    client.run(DiscordConfig.DISCORD_TOKEN)
+    def run(self):
+        self.client.run(DiscordConfig.DISCORD_TOKEN)
 
 if __name__ == '__main__':
-    run()
+    bot = DiscordBot()
+    bot.run()

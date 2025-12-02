@@ -19,7 +19,8 @@ class DatabaseConfig:
     
     MONGO_URI = os.getenv("MONGO_URI", URI_DOCKER if IN_DOCKER else URI_LOCAL)
     
-    DB_NAME = os.getenv("DB_NAME", config.get('database', 'db_name', fallback='swp_discord_bot_emp'))
+    CV_DB_NAME = os.getenv("CV_DB_NAME", config.get('database', 'cv_db_name', fallback='constant_values'))
+    DISCORD_DB_NAME = os.getenv("DISCORD_DB_NAME", config.get('database', 'discord_db_name', fallback='discord'))
     
     @staticmethod
     def generate_env():

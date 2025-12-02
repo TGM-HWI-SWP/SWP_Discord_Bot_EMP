@@ -9,7 +9,7 @@ from discord_bot.init.config_loader import DatabaseConfig
 class DBMS(DatabasePort):
     def __init__(self, uri: str | None = None, db_name: str | None = None):
         self.uri = uri or DatabaseConfig.MONGO_URI
-        self.db_name = db_name or DatabaseConfig.DB_NAME
+        self.db_name = db_name or DatabaseConfig.CV_DB_NAME
         self.client: MongoClient | None = None
         self.db: Database | None = None
 
