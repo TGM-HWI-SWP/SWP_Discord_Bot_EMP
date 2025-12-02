@@ -32,6 +32,10 @@ if defined VIRTUAL_ENV (
     call .venv\Scripts\activate.bat
 )
 
+echo Configuring VS Code to use .venv...
+if not exist ".vscode" mkdir .vscode
+echo {"python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe"} > .vscode\settings.json
+
 echo Generating .env from config.ini...
 python src\discord_bot\init\config_loader.py
 
