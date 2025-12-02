@@ -6,7 +6,7 @@ if defined VIRTUAL_ENV (
     echo Already in an activated virtual environment!
 ) else if not exist ".venv" (
     echo Creating virtual environment...
-    python -3.13 -m venv .venv
+    py -3.13 -m venv .venv
     echo Virtual environment created!
     
     echo Activating virtual environment...
