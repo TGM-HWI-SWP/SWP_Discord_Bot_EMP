@@ -1,7 +1,7 @@
 services:
   mongo:
     image: mongo:latest
-    container_name: swp_discord_bot_emp_mongo
+    container_name: mongo
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
@@ -13,7 +13,7 @@ services:
 
   mongo-express:
     image: mongo-express:latest
-    container_name: swp_discord_bot_emp_mongo_express
+    container_name: mongo_express
     restart: always
     ports:
       - "8081:8081"
@@ -27,6 +27,7 @@ services:
       - mongo
 
   gradio:
+    container_name: gradio
     build:
       context: .
       dockerfile: src/discord_bot/dockerfile
