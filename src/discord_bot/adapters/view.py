@@ -34,15 +34,28 @@ ADMIN_PANEL_CSS = """
 .stat-number {
     font-size: 3em;
     font-weight: 700;
-    color: #57F287;
+    color: white;
 }
 .stat-label {
     font-size: 1.2em;
     color: #99AAB5;
     text-transform: uppercase;
 }
-"""
 
+/* Override Gradio orange colors with Discord blue */
+button.primary, .gr-button-primary {
+    background: #5865F2 !important;
+    border-color: #5865F2 !important;
+}
+button.primary:hover, .gr-button-primary:hover {
+    background: #4752C4 !important;
+    border-color: #4752C4 !important;
+}
+.tabs button[aria-selected="true"] {
+    border-bottom-color: #5865F2 !important;
+    color: #5865F2 !important;
+}
+"""
 
 class AdminPanel(ViewPort):
     def __init__(
@@ -66,17 +79,13 @@ class AdminPanel(ViewPort):
         return ""
     
     def build_interface(self) -> gr.Blocks:
-        with gr.Blocks(
-            title="Discord Bot Admin Panel",
-            theme=gr.themes.Soft(primary_hue="blue", secondary_hue="slate"),
-            css=ADMIN_PANEL_CSS
-        ) as app:
+        with gr.Blocks(title="Discord Bot Admin Panel") as app:
             
             gr.HTML("""
                 <div class="admin-header">
                     <h1>Discord Bot Admin Panel</h1>
                     <p style="font-size: 1.2em; margin-top: 10px; opacity: 0.9;">
-                        Manage dishes, fun facts, and translations
+                        Bot Control & Database Management
                     </p>
                 </div>
             """)
@@ -84,183 +93,270 @@ class AdminPanel(ViewPort):
             with gr.Tabs():
                 
                 with gr.Tab("Dashboard"):
-                    gr.Markdown("### Database Statistics")
+                    gr.Markdown("### Discord Bot Status")
                     
-                    refresh_btn = gr.Button("Refresh Stats", size="lg")
+                    refresh_btn = gr.Button("Refresh Status", size="lg")
                     
                     with gr.Row():
-                        dishes_stat = gr.Markdown("### Loading...")
-                        facts_stat = gr.Markdown("### Loading...")
-                        categories_stat = gr.Markdown("### Loading...")
+                        bot_status = gr.Markdown("### Loading...")
+                        servers_stat = gr.Markdown("### Loading...")
+                        users_stat = gr.Markdown("### Loading...")
                     
-                    stats_json = gr.JSON(label="Detailed Statistics")
+                    bot_info = gr.JSON(label="Bot Information")
                     
-                    def load_stats():
-                        categories = ["Italian", "German", "Austrian", "Mexican", "Chinese", 
-                                    "Japanese", "Indian", "American", "French", "Spanish", 
-                                    "Greek", "Turkish", "Thai", "Korean", "British", "African",
-                                    "Middle Eastern", "Vegan", "Dessert", "Seafood"]
+                    def load_dashboard():
+                        status = {"status": "online", "servers": 0, "users": 0}
                         
-                        stats = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
+                        status_md = f'<div class="stat-card"><div class="stat-label">Status</div><div class="stat-number">Online</div></div>'
+                        servers_md = f'<div class="stat-card"><div class="stat-label">Servers</div><div class="stat-number">{status["servers"]}</div></div>'
+                        users_md = f'<div class="stat-card"><div class="stat-label">Users</div><div class="stat-number">{status["users"]}</div></div>'
                         
-                        for cat in categories:
-                            count = self.dbms.get_table_size("dishes", cat)
-                            if count > 0:
-                                stats["dishes"][cat] = count
-                                stats["total_dishes"] += count
-                        
-                        stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
-                        
-                        dishes_md = f'<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{stats["total_dishes"]}</div></div>'
-                        facts_md = f'<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{stats["total_fun_facts"]}</div></div>'
-                        cats_md = f'<div class="stat-card"><div class="stat-label">Categories</div><div class="stat-number">{len(stats["dishes"])}</div></div>'
-                        
-                        return dishes_md, facts_md, cats_md, stats
+                        return status_md, servers_md, users_md, status
                     
-                    refresh_btn.click(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
-                    app.load(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
+                    refresh_btn.click(fn=load_dashboard, outputs=[bot_status, servers_stat, users_stat, bot_info])
+                    app.load(fn=load_dashboard, outputs=[bot_status, servers_stat, users_stat, bot_info])
                 
-                with gr.Tab("Dishes"):
+                with gr.Tab("Bot Control"):
+                    gr.Markdown("### Discord Bot Management")
+                    
                     with gr.Row():
                         with gr.Column():
-                            gr.Markdown("### Search & View")
-                            search_query = gr.Textbox(label="Search", placeholder="Enter dish name...")
-                            search_cat = gr.Dropdown(
-                                choices=["All", "Italian", "German", "Austrian", "Mexican", "Chinese", 
-                                        "Japanese", "Indian", "American", "French", "Spanish", "Greek",
-                                        "Turkish", "Thai", "Korean", "British", "African", "Middle Eastern",
-                                        "Vegan", "Dessert", "Seafood"],
-                                value="All",
-                                label="Category"
-                            )
-                            search_btn = gr.Button("Search")
-                            results = gr.Dataframe(headers=["ID", "Category", "Dish"])
+                            gr.Markdown("#### Server Management")
+                            server_list = gr.Dropdown(label="Select Server", choices=[], interactive=True)
+                            refresh_servers_btn = gr.Button("Refresh Servers")
+                            leave_server_btn = gr.Button("Leave Server")
+                            server_status = gr.Markdown("")
                         
                         with gr.Column():
-                            gr.Markdown("### Add New Dish")
-                            new_cat = gr.Dropdown(
+                            gr.Markdown("#### User Management")
+                            user_id_input = gr.Textbox(label="User ID")
+                            block_user_btn = gr.Button("Block User")
+                            unblock_user_btn = gr.Button("Unblock User")
+                            user_status = gr.Markdown("")
+                    
+                    gr.Markdown("#### Send Custom Message")
+                    with gr.Row():
+                        channel_id_input = gr.Textbox(label="Channel ID")
+                        message_input = gr.Textbox(label="Message", lines=3)
+                    send_message_btn = gr.Button("Send Message")
+                    message_status = gr.Markdown("")
+                    
+                    gr.Markdown("#### Bot Settings")
+                    with gr.Row():
+                        with gr.Column():
+                            bot_prefix = gr.Textbox(label="Command Prefix", value="!")
+                            bot_status_text = gr.Textbox(label="Status Text", value="Playing")
+                        with gr.Column():
+                            auto_reply = gr.Checkbox(label="Auto Reply", value=False)
+                            log_messages = gr.Checkbox(label="Log Messages", value=True)
+                    update_settings_btn = gr.Button("Update Settings")
+                    settings_status = gr.Markdown("")
+                    
+                    def placeholder_refresh_servers():
+                        return "Placeholder: Refresh servers"
+                    
+                    def placeholder_leave_server():
+                        return "Placeholder: Leave server"
+                    
+                    def placeholder_block_user():
+                        return "Placeholder: Block user"
+                    
+                    def placeholder_unblock_user():
+                        return "Placeholder: Unblock user"
+                    
+                    def placeholder_send_message():
+                        return "Placeholder: Send message"
+                    
+                    def placeholder_update_settings():
+                        return "Placeholder: Update settings"
+                    
+                    refresh_servers_btn.click(fn=placeholder_refresh_servers, outputs=server_status)
+                    leave_server_btn.click(fn=placeholder_leave_server, outputs=server_status)
+                    block_user_btn.click(fn=placeholder_block_user, outputs=user_status)
+                    unblock_user_btn.click(fn=placeholder_unblock_user, outputs=user_status)
+                    send_message_btn.click(fn=placeholder_send_message, outputs=message_status)
+                    update_settings_btn.click(fn=placeholder_update_settings, outputs=settings_status)
+                
+                with gr.Tab("Database"):
+                    with gr.Tabs():
+                        with gr.Tab("Dishes"):
+                            with gr.Row():
+                                with gr.Column():
+                                    gr.Markdown("### Search & View")
+                                    search_query = gr.Textbox(label="Search", placeholder="Enter dish name...")
+                                    search_cat = gr.Dropdown(
+                                        choices=["All", "Italian", "German", "Austrian", "Mexican", "Chinese", 
+                                                "Japanese", "Indian", "American", "French", "Spanish", "Greek",
+                                                "Turkish", "Thai", "Korean", "British", "African", "Middle Eastern",
+                                                "Vegan", "Dessert", "Seafood"],
+                                        value="All",
+                                        label="Category"
+                                    )
+                                    search_btn = gr.Button("Search")
+                                    results = gr.Dataframe(headers=["ID", "Category", "Dish"])
+                                
+                                with gr.Column():
+                                    gr.Markdown("### Add New Dish")
+                                    new_cat = gr.Dropdown(
+                                        choices=["Italian", "German", "Austrian", "Mexican", "Chinese", 
+                                                "Japanese", "Indian", "American", "French", "Spanish", "Greek",
+                                                "Turkish", "Thai", "Korean", "British", "African", "Middle Eastern",
+                                                "Vegan", "Dessert", "Seafood"],
+                                        value="Italian",
+                                        label="Category"
+                                    )
+                                    new_name = gr.Textbox(label="Dish Name")
+                                    add_btn = gr.Button("Add")
+                                    add_status = gr.Markdown("")
+                                    
+                                    gr.Markdown("### Delete Dish")
+                                    del_id = gr.Number(label="Dish ID", precision=0)
+                                    del_btn = gr.Button("Delete")
+                                    del_status = gr.Markdown("")
+                    
+                            gr.Markdown("### Test Random Dish")
+                            test_cat = gr.Dropdown(
                                 choices=["Italian", "German", "Austrian", "Mexican", "Chinese", 
                                         "Japanese", "Indian", "American", "French", "Spanish", "Greek",
                                         "Turkish", "Thai", "Korean", "British", "African", "Middle Eastern",
                                         "Vegan", "Dessert", "Seafood"],
-                                value="Italian",
-                                label="Category"
+                                value="Italian"
                             )
-                            new_name = gr.Textbox(label="Dish Name")
-                            add_btn = gr.Button("Add")
-                            add_status = gr.Markdown("")
+                            test_btn = gr.Button("Get Random")
+                            test_result = gr.Textbox(label="Result", interactive=False)
+                    
+                            def search_dishes(query, cat):
+                                filter_query = {} if cat == "All" else {"category": cat}
+                                data = self.dbms.get_data("dishes", filter_query)
+                                if query:
+                                    data = [d for d in data if query.lower() in d.get("dish", "").lower()]
+                                return [[d.get("id"), d.get("category"), d.get("dish")] for d in data]
                             
-                            gr.Markdown("### Delete Dish")
-                            del_id = gr.Number(label="Dish ID", precision=0)
-                            del_btn = gr.Button("Delete")
-                            del_status = gr.Markdown("")
-                    
-                    gr.Markdown("### Test Random Dish")
-                    test_cat = gr.Dropdown(
-                        choices=["Italian", "German", "Austrian", "Mexican", "Chinese", 
-                                "Japanese", "Indian", "American", "French", "Spanish", "Greek",
-                                "Turkish", "Thai", "Korean", "British", "African", "Middle Eastern",
-                                "Vegan", "Dessert", "Seafood"],
-                        value="Italian"
-                    )
-                    test_btn = gr.Button("Get Random")
-                    test_result = gr.Textbox(label="Result", interactive=False)
-                    
-                    def search_dishes(query, cat):
-                        filter_query = {} if cat == "All" else {"category": cat}
-                        data = self.dbms.get_data("dishes", filter_query)
-                        if query:
-                            data = [d for d in data if query.lower() in d.get("dish", "").lower()]
-                        return [[d.get("id"), d.get("category"), d.get("dish")] for d in data]
-                    
-                    def add_dish(cat, name):
-                        if not name:
-                            return "Error: Enter a dish name"
-                        all_dishes = self.dbms.get_data("dishes", {})
-                        next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
-                        success = self.dbms.insert_data("dishes", {"id": next_id, "category": cat, "dish": name})
-                        return f"Success: Added {name}" if success else "Error: Failed"
-                    
-                    def delete_dish(dish_id):
-                        if not dish_id or dish_id <= 0:
-                            return "Error: Invalid ID"
-                        success = self.dbms.delete_data("dishes", {"id": int(dish_id)})
-                        return f"Success: Deleted ID {int(dish_id)}" if success else "Error: Failed"
-                    
-                    def test_dish(cat):
-                        return self.dish_selector.execute_function(cat) if self.dish_selector else "N/A"
-                    
-                    search_btn.click(fn=search_dishes, inputs=[search_query, search_cat], outputs=results)
-                    add_btn.click(fn=add_dish, inputs=[new_cat, new_name], outputs=add_status)
-                    del_btn.click(fn=delete_dish, inputs=del_id, outputs=del_status)
-                    test_btn.click(fn=test_dish, inputs=test_cat, outputs=test_result)
-                
-                with gr.Tab("Fun Facts"):
-                    with gr.Row():
-                        with gr.Column():
-                            gr.Markdown("### Search")
-                            fact_query = gr.Textbox(label="Search", placeholder="Keywords...")
-                            fact_search_btn = gr.Button("Search")
-                            fact_results = gr.Dataframe(headers=["ID", "Fun Fact"])
+                            def add_dish(cat, name):
+                                if not name:
+                                    return "Error: Enter a dish name"
+                                all_dishes = self.dbms.get_data("dishes", {})
+                                next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
+                                success = self.dbms.insert_data("dishes", {"id": next_id, "category": cat, "dish": name})
+                                return f"Success: Added {name}" if success else "Error: Failed"
+                            
+                            def delete_dish(dish_id):
+                                if not dish_id or dish_id <= 0:
+                                    return "Error: Invalid ID"
+                                success = self.dbms.delete_data("dishes", {"id": int(dish_id)})
+                                return f"Success: Deleted ID {int(dish_id)}" if success else "Error: Failed"
+                            
+                            def test_dish(cat):
+                                return self.dish_selector.execute_function(cat) if self.dish_selector else "N/A"
+                            
+                            search_btn.click(fn=search_dishes, inputs=[search_query, search_cat], outputs=results)
+                            add_btn.click(fn=add_dish, inputs=[new_cat, new_name], outputs=add_status)
+                            del_btn.click(fn=delete_dish, inputs=del_id, outputs=del_status)
+                            test_btn.click(fn=test_dish, inputs=test_cat, outputs=test_result)
                         
-                        with gr.Column():
-                            gr.Markdown("### Add New")
-                            new_fact = gr.Textbox(label="Fun Fact", lines=3)
-                            fact_add_btn = gr.Button("Add")
-                            fact_add_status = gr.Markdown("")
+                        with gr.Tab("Fun Facts"):
+                            with gr.Row():
+                                with gr.Column():
+                                    gr.Markdown("### Search")
+                                    fact_query = gr.Textbox(label="Search", placeholder="Keywords...")
+                                    fact_search_btn = gr.Button("Search")
+                                    fact_results = gr.Dataframe(headers=["ID", "Fun Fact"])
+                                
+                                with gr.Column():
+                                    gr.Markdown("### Add New")
+                                    new_fact = gr.Textbox(label="Fun Fact", lines=3)
+                                    fact_add_btn = gr.Button("Add")
+                                    fact_add_status = gr.Markdown("")
+                                    
+                                    gr.Markdown("### Delete")
+                                    fact_del_id = gr.Number(label="Fact ID", precision=0)
+                                    fact_del_btn = gr.Button("Delete")
+                                    fact_del_status = gr.Markdown("")
+                    
+                            gr.Markdown("### Test Random Fun Fact")
+                            fact_test_btn = gr.Button("Get Random")
+                            fact_test_result = gr.Textbox(label="Result", interactive=False, lines=3)
+                    
+                            def search_facts(query):
+                                data = self.dbms.get_data("fun_facts", {})
+                                if query:
+                                    data = [f for f in data if query.lower() in f.get("fun_fact", "").lower()]
+                                return [[f.get("id"), f.get("fun_fact")] for f in data]
                             
-                            gr.Markdown("### Delete")
-                            fact_del_id = gr.Number(label="Fact ID", precision=0)
-                            fact_del_btn = gr.Button("Delete")
-                            fact_del_status = gr.Markdown("")
-                    
-                    gr.Markdown("### Test Random Fun Fact")
-                    fact_test_btn = gr.Button("Get Random")
-                    fact_test_result = gr.Textbox(label="Result", interactive=False, lines=3)
-                    
-                    def search_facts(query):
-                        data = self.dbms.get_data("fun_facts", {})
-                        if query:
-                            data = [f for f in data if query.lower() in f.get("fun_fact", "").lower()]
-                        return [[f.get("id"), f.get("fun_fact")] for f in data]
-                    
-                    def add_fact(text):
-                        if not text:
-                            return "Error: Enter a fun fact"
-                        all_facts = self.dbms.get_data("fun_facts", {})
-                        next_id = max([f.get("id", 0) for f in all_facts], default=0) + 1
-                        success = self.dbms.insert_data("fun_facts", {"id": next_id, "fun_fact": text})
-                        return "Success: Added" if success else "Error: Failed"
-                    
-                    def delete_fact(fact_id):
-                        if not fact_id or fact_id <= 0:
-                            return "Error: Invalid ID"
-                        success = self.dbms.delete_data("fun_facts", {"id": int(fact_id)})
-                        return f"Success: Deleted ID {int(fact_id)}" if success else "Error: Failed"
-                    
-                    def test_fact():
-                        return self.fun_fact_selector.execute_function() if self.fun_fact_selector else "N/A"
-                    
-                    fact_search_btn.click(fn=search_facts, inputs=fact_query, outputs=fact_results)
-                    fact_add_btn.click(fn=add_fact, inputs=new_fact, outputs=fact_add_status)
-                    fact_del_btn.click(fn=delete_fact, inputs=fact_del_id, outputs=fact_del_status)
-                    fact_test_btn.click(fn=test_fact, outputs=fact_test_result)
-                
-                with gr.Tab("Translator"):
-                    gr.Markdown("### Translate Text")
-                    
-                    with gr.Row():
-                        trans_input = gr.Textbox(label="Input", lines=5, placeholder="Enter text...")
-                        trans_output = gr.Textbox(label="Output", lines=5, interactive=False)
-                    
-                    trans_btn = gr.Button("Translate", size="lg")
-                    
-                    def translate(text):
-                        if not text:
-                            return "Enter text"
-                        return self.translator.execute_function(text) if self.translator else "N/A"
-                    
-                    trans_btn.click(fn=translate, inputs=trans_input, outputs=trans_output)
+                            def add_fact(text):
+                                if not text:
+                                    return "Error: Enter a fun fact"
+                                all_facts = self.dbms.get_data("fun_facts", {})
+                                next_id = max([f.get("id", 0) for f in all_facts], default=0) + 1
+                                success = self.dbms.insert_data("fun_facts", {"id": next_id, "fun_fact": text})
+                                return "Success: Added" if success else "Error: Failed"
+                            
+                            def delete_fact(fact_id):
+                                if not fact_id or fact_id <= 0:
+                                    return "Error: Invalid ID"
+                                success = self.dbms.delete_data("fun_facts", {"id": int(fact_id)})
+                                return f"Success: Deleted ID {int(fact_id)}" if success else "Error: Failed"
+                            
+                            def test_fact():
+                                return self.fun_fact_selector.execute_function() if self.fun_fact_selector else "N/A"
+                            
+                            fact_search_btn.click(fn=search_facts, inputs=fact_query, outputs=fact_results)
+                            fact_add_btn.click(fn=add_fact, inputs=new_fact, outputs=fact_add_status)
+                            fact_del_btn.click(fn=delete_fact, inputs=fact_del_id, outputs=fact_del_status)
+                            fact_test_btn.click(fn=test_fact, outputs=fact_test_result)
+                        
+                        with gr.Tab("Translator"):
+                            gr.Markdown("### Translate Text")
+                            
+                            with gr.Row():
+                                trans_input = gr.Textbox(label="Input", lines=5, placeholder="Enter text...")
+                                trans_output = gr.Textbox(label="Output", lines=5, interactive=False)
+                            
+                            trans_btn = gr.Button("Translate", size="lg")
+                            
+                            def translate(text):
+                                if not text:
+                                    return "Enter text"
+                                return self.translator.execute_function(text) if self.translator else "N/A"
+                            
+                            trans_btn.click(fn=translate, inputs=trans_input, outputs=trans_output)
+                        
+                        with gr.Tab("Statistics"):
+                            gr.Markdown("### Database Statistics")
+                            
+                            refresh_stats_btn = gr.Button("Refresh Stats", size="lg")
+                            
+                            with gr.Row():
+                                dishes_stat = gr.Markdown("### Loading...")
+                                facts_stat = gr.Markdown("### Loading...")
+                                categories_stat = gr.Markdown("### Loading...")
+                            
+                            stats_json = gr.JSON(label="Detailed Statistics")
+                            
+                            def load_stats():
+                                categories = ["Italian", "German", "Austrian", "Mexican", "Chinese", 
+                                            "Japanese", "Indian", "American", "French", "Spanish", 
+                                            "Greek", "Turkish", "Thai", "Korean", "British", "African",
+                                            "Middle Eastern", "Vegan", "Dessert", "Seafood"]
+                                
+                                stats = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
+                                
+                                for cat in categories:
+                                    count = self.dbms.get_table_size("dishes", cat)
+                                    if count > 0:
+                                        stats["dishes"][cat] = count
+                                        stats["total_dishes"] += count
+                                
+                                stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
+                                
+                                dishes_md = f'<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{stats["total_dishes"]}</div></div>'
+                                facts_md = f'<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{stats["total_fun_facts"]}</div></div>'
+                                cats_md = f'<div class="stat-card"><div class="stat-label">Categories</div><div class="stat-number">{len(stats["dishes"])}</div></div>'
+                                
+                                return dishes_md, facts_md, cats_md, stats
+                            
+                            refresh_stats_btn.click(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
+                            app.load(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
             
             gr.HTML("""
                 <div style="text-align: center; padding: 20px; color: #99AAB5; margin-top: 20px;">
@@ -278,9 +374,9 @@ class AdminPanel(ViewPort):
         self.app.launch(
             server_name=self.host,
             server_port=self.port,
-            share=share
+            share=share,
+            css=ADMIN_PANEL_CSS
         )
-
 
 if __name__ == "__main__":
     from discord_bot.adapters.db import DBMS
