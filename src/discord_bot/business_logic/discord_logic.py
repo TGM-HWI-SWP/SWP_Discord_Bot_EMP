@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 import asyncio
 
 from discord_bot.init.config_loader import DiscordConfig
@@ -7,10 +8,10 @@ from discord_bot.contracts.ports import DiscordBotPort
 class DiscordBot(DiscordBotPort):
     def __init__(self):
         intents = discord.Intents.default()
-        intents.message_content = True
         self.client = discord.Client(intents=intents)
+        self.tree = app_commands.CommandTree(self.client)
         self.commands = {}
-        self.command_prefix = DiscordConfig.COMMAND_PREFIX
+        self.unread_dms = []
         
         @self.client.event
         async def on_ready():
@@ -28,18 +29,42 @@ class DiscordBot(DiscordBotPort):
 
     async def on_ready(self):
         print(f'Logged in as {self.client.user}')
+        await self.tree.sync()
+        print(f'Synced {len(self.tree.get_commands())} slash commands')
 
     async def on_message(self, message):
         if message.author == self.client.user:
             return
         
-        if message.content.startswith(self.command_prefix):
-            parts = message.content[1:].split()
-            command = parts[0].lower()
-            args = parts[1:] if len(parts) > 1 else []
-            
-            if command in self.commands:
-                await self.commands[command](message, args)
+        if isinstance(message.channel, discord.DMChannel):
+            dm_data = {
+                "id": message.id,
+                "author_id": message.author.id,
+                "author_name": str(message.author),
+                "content": message.content,
+                "timestamp": message.created_at.isoformat(),
+                "read": False
+            }
+            self.unread_dms.append(dm_data)
+            print(f"DM received from {message.author}: {message.content}")
+    
+    def get_unread_dms(self) -> list[dict]:
+        return [dm for dm in self.unread_dms if not dm["read"]]
+    
+    def mark_dm_as_read(self, dm_id: int) -> bool:
+        for dm in self.unread_dms:
+            if dm["id"] == dm_id and not dm["read"]:
+                dm["read"] = True
+                print(f"DM {dm_id} marked as read")
+                return True
+        return False
+    
+    def mark_all_dms_as_read(self) -> int:
+        count = sum(1 for dm in self.unread_dms if not dm["read"])
+        for dm in self.unread_dms:
+            dm["read"] = True
+        print(f"Marked {count} DMs as read")
+        return count
 
     def send_message(self, server_id: int, channel_id: int, message: str) -> bool:
         try:
@@ -76,14 +101,19 @@ class DiscordBot(DiscordBotPort):
     def register_command(self, command: str, callback) -> bool:
         if command in self.commands:
             return False
+        
+        @self.tree.command(name=command, description=f"{command} command")
+        async def slash_command(interaction: discord.Interaction):
+            await callback(interaction)
+        
         self.commands[command] = callback
         return True
 
 if __name__ == '__main__':
     bot = DiscordBot()
     
-    async def funfact_command(message, args):
-        await message.channel.send("Here's a fun fact!")
+    async def funfact_command(interaction: discord.Interaction):
+        await interaction.response.send_message("Here's a fun fact!")
     
     bot.register_command("funfact", funfact_command)
     bot.run()

@@ -49,7 +49,6 @@ DISCORD_TOKEN={config.get('discord', 'discord_token', fallback='')}
 class DiscordConfig:
     TARGET_LANGUAGE = os.getenv("TARGET_LANGUAGE", config.get('discord', 'target_language', fallback='en'))
     DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", config.get('discord', 'discord_token', fallback=''))
-    COMMAND_PREFIX = os.getenv("COMMAND_PREFIX", config.get('discord', 'command_prefix', fallback='!'))
 
 if __name__ == "__main__":
     DatabaseConfig.generate_env()
