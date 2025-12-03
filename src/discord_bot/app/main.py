@@ -1,10 +1,11 @@
+import discord
+
 from discord_bot.business_logic.fun_fact_selector import FunFactSelector
 from discord_bot.business_logic.dish_selector import DishSelector
 from discord_bot.adapters.db import DBMS
 from discord_bot.business_logic.translator import Translator
 from discord_bot.business_logic.discord_logic import DiscordBot
 from discord_bot.init.config_loader import DatabaseConfig
-import discord
 
 if __name__ == "__main__":
     # Initialize constant values database
