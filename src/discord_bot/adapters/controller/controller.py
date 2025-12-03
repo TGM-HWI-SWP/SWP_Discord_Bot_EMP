@@ -1,45 +1,16 @@
-"""Controller implementation for Discord bot operations."""
-
-from discord_bot.contracts.ports import ControllerPort
-
+from discord_bot.contracts.ports import ControllerPort, DishPort, FunFactPort, TranslatePort
 
 class Controller(ControllerPort):
-    """Controller for handling Discord bot commands and messages."""
-    
-    def handle_command(self, server_id: int, channel_id: int, command: str, args: list[str]) -> bool:
-        """Handle a command issued in the Discord server.
+    def __init__(self, dish_selector: DishPort, fun_fact_selector: FunFactPort, translator: TranslatePort):
+        self.dish_selector = dish_selector
+        self.fun_fact_selector = fun_fact_selector
+        self.translator = translator
 
-        Args:
-            server_id (int): The ID of the Discord server.
-            channel_id (int): The ID of the channel where the command was issued.
-            command (str): The command to be handled.
-            args (list[str]): The arguments provided with the command.
+    def get_fun_fact(self) -> str:
+        return self.fun_fact_selector.execute_function()
 
-        Returns:
-            bool: True if the command was handled successfully, False otherwise.
-        """
-        # Implementation placeholder
-        return True
+    def get_dish_suggestion(self, category: str) -> str:
+        return self.dish_selector.execute_function(category)
 
-    def handle_message(self, server_id: int, channel_id: int, message: str) -> bool:
-        """Handle a message sent in the Discord server.
-
-        Args:
-            server_id (int): The ID of the Discord server.
-            channel_id (int): The ID of the channel where the message was sent.
-            message (str): The message to be handled.
-
-        Returns:
-            bool: True if the message was handled successfully, False otherwise.
-        """
-        # Implementation placeholder
-        return True
-
-    def get_server_info(self) -> list[dict]:
-        """Fetch information about the Discord servers the bot is connected to.
-
-        Returns:
-            list[dict]: A list of dictionaries representing the server information.
-        """
-        # Implementation placeholder
-        return []
+    def translate_text(self, text: str) -> str:
+        return self.translator.execute_function(text)

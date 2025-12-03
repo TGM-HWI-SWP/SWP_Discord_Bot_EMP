@@ -1,6 +1,6 @@
 import gradio as gr
 
-from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort
+from discord_bot.contracts.ports import ViewPort, DatabasePort, ControllerPort
 
 
 ADMIN_PANEL_CSS = """
@@ -61,16 +61,12 @@ class AdminPanel(ViewPort):
     def __init__(
         self,
         dbms: DatabasePort,
-        dish_selector: DishPort | None = None,
-        fun_fact_selector: FunFactPort | None = None,
-        translator: TranslatePort | None = None,
+        controller: ControllerPort,
         host: str = "0.0.0.0",
         port: int = 7860
     ):
         self.dbms = dbms
-        self.dish_selector = dish_selector
-        self.fun_fact_selector = fun_fact_selector
-        self.translator = translator
+        self.controller = controller
         self.host = host
         self.port = port
         self.app = None
@@ -247,7 +243,7 @@ class AdminPanel(ViewPort):
                                 return f"Success: Deleted ID {int(dish_id)}" if success else "Error: Failed"
                             
                             def test_dish(cat):
-                                return self.dish_selector.execute_function(cat) if self.dish_selector else "N/A"
+                                return self.controller.get_dish_suggestion(cat)
                             
                             search_btn.click(fn=search_dishes, inputs=[search_query, search_cat], outputs=results)
                             add_btn.click(fn=add_dish, inputs=[new_cat, new_name], outputs=add_status)
@@ -298,7 +294,7 @@ class AdminPanel(ViewPort):
                                 return f"Success: Deleted ID {int(fact_id)}" if success else "Error: Failed"
                             
                             def test_fact():
-                                return self.fun_fact_selector.execute_function() if self.fun_fact_selector else "N/A"
+                                return self.controller.get_fun_fact()
                             
                             fact_search_btn.click(fn=search_facts, inputs=fact_query, outputs=fact_results)
                             fact_add_btn.click(fn=add_fact, inputs=new_fact, outputs=fact_add_status)
@@ -317,7 +313,7 @@ class AdminPanel(ViewPort):
                             def translate(text):
                                 if not text:
                                     return "Enter text"
-                                return self.translator.execute_function(text) if self.translator else "N/A"
+                                return self.controller.translate_text(text)
                             
                             trans_btn.click(fn=translate, inputs=trans_input, outputs=trans_output)
                         
@@ -383,6 +379,7 @@ if __name__ == "__main__":
     from discord_bot.business_logic.dish_selector import DishSelector
     from discord_bot.business_logic.fun_fact_selector import FunFactSelector
     from discord_bot.business_logic.translator import Translator
+    from discord_bot.adapters.controller.controller import Controller
     
     db = DBMS()
     db.connect()
@@ -391,10 +388,14 @@ if __name__ == "__main__":
     fun_fact_selector = FunFactSelector(dbms=db)
     translator = Translator()
     
-    panel = AdminPanel(
-        dbms=db,
+    controller = Controller(
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
         translator=translator
+    )
+    
+    panel = AdminPanel(
+        dbms=db,
+        controller=controller
     )
     panel.launch()

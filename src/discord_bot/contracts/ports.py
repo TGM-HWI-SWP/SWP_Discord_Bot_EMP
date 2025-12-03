@@ -132,40 +132,35 @@ class DishPort(ModelPort):
 
 class ControllerPort(ABC):
     @abstractmethod
-    def handle_command(self, server_id: int, channel_id: int, command: str, args: list[str]) -> bool:
-        """Handle a command issued in the Discord server.
-
-        Args:
-            server_id (int): The ID of the Discord server.
-            channel_id (int): The ID of the channel where the command was issued.
-            command (str): The command to be handled.
-            args (list[str]): The arguments provided with the command.
+    def get_fun_fact(self) -> str:
+        """Get a random fun fact.
 
         Returns:
-            bool: True if the command was handled successfully, False otherwise.
+            str: A random fun fact.
         """
         ...
 
     @abstractmethod
-    def handle_message(self, server_id: int, channel_id: int, message: str) -> bool:
-        """Handle a message sent in the Discord server.
+    def get_dish_suggestion(self, category: str) -> str:
+        """Get a dish suggestion for a specific category.
 
         Args:
-            server_id (int): The ID of the Discord server.
-            channel_id (int): The ID of the channel where the message was sent.
-            message (str): The message to be handled.
+            category (str): The category of dish to suggest.
 
         Returns:
-            bool: True if the message was handled successfully, False otherwise.
+            str: A suggested dish name.
         """
         ...
 
     @abstractmethod
-    def get_server_info() -> list[dict]:
-        """Fetch information about the Discord servers the bot is connected to.
+    def translate_text(self, text: str) -> str:
+        """Translate text to the target language.
+
+        Args:
+            text (str): The text to translate.
 
         Returns:
-            list[dict]: A list of dictionaries representing the server information.
+            str: The translated text.
         """
         ...
 
@@ -181,3 +176,103 @@ class ViewPort(ABC):
             str: The user input as a string.
         """
         ...
+
+class DiscordBotPort(ABC):
+    @abstractmethod
+    def send_message(self, server_id: int, channel_id: int, message: str) -> bool:
+        """Send a message to the specified Discord server and channel.
+
+        Args:
+            server_id (int): The ID of the Discord server.
+            channel_id (int): The ID of the channel to send the message to.
+            message (str): The message to be sent.
+
+        Returns:
+            bool: True if the message was sent successfully, False otherwise.
+        """
+        ...
+
+    @abstractmethod
+    def send_dm(self, user_id: int, message: str) -> bool:
+        """Send a direct message to the specified user.
+
+        Args:
+            user_id (int): The ID of the user to send the direct message to.
+            message (str): The message to be sent.
+
+        Returns:
+            bool: True if the direct message was sent successfully, False otherwise.
+        """
+        ...
+
+    @abstractmethod
+    def run(self) -> None:
+        """Start the Discord bot and connect to Discord servers.
+        
+        This method should be called to initialize the bot connection and start
+        listening for events and commands.
+        """
+        ...
+
+    @abstractmethod
+    def get_servers(self) -> list[dict]:
+        """Get information about all servers the bot is connected to.
+
+        Returns:
+            list[dict]: A list of dictionaries containing server information.
+                Each dictionary should include at least 'id' and 'name' keys.
+        """
+        ...
+
+    @abstractmethod
+    def get_channels(self, server_id: int) -> list[dict]:
+        """Get all channels for a specific server.
+
+        Args:
+            server_id (int): The ID of the Discord server.
+
+        Returns:
+            list[dict]: A list of dictionaries containing channel information.
+                Each dictionary should include at least 'id' and 'name' keys.
+        """
+        ...
+
+    @abstractmethod
+    def is_connected(self) -> bool:
+        """Check if the bot is currently connected to Discord.
+
+        Returns:
+            bool: True if the bot is connected, False otherwise.
+        """
+        ...
+
+    @abstractmethod
+    def register_command(self, command: str, callback) -> bool:
+        """Register a command handler for the Discord bot.
+
+        Args:
+            command (str): The command name (without prefix, e.g., 'funfact').
+            callback: The function to call when the command is invoked.
+
+        Returns:
+            bool: True if the command was registered successfully, False otherwise.
+        """
+        ...
+
+    @abstractmethod
+    async def on_message(self, message) -> None:
+        """Handle incoming Discord messages.
+
+        Args:
+            message: The Discord message object.
+        """
+        ...
+
+    @abstractmethod
+    async def on_ready(self) -> None:
+        """Handle the bot ready event.
+        
+        Called when the bot has successfully connected to Discord.
+        """
+        ...
+    
