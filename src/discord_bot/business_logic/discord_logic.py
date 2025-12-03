@@ -29,8 +29,13 @@ class DiscordBot(DiscordBotPort):
 
     async def on_ready(self):
         print(f'Logged in as {self.client.user}')
+        
         await self.tree.sync()
-        print(f'Synced {len(self.tree.get_commands())} slash commands')
+        print(f'Synced {len(self.tree.get_commands())} slash commands globally')
+        
+        for guild in self.client.guilds:
+            await self.tree.sync(guild=guild)
+            print(f'Synced to guild: {guild.name}')
 
     async def on_message(self, message):
         if message.author == self.client.user:
@@ -46,7 +51,6 @@ class DiscordBot(DiscordBotPort):
                 "read": False
             }
             self.unread_dms.append(dm_data)
-            print(f"DM received from {message.author}: {message.content}")
     
     def get_unread_dms(self) -> list[dict]:
         return [dm for dm in self.unread_dms if not dm["read"]]
@@ -55,7 +59,6 @@ class DiscordBot(DiscordBotPort):
         for dm in self.unread_dms:
             if dm["id"] == dm_id and not dm["read"]:
                 dm["read"] = True
-                print(f"DM {dm_id} marked as read")
                 return True
         return False
     
@@ -63,7 +66,6 @@ class DiscordBot(DiscordBotPort):
         count = sum(1 for dm in self.unread_dms if not dm["read"])
         for dm in self.unread_dms:
             dm["read"] = True
-        print(f"Marked {count} DMs as read")
         return count
 
     def send_message(self, server_id: int, channel_id: int, message: str) -> bool:
@@ -113,7 +115,7 @@ if __name__ == '__main__':
     bot = DiscordBot()
     
     async def funfact_command(interaction: discord.Interaction):
-        await interaction.response.send_message("Here's a fun fact!")
+        await interaction.response.send_message("Hallo Welt!")
     
-    bot.register_command("funfact", funfact_command)
+    bot.register_command("test", funfact_command)
     bot.run()
