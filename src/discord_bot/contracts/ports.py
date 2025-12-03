@@ -247,12 +247,12 @@ class DiscordBotPort(ABC):
         ...
 
     @abstractmethod
-    def register_command(self, command: str, callback) -> bool:
+    def register_command(self, command: str, callback: callable) -> bool:
         """Register a command handler for the Discord bot.
 
         Args:
             command (str): The command name (without prefix, e.g., 'funfact').
-            callback: The function to call when the command is invoked.
+            callback (callable): The async function to call when the command is invoked.
 
         Returns:
             bool: True if the command was registered successfully, False otherwise.

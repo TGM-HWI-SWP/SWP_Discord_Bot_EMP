@@ -13,8 +13,8 @@ class Translator(Model, TranslatePort):
             try:
                 translator = GoogleTranslator(source="auto", target=DiscordConfig.TARGET_LANGUAGE)
                 return translator.translate(text)
-            except Exception as e:
-                print(f"Translation error (attempt {attempt + 1}/10): {e}")
+            except Exception as error:
+                print(f"Translation error (attempt {attempt + 1}/10): {error}")
         return text
 
 if __name__ == "__main__":

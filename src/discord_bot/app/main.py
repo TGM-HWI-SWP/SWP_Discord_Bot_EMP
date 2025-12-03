@@ -8,7 +8,6 @@ from discord_bot.business_logic.discord_logic import DiscordBot
 from discord_bot.init.config_loader import DatabaseConfig
 
 if __name__ == "__main__":
-    # Initialize constant values database
     cv_db = DBMS(db_name=DatabaseConfig.CV_DB_NAME)
     cv_db.connect()
 

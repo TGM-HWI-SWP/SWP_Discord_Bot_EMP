@@ -1,7 +1,7 @@
+import numpy as np
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.database import Database
-import numpy as np
 
 from discord_bot.contracts.ports import DatabasePort
 from discord_bot.init.config_loader import DatabaseConfig
@@ -20,10 +20,10 @@ class DBMS(DatabasePort):
             self.client = MongoClient(self.uri)
             self.client.admin.command("ping")
             self.db = self.client[self.db_name]
-        except Exception as e:
+        except Exception as error:
             self.client = None
             self.db = None
-            raise ConnectionFailure(f"Mongo connect failed (uri={self.uri}): {e}")
+            raise ConnectionFailure(f"Mongo connect failed (uri={self.uri}): {error}")
 
     def _collection(self, table: str):
         if self.db is None:
@@ -41,15 +41,15 @@ class DBMS(DatabasePort):
         if size == 0:
             return {}
         
-        idx = int(np.random.randint(0, size))
-        cursor = self._collection(table).find(query).skip(idx).limit(1)
+        index = int(np.random.randint(0, size))
+        cursor = self._collection(table).find(query).skip(index).limit(1)
 
-        for doc in cursor:
-            return doc
+        for document in cursor:
+            return document
         return {}
 
     def get_data(self, table: str, query: dict) -> list[dict]:
-        return [d for d in self._collection(table).find(query)]
+        return [document for document in self._collection(table).find(query)]
 
     def insert_data(self, table: str, data: dict) -> bool:
         return self._collection(table).insert_one(data).acknowledged
@@ -76,5 +76,5 @@ class DBMS(DatabasePort):
                 return True
             return False
         
-        except Exception as e:
-            raise RuntimeError(f"Error uploading collection: {e}")
+        except Exception as error:
+            raise RuntimeError(f"Error uploading collection: {error}")

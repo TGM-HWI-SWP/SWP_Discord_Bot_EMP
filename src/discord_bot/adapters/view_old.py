@@ -38,10 +38,10 @@ class DiscordBotView(ViewPort):
             server_choice = gr.Dropdown(label="Server", choices=["Server 1", "Server 2"], interactive=True)
             channel_id = gr.Number(label="Channel ID", value=0, precision=0)
             message_input = gr.Textbox(label="Enter your message")
-            test_btn = gr.Button("Send")
+            test_button = gr.Button("Send")
             output = gr.Textbox(label="Output", interactive=False)
             
-            test_btn.click(
+            test_button.click(
                 fn=self.controller.handle_message,
                 inputs=[server_choice, channel_id, message_input],
                 outputs=output
