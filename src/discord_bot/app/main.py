@@ -4,7 +4,7 @@ from discord_bot.business_logic.fun_fact_selector import FunFactSelector
 from discord_bot.business_logic.dish_selector import DishSelector
 from discord_bot.adapters.db import DBMS
 from discord_bot.business_logic.translator import Translator
-from discord_bot.business_logic.discord_logic import DiscordBot
+from discord_bot.business_logic.discord_logic import DiscordLogic
 from discord_bot.init.config_loader import DBConfigLoader
 
 if __name__ == "__main__":
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     print("=== DISCORD BOT TEST ===")
     discord_db = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
     discord_db.connect()
-    discord_bot = DiscordBot(dbms=discord_db)
+    discord_bot = DiscordLogic(dbms=discord_db)
     async def test_command(interaction: discord.Interaction):
         await interaction.response.send_message("Hello World!")
     discord_bot.register_command("test", test_command, description="Test command to verify bot functionality")
