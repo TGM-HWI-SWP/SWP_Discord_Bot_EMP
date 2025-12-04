@@ -4,12 +4,12 @@ from pymongo.errors import ConnectionFailure
 from pymongo.database import Database
 
 from discord_bot.contracts.ports import DatabasePort
-from discord_bot.init.config_loader import DatabaseConfig
+from discord_bot.init.config_loader import DBConfigLoader
 
 class DBMS(DatabasePort):
     def __init__(self, uri: str | None = None, db_name: str | None = None):
-        self.uri = uri or DatabaseConfig.MONGO_URI
-        self.db_name = db_name or DatabaseConfig.CV_DB_NAME
+        self.uri = uri or DBConfigLoader.MONGO_URI
+        self.db_name = db_name or DBConfigLoader.CV_DB_NAME
         self.client: MongoClient | None = None
         self.db: Database | None = None
 

@@ -4,7 +4,7 @@ import discord
 from discord import app_commands
 
 from discord_bot.contracts.ports import DiscordBotPort, DatabasePort
-from discord_bot.init.config_loader import DiscordConfig
+from discord_bot.init.config_loader import DiscordConfigLoader
 from discord_bot.business_logic.model import Model
 
 class DiscordBot(Model, DiscordBotPort):
@@ -26,8 +26,12 @@ class DiscordBot(Model, DiscordBotPort):
         async def on_message(message):
             await self.on_message(message)
     
+    def execute_function(self):
+        pass
+    
     def run(self):
-        self.client.run(DiscordConfig.DISCORD_TOKEN)
+        self.logging("Starting Discord bot...")
+        self.client.run(DiscordConfigLoader.DISCORD_TOKEN)
     
     def stop(self):
         asyncio.create_task(self.client.close())

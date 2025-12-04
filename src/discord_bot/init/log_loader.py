@@ -9,7 +9,7 @@ class LogLoader:
     def setup_log_files(self) -> None:
         business_logic_files = [
             file.stem for file in self.business_logic_dir.glob("*.py")
-            if file.stem != "__init__"
+            if file.stem != "__init__" and file.stem != "model"
         ]
         
         for filename in business_logic_files:

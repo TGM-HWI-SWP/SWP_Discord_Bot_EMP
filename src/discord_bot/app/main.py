@@ -5,10 +5,10 @@ from discord_bot.business_logic.dish_selector import DishSelector
 from discord_bot.adapters.db import DBMS
 from discord_bot.business_logic.translator import Translator
 from discord_bot.business_logic.discord_logic import DiscordBot
-from discord_bot.init.config_loader import DatabaseConfig
+from discord_bot.init.config_loader import DBConfigLoader
 
 if __name__ == "__main__":
-    cv_db = DBMS(db_name=DatabaseConfig.CV_DB_NAME)
+    cv_db = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
     cv_db.connect()
 
     # TESTING FUN FACT SELECTOR
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # TESTING DISCORD BOT CONNECTION
     print("=== DISCORD BOT TEST ===")
-    discord_db = DBMS(db_name=DatabaseConfig.DISCORD_DB_NAME)
+    discord_db = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
     discord_db.connect()
     discord_bot = DiscordBot(dbms=discord_db)
     async def test_command(interaction: discord.Interaction):

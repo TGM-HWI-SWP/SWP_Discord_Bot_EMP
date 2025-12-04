@@ -3,12 +3,12 @@ from pathlib import Path
 from datetime import datetime
 
 from discord_bot.adapters.db import DBMS
-from discord_bot.init.config_loader import DatabaseConfig
+from discord_bot.init.config_loader import DBConfigLoader
 
 class DBLoader:
     def __init__(self):
-        self.cv_dbms = DBMS(db_name=DatabaseConfig.CV_DB_NAME)
-        self.discord_dbms = DBMS(db_name=DatabaseConfig.DISCORD_DB_NAME)
+        self.cv_dbms = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
+        self.discord_dbms = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
         self.db_data_path = Path(__file__).parent / "db_data"
     
     def import_collections(self, force_reload: bool = False):
@@ -30,7 +30,7 @@ class DBLoader:
                     for row in reader
                 ]
 
-            self.cv_dbms.upload_collection(DatabaseConfig.CV_DB_NAME, collection_name, data)
+            self.cv_dbms.upload_collection(DBConfigLoader.CV_DB_NAME, collection_name, data)
             print(f'Imported \'{collection_name}\' - {len(data)} documents')
         
         print("Constant values database initialization complete")
