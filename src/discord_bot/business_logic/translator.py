@@ -13,11 +13,11 @@ class Translator(Model, TranslatePort):
             try:
                 translator = GoogleTranslator(source="auto", target=DiscordConfigLoader.TARGET_LANGUAGE)
                 result = translator.translate(text)
-                self.logging(f"Successfully translated: '{text}' -> '{result}'")
+                self.logging(f'Successfully translated: \'{text}\' -> \'{result}\'')
                 return result
             except Exception as error:
-                self.logging(f"Translation error (attempt {attempt + 1}/10): {error}")
-        self.logging(f"Translation failed after 10 attempts, returning original text: '{text}'")
+                self.logging(f'Translation error (attempt {attempt + 1}/10): {error}')
+        self.logging(f'Translation failed after 10 attempts, returning original text: \'{text}\'')
         return text
 
 if __name__ == "__main__":

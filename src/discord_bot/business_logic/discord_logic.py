@@ -3,11 +3,11 @@ from datetime import datetime
 import discord
 from discord import app_commands
 
-from discord_bot.contracts.ports import DiscordBotPort, DatabasePort
+from discord_bot.contracts.ports import DiscordLogicPort, DatabasePort
 from discord_bot.init.config_loader import DiscordConfigLoader
 from discord_bot.business_logic.model import Model
 
-class DiscordBot(Model, DiscordBotPort):
+class DiscordLogic(Model, DiscordLogicPort):
     def __init__(self, dbms: DatabasePort | None = None):
         super().__init__()
         intents = discord.Intents.default()
@@ -229,12 +229,12 @@ class DiscordBot(Model, DiscordBotPort):
 
 if __name__ == '__main__':
     from discord_bot.adapters.db import DBMS
-    from discord_bot.init.config_loader import DatabaseConfig
+    from discord_bot.init.config_loader import DBConfigLoader
     
-    dbms = DBMS(db_name=DatabaseConfig.DISCORD_DB_NAME)
+    dbms = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
     dbms.connect()
     
-    bot = DiscordBot(dbms=dbms)
+    bot = DiscordLogic(dbms=dbms)
     
     async def funfact_command(interaction: discord.Interaction):
         await interaction.response.send_message("Hallo Welt!")

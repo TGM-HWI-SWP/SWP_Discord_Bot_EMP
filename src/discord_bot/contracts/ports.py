@@ -177,7 +177,7 @@ class ViewPort(ABC):
         """
         ...
 
-class DiscordBotPort(ABC):
+class DiscordLogicPort(ABC):
     @abstractmethod
     def send_message(self, server_id: int, channel_id: int, message: str) -> bool:
         """Send a message to the specified Discord server and channel.
