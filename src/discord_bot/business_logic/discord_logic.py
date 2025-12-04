@@ -143,7 +143,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.dbms.insert_data("messages", message_data)
             self._increment_message_stats()
         except Exception as error:
-            self.logging(f"Error saving message: {error}")
+            self.logging(f'Error saving message: {error}')
     
     def _save_direct_message(self, dm_data: dict) -> None:
         if not self.dbms:
