@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     # TESTING TRANSLATOR
     translator = Translator()
-    sample_text = "Zdravo, kako si?"
+    sample_text = "Merhaba, nasılsın?"
     translated_text = translator.execute_function(sample_text)
     print("=== TRANSLATION TEST ===")
     print(f"Original: {sample_text}")
