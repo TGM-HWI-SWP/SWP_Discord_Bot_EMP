@@ -14,7 +14,7 @@ class Translator(Model, TranslatePort):
                 translator = GoogleTranslator(source="auto", target=DiscordConfig.TARGET_LANGUAGE)
                 return translator.translate(text)
             except Exception as error:
-                print(f"Translation error (attempt {attempt + 1}/10): {error}")
+                self.logging(f"Translation error (attempt {attempt + 1}/10): {error}")
         return text
 
 if __name__ == "__main__":

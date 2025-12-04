@@ -9,8 +9,11 @@ class DishSelector(Model, DishPort):
     def execute_function(self, category: str) -> str:
         dish = self.dbms.get_random_entry(table="dishes", category=category)
         if not dish:
-            return "No dish found."
-        return dish.get("dish") or str(dish)
+            self.logging("No dish found.")
+            return ""
+        result = dish.get("dish") or str(dish)
+        self.logging(f"Dish selected: {result}")
+        return result
 
 if __name__ == "__main__":
     from discord_bot.adapters.db import DBMS

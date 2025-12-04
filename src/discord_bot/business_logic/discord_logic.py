@@ -5,9 +5,11 @@ from discord import app_commands
 
 from discord_bot.contracts.ports import DiscordBotPort, DatabasePort
 from discord_bot.init.config_loader import DiscordConfig
+from discord_bot.business_logic.model import Model
 
-class DiscordBot(DiscordBotPort):
+class DiscordBot(Model, DiscordBotPort):
     def __init__(self, dbms: DatabasePort | None = None):
+        super().__init__()
         intents = discord.Intents.default()
         intents.message_content = True
         self.client = discord.Client(intents=intents)
@@ -31,14 +33,14 @@ class DiscordBot(DiscordBotPort):
         asyncio.create_task(self.client.close())
 
     async def on_ready(self):
-        print(f'Logged in as {self.client.user}')
+        self.logging(f'Logged in as {self.client.user}')
         
         await self.tree.sync()
-        print(f'Synced {len(self.tree.get_commands())} slash commands globally')
+        self.logging(f'Synced {len(self.tree.get_commands())} slash commands globally')
         
         for guild in self.client.guilds:
             await self.tree.sync(guild=guild)
-            print(f'Synced to guild: {guild.name}')
+            self.logging(f'Synced to guild: {guild.name}')
 
     async def on_message(self, message):
         if message.author == self.client.user:
@@ -137,7 +139,7 @@ class DiscordBot(DiscordBotPort):
             self.dbms.insert_data("messages", message_data)
             self._increment_message_stats()
         except Exception as error:
-            print(f"Error saving message: {error}")
+            self.logging(f"Error saving message: {error}")
     
     def _save_direct_message(self, dm_data: dict) -> None:
         if not self.dbms:
@@ -146,7 +148,7 @@ class DiscordBot(DiscordBotPort):
             self.dbms.insert_data("direct_messages", dm_data)
             self._increment_dm_stats()
         except Exception as error:
-            print(f'Error saving direct message: {error}')
+            self.logging(f'Error saving direct message: {error}')
     
     def _save_command(self, command_name: str, description: str) -> None:
         if not self.dbms:
@@ -163,7 +165,7 @@ class DiscordBot(DiscordBotPort):
                 }
                 self.dbms.insert_data("commands", command_data)
         except Exception as error:
-            print(f'Error saving command: {error}')
+            self.logging(f'Error saving command: {error}')
     
     def _update_command_usage(self, command_name: str) -> None:
         if not self.dbms:
@@ -177,7 +179,7 @@ class DiscordBot(DiscordBotPort):
                 self.dbms.update_data("commands", {"command_name": command_name}, command)
                 self._increment_command_stats(command_name)
         except Exception as error:
-            print(f'Error updating command usage: {error}')
+            self.logging(f'Error updating command usage: {error}')
     
     def _increment_message_stats(self) -> None:
         if not self.dbms:
@@ -190,7 +192,7 @@ class DiscordBot(DiscordBotPort):
                 stat["total_messages"] = stat.get("total_messages", 0) + 1
                 self.dbms.update_data("statistics", {"date": today}, stat)
         except Exception as error:
-            print(f'Error updating message stats: {error}')
+            self.logging(f'Error updating message stats: {error}')
     
     def _increment_dm_stats(self) -> None:
         if not self.dbms:
@@ -203,7 +205,7 @@ class DiscordBot(DiscordBotPort):
                 stat["total_dms"] = stat.get("total_dms", 0) + 1
                 self.dbms.update_data("statistics", {"date": today}, stat)
         except Exception as error:
-            print(f'Error updating DM stats: {error}')
+            self.logging(f'Error updating DM stats: {error}')
     
     def _increment_command_stats(self, command_name: str) -> None:
         if not self.dbms:
@@ -219,7 +221,7 @@ class DiscordBot(DiscordBotPort):
                 stat["command_breakdown"][command_name] = stat["command_breakdown"].get(command_name, 0) + 1
                 self.dbms.update_data("statistics", {"date": today}, stat)
         except Exception as error:
-            print(f'Error updating command stats: {error}')
+            self.logging(f'Error updating command stats: {error}')
 
 if __name__ == '__main__':
     from discord_bot.adapters.db import DBMS

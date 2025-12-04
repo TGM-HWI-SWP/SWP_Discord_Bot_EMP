@@ -9,8 +9,11 @@ class FunFactSelector(Model, FunFactPort):
     def execute_function(self) -> str:
         fun_fact = self.dbms.get_random_entry(table="fun_facts", category=None)
         if not fun_fact:
-            return "No fun fact found."
-        return fun_fact.get("fun_fact") or str(fun_fact)
+            self.logging("No fun fact found.")
+            return ""
+        result = fun_fact.get("fun_fact") or str(fun_fact)
+        self.logging(f"Fun fact selected: {result}")
+        return result
 
 if __name__ == "__main__":
     from discord_bot.adapters.db import DBMS

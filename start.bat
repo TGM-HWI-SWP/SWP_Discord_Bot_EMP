@@ -39,6 +39,9 @@ docker-compose restart
 echo Initializing database data...
 python src\discord_bot\init\db_loader.py
 
+echo Initializing logs...
+python src\discord_bot\init\log_loader.py
+
 echo Quick restart complete!
 pause
 exit /b 0
@@ -83,6 +86,9 @@ docker-compose up -d --build
 
 echo Initializing database data...
 python src\discord_bot\init\db_loader.py
+
+echo Initializing logs...
+python src\discord_bot\init\log_loader.py
 
 echo All services started!
 pause

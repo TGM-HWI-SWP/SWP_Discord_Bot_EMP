@@ -8,7 +8,7 @@ config_path = project_root / "config.ini"
 config = configparser.ConfigParser()
 files_read = config.read(config_path)
 
-class DatabaseConfig:
+class DBConfigLoader:
     IN_DOCKER = os.path.exists("/.dockerenv")
     
     MONGO_ROOT_USER = config.get("mongo", "mongo_root_user", fallback="root")
@@ -30,8 +30,8 @@ class DatabaseConfig:
 # Regenerate by calling DatabaseConfig.generate_env()
 
 # MongoDB Configuration
-MONGO_INITDB_ROOT_USERNAME={DatabaseConfig.MONGO_ROOT_USER}
-MONGO_INITDB_ROOT_PASSWORD={DatabaseConfig.MONGO_ROOT_PASSWORD}
+MONGO_INITDB_ROOT_USERNAME={DBConfigLoader.MONGO_ROOT_USER}
+MONGO_INITDB_ROOT_PASSWORD={DBConfigLoader.MONGO_ROOT_PASSWORD}
 
 # Mongo Express Basic Auth
 ME_CONFIG_BASICAUTH_USERNAME={config.get("mongo_express", "basic_auth_username", fallback="admin")}
@@ -46,9 +46,9 @@ DISCORD_TOKEN={config.get("discord", "discord_token", fallback="")}
         
         print(f'Generated .env from config.ini at {env_path}')
 
-class DiscordConfig:
+class DiscordConfigLoader:
     TARGET_LANGUAGE = os.getenv("TARGET_LANGUAGE", config.get("discord", "target_language", fallback="en"))
     DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", config.get("discord", "discord_token", fallback=""))
 
 if __name__ == "__main__":
-    DatabaseConfig.generate_env()
+    DBConfigLoader.generate_env()
