@@ -7,6 +7,8 @@ class LogLoader:
         self.business_logic_dir = Path(__file__).parent.parent / "business_logic"
     
     def setup_log_files(self) -> None:
+        self.log_dir.mkdir(parents=True, exist_ok=True)
+        
         business_logic_files = [
             file.stem for file in self.business_logic_dir.glob("*.py")
             if file.stem != "__init__" and file.stem != "model"
