@@ -10,10 +10,4 @@ RUN uv sync
 EXPOSE 7860
 ENV GRADIO_SERVER_NAME=0.0.0.0
 
-RUN echo "#!/bin/sh\n\
-uv run python -m discord_bot.init.log_loader && \n\
-uv run python -m discord_bot.init.db_loader && \n\
-exec uv run python -m discord_bot.app.main" > /entrypoint.sh && \
-    chmod +x /entrypoint.sh
-
-CMD ["/entrypoint.sh"]
+CMD ["uv", "run", "python", "-m", "discord_bot.app.main"]

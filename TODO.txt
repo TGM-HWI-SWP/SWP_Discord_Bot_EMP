@@ -1,0 +1,25 @@
+TODO:
+
+# urgent
+.venv still broken in bat file
+
+# urgent
+gradio and codebase both need separate docker container so nothing gets executed twice (gradio volume in docker-compose.yaml)
+
+# urgent
+discord bot still needs translate and auto translate methods (also need to be integrated in view.py via controller.py and the respective ports need to be added to ports.py)
+
+# urgent
+and dish selection as well as auto translate and translate need to accept params over on discord (maybe @user for the auto translate and a dropdown or premade selection for dish category if possible)
+
+# high priority
+view.py needs to be refactored entirely and simplified
+
+# high priority
+orange theme in view.py needs to go (should be blue like discord) 
+
+# optional
+maybe a dark and light mode toggle in view.py
+
+# at the end
+entire code needs to be checked for readability and understandability (comments where necessary, constant variable names across files, docstrings in google style for every function and class, typehinting everywhere, and one-line docstrings or comments in the first line of every file describing its purpose)
