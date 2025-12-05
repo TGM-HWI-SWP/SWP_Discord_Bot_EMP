@@ -106,6 +106,20 @@ class TranslatePort(ModelPort):
             str: The translated message.
         """
         ...
+    
+    @overload
+    def execute_function(self, text: str, user_id: int) -> str:
+        """Auto-translate message using user's preferred language.
+        
+        Args:
+            text (str): The text to translate.
+            user_id (int): The user ID to look up language preference.
+        
+        Returns:
+            str: The translated message.
+        """
+        ...
+    
 
 class FunFactPort(ModelPort):
     @abstractmethod

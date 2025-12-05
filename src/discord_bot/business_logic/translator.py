@@ -1,19 +1,30 @@
 from deep_translator import GoogleTranslator
 
-from discord_bot.contracts.ports import TranslatePort
+from discord_bot.contracts.ports import TranslatePort, DatabasePort
 from discord_bot.business_logic.model import Model
 from discord_bot.init.config_loader import DiscordConfigLoader
 
 class Translator(Model, TranslatePort):
-    def __init__(self, **kwargs):
+    def __init__(self, dbms: DatabasePort | None = None, **kwargs):
         super().__init__(**kwargs)
+        self.dbms = dbms
 
-    def execute_function(self, text: str) -> str:
+    def execute_function(self, text: str, user_id: int | None = None) -> str:
+        target_language = DiscordConfigLoader.TARGET_LANGUAGE
+        
+        if user_id and self.dbms:
+            user_data = self.dbms.get_data("users", {"user_id": user_id})
+            if user_data:
+                target_language = user_data[0].get("target_language", target_language)
+        
         for attempt in range(10):
             try:
-                translator = GoogleTranslator(source="auto", target=DiscordConfigLoader.TARGET_LANGUAGE)
+                translator = GoogleTranslator(source="auto", target=target_language)
                 result = translator.translate(text)
-                self.logging(f'Successfully translated: \'{text}\' -> \'{result}\'')
+                if user_id:
+                    self.logging(f'Successfully auto-translated: \'{text}\' -> \'{result}\' (target: {target_language})')
+                else:
+                    self.logging(f'Successfully translated: \'{text}\' -> \'{result}\'')
                 return result
             except Exception as error:
                 self.logging(f'Translation error (attempt {attempt + 1}/10): {error}')
