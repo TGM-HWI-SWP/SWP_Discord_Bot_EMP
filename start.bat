@@ -1,8 +1,12 @@
 @echo off
 
-if not exist ".venv" (
+if not exist ".venv\Scripts\python.exe" (
+    if exist ".venv" (
+        echo Removing old .venv folder...
+        rmdir /s /q .venv
+    )
     echo Creating virtual environment...
-    python -m venv .venv
+    py -3.13 -m venv .venv
     echo Virtual environment created!
 )
 
