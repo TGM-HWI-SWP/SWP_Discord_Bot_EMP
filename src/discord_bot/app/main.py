@@ -14,11 +14,11 @@ if __name__ == "__main__":
 
     fun_fact_selector = FunFactSelector(dbms=cv_db)
     dish_selector = DishSelector(dbms=cv_db)
-    translator = Translator()
 
     discord_db = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
     discord_db.connect()
 
+    translator = Translator(dbms=discord_db)
     discord_bot = DiscordLogic(dbms=discord_db)
 
     @discord_bot.tree.command(name="funfact", description="Get a random fun fact")
