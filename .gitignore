@@ -16,3 +16,4 @@ __pycache__/
 *.so
 *.egg
 *.log
+uv.lock

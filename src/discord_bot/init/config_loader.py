@@ -12,7 +12,10 @@ class DBConfigLoader:
     IN_DOCKER = os.path.exists("/.dockerenv")
     
     MONGO_ROOT_USER = config.get("mongo", "mongo_root_user", fallback="root")
-    MONGO_ROOT_PASSWORD = config.get("mongo", "mongo_root_password", fallback="example")
+    MONGO_ROOT_PASSWORD = config.get("mongo", "mongo_root_password", fallback="rot")
+
+    BASIC_AUTH_USERNAME = config.get("mongo_express", "basic_auth_username", fallback="admin")
+    BASIC_AUTH_PASSWORD = config.get("mongo_express", "basic_auth_password", fallback="admin")
 
     URI_DOCKER = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@mongo:27017/"
     URI_LOCAL = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@localhost:27017/"
@@ -34,11 +37,14 @@ MONGO_INITDB_ROOT_USERNAME={DBConfigLoader.MONGO_ROOT_USER}
 MONGO_INITDB_ROOT_PASSWORD={DBConfigLoader.MONGO_ROOT_PASSWORD}
 
 # Mongo Express Basic Auth
-ME_CONFIG_BASICAUTH_USERNAME={config.get("mongo_express", "basic_auth_username", fallback="admin")}
-ME_CONFIG_BASICAUTH_PASSWORD={config.get("mongo_express", "basic_auth_password", fallback="pass")}
+ME_CONFIG_BASICAUTH_USERNAME={DBConfigLoader.BASIC_AUTH_USERNAME}
+ME_CONFIG_BASICAUTH_PASSWORD={DBConfigLoader.BASIC_AUTH_PASSWORD}
 
 # Discord Configuration
-DISCORD_TOKEN={config.get("discord", "discord_token", fallback="")}
+DISCORD_TOKEN={DiscordConfigLoader.DISCORD_TOKEN}
+
+# Settings
+DEV_MODE={str(SettingsConfigLoader.DEV_MODE).lower()}
 """
         
         with open(env_path, "w") as file:
@@ -49,6 +55,9 @@ DISCORD_TOKEN={config.get("discord", "discord_token", fallback="")}
 class DiscordConfigLoader:
     TARGET_LANGUAGE = os.getenv("TARGET_LANGUAGE", config.get("discord", "target_language", fallback="en"))
     DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", config.get("discord", "discord_token", fallback=""))
+
+class SettingsConfigLoader:
+    DEV_MODE = os.getenv("DEV_MODE", config.getboolean("settings", "dev_mode", fallback=True))
 
 if __name__ == "__main__":
     DBConfigLoader.generate_env()

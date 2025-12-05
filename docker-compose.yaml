@@ -31,6 +31,8 @@ services:
     build:
       context: .
       dockerfile: src/discord_bot/dockerfile
+      args:
+        DEV_MODE: ${DEV_MODE:-false}
     ports:
       - "7860:7860"
     environment:

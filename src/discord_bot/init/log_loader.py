@@ -26,7 +26,6 @@ class LogLoader:
         
         return self.log_dir / f'{filename}.log'
 
-
 if __name__ == "__main__":
     log_loader = LogLoader()
     log_loader.setup_log_files()
