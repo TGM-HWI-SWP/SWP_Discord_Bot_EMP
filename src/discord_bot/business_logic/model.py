@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Any
 
 from discord_bot.contracts.ports import ModelPort
 from discord_bot.init.log_loader import LogLoader
