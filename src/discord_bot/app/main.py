@@ -14,11 +14,11 @@ if __name__ == "__main__":
 
     fun_fact_selector = FunFactSelector(dbms=cv_db)
     dish_selector = DishSelector(dbms=cv_db)
+    translator = Translator()
 
     discord_db = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
     discord_db.connect()
 
-    translator = Translator(dbms=discord_db)
     discord_bot = DiscordLogic(dbms=discord_db)
 
     @discord_bot.tree.command(name="funfact", description="Get a random fun fact")
@@ -32,19 +32,16 @@ if __name__ == "__main__":
         await interaction.response.send_message(dish_selector.execute_function(category))
         discord_bot._update_command_usage("dish")
 
-    @discord_bot.tree.command(name="translate", description="Translate message to target language")
-    @app_commands.describe(text="The text to translate")
-    async def translate_command(interaction: discord.Interaction, text: str):
-        result = translator.execute_function(text)
-        await interaction.response.send_message(result)
-        discord_bot._update_command_usage("translate")
+    async def translate_command(interaction: discord.Interaction):
+        await interaction.response.send_message(translator.execute_function()) # also needs text to be passed on execution from command parameter
 
-    @discord_bot.tree.command(name="auto-translate", description="Auto-translate message to target language based on user_id")
-    @app_commands.describe(text="The text to translate", user="The user whose language preference to use")
-    async def auto_translate_command(interaction: discord.Interaction, text: str, user: discord.Member):
-        result = translator.execute_function(text, user.id)
-        await interaction.response.send_message(result)
-        discord_bot._update_command_usage("auto-translate")
+    async def auto_translate_command(interaction: discord.Interaction):
+        await interaction.response.send_message(translator.execute_function()) # also needs text to be passed on execution from command parameter and auto-translate target to be passed
+    
+    discord_bot.register_command("funfact", funfact_command, description="Get a random fun fact")
+    discord_bot.register_command("dish", dish_command, description="Get a dish suggestion")
+    discord_bot.register_command("translate", translate_command, description="Translate message to target language")
+    discord_bot.register_command("auto-translate", auto_translate_command, description="Auto-translate message to target language based on user_id")
     
     discord_bot.run()
     
