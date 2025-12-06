@@ -82,8 +82,16 @@ class AdminPanel(ViewPort):
     def get_user_input(self, interactable_element: str) -> str:
         return ""
     
+    
+    @property
+    def check_available(self) -> bool:
+        return self.discord_bot is not None
+                    
+    def check_connection(self) -> bool:
+        return self.check_available() and getattr(self.discord_bot, 'is_connected', lambda: False)()  
+    
     def build_interface(self) -> gr.Blocks:
-        with gr.Blocks(title="Discord Bot Admin Panel") as app:
+        with gr.Blocks(title="Discord Bot Admin Panel", css=ADMIN_PANEL_CSS) as app:
             
             gr.HTML("""
                 <div class="admin-header">
@@ -156,12 +164,10 @@ class AdminPanel(ViewPort):
                     update_settings_btn = gr.Button("Update Settings")
                     settings_status = gr.Markdown("")
                     
-                    @property
-                    def check_available(self) -> bool:
-                        return self.discord_bot is not None
                     
-                    def check_connection(self) -> bool:
-                        return self.check_available() and getattr(self.discord_bot, 'is_connected', lambda: False)()  
+                    
+                    
+                    
                     
                     
                     def refresh_server_list():
@@ -177,6 +183,9 @@ class AdminPanel(ViewPort):
                             
                         choices = [f'{server["name"]} ({server["id"]})' for server in servers]
                         return gr.update(choices=choices), f"Found {len(servers)} servers"
+                    
+                    
+                    
                     
                     def placeholder_leave_server():
                         return "Placeholder: Leave server"
@@ -214,6 +223,56 @@ class AdminPanel(ViewPort):
                     unblock_user_btn.click(fn=placeholder_unblock_user, outputs=user_status)
                     send_message_btn.click(fn=send_message, inputs=[channel_id_input, message_input], outputs=message_status)
                     update_settings_btn.click(fn=placeholder_update_settings, outputs=settings_status)
+                
+                with gr.Tab("Servers"):
+                    gr.Markdown("### Discord Servers")
+                    gr.Markdown("All servers where the bot is currently active")
+                    
+                    refresh_server_view_btn = gr.Button("Refresh Server List", size="lg")
+                    
+                    server_table = gr.Dataframe(
+                        headers=["Server ID", "Server Name", "Member Count"],
+                        label="Connected Servers",
+                        interactive=False
+                    )
+                    
+                    server_view_status = gr.Markdown("")
+                    
+                    def load_server_list():
+                        if not self.check_bot_available():
+                            return [], "Discord bot not available (runs in separate container)"
+                        
+                        if not self.check_bot_connected():
+                            return [], "Bot is offline"
+                        
+                        try:
+                            servers = self.discord_bot.get_servers()
+                            if not servers:
+                                return [], "No servers found"
+                            
+                            # Get additional info for each server
+                            server_data = []
+                            for server in servers:
+                                server_id = server.get("id", "N/A")
+                                server_name = server.get("name", "Unknown")
+                                
+                                # Try to get member count from guild
+                                member_count = "N/A"
+                                try:
+                                    guild = self.discord_bot.client.get_guild(server_id)
+                                    if guild:
+                                        member_count = guild.member_count
+                                except:
+                                    pass
+                                
+                                server_data.append([server_id, server_name, member_count])
+                            
+                            return server_data, f"Found {len(servers)} server(s)"
+                        except Exception as e:
+                            return [], f"Error loading servers: {str(e)}"
+                    
+                    refresh_server_view_btn.click(fn=load_server_list, outputs=[server_table, server_view_status])
+                    app.load(fn=load_server_list, outputs=[server_table, server_view_status])
                 
                 with gr.Tab("Database"):
                     with gr.Tabs():
@@ -412,8 +471,7 @@ class AdminPanel(ViewPort):
         self.app.launch(
             server_name=self.host,
             server_port=self.port,
-            share=share,
-            css=ADMIN_PANEL_CSS
+            share=share
         )
 
 if __name__ == "__main__":
