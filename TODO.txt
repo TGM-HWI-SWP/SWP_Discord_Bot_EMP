@@ -1,13 +1,17 @@
 TODO:
 
 # urgent
-.venv still broken in bat file
+.venv still broken in bat file  ~
 
 # urgent
 gradio and codebase both need separate docker container so nothing gets executed twice (gradio volume in docker-compose.yaml)
+should be fixed now, needs to be checked tho
+
 
 # urgent
 gradio needs ages to start up
+
+
 
 # urgent
 discord bot still needs translate and auto translate methods (also need to be integrated in view.py via controller.py and the respective ports need to be added to ports.py)

@@ -26,6 +26,23 @@ services:
     depends_on:
       - mongo
 
+  discord_bot:
+    container_name: discord_bot
+    build:
+      context: .
+      dockerfile: src/discord_bot/dockerfile
+      args:
+        DEV_MODE: ${DEV_MODE:-false}
+    command: ["uv", "run", "python", "-m", "discord_bot.app.discord_bot_main"]
+    environment:
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+    volumes:
+      - .:/usr/src/discord_bot:rw
+    depends_on:
+      - mongo
+    restart: always
+
   gradio:
     container_name: gradio
     build:
@@ -33,6 +50,7 @@ services:
       dockerfile: src/discord_bot/dockerfile
       args:
         DEV_MODE: ${DEV_MODE:-false}
+    command: ["uv", "run", "python", "-m", "discord_bot.app.gradio_main"]
     ports:
       - "7860:7860"
     environment:
