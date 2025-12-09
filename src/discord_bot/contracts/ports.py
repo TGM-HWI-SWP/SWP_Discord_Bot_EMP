@@ -5,6 +5,19 @@ from typing import overload
 
 class DatabasePort(ABC):
     @abstractmethod
+    def connect(self, max_attempts: int = 10, delay_seconds: float = 2) -> None:
+        """Connect to the database.
+
+        Args:
+            max_attempts (int): The maximum number of attempts to connect to the database.
+            delay_seconds (float): The delay in seconds between attempts.
+
+        Raises:
+            ConnectionFailure: If the database connection fails after the maximum number of attempts.
+        """
+        ...
+
+    @abstractmethod
     def get_data(self, table: str, query: dict) -> list[dict]:
         """Fetch data from the specified table based on the query.
 

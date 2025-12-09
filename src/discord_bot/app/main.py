@@ -2,6 +2,7 @@ import discord
 import threading
 import time
 import runpy
+import uuid
 
 from discord_bot.business_logic.fun_fact_selector import FunFactSelector
 from discord_bot.business_logic.dish_selector import DishSelector
@@ -11,9 +12,13 @@ from discord_bot.business_logic.discord_logic import DiscordLogic
 from discord_bot.init.config_loader import DBConfigLoader
 from discord_bot.adapters.view import AdminPanel
 
-def start_bot():
+
+# ALL OF THE [xxx] ARE LOGGING MESSAGES AND NEED TO BE REMOVED AFTER TESTING ALSO UUID SHOULD BE REMOVED
+def start_bot(startup_id: str):
+    import threading as th
+    thread_id = th.get_ident()
     try:
-        print("[BOT] Starting Discord bot initialization...", flush=True)
+        print(f"[BOT] [{startup_id}] [Thread-{thread_id}] Starting Discord bot initialization...", flush=True)
         cv_db = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
         cv_db.connect()
         print("[BOT] CV database connected", flush=True)
@@ -52,6 +57,9 @@ def start_bot():
         print(f"[BOT] Exception in bot thread: {e}", flush=True)
     
 if __name__ == "__main__":
+    # TESTING: Unique startup ID to verify single execution
+    STARTUP_ID = str(uuid.uuid4())[:8]
+    print(f"[STARTUP_ID] {STARTUP_ID} - Application starting", flush=True)
     print("=== Running initialization ===", flush=True)
 
     try:
@@ -66,13 +74,15 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[INIT] DB loader failed: {e}", flush=True)
     
+    main_thread_id = threading.get_ident()
+    print(f"[STARTUP_ID] {STARTUP_ID} - Starting application [MainThread-{main_thread_id}]", flush=True)
     print("=== Starting application ===", flush=True)
-    bot_thread = threading.Thread(target=start_bot, daemon=False, name="DiscordBot")
+    bot_thread = threading.Thread(target=start_bot, args=(STARTUP_ID,), daemon=False, name="DiscordBot")
     bot_thread.start()
-    print("[MAIN] Discord bot thread started, waiting 2 seconds...", flush=True)
+    print(f"[MAIN] [{STARTUP_ID}] [Thread-{main_thread_id}] Discord bot thread started, waiting 2 seconds...", flush=True)
     time.sleep(2)
     
-    print("[MAIN] Setting up Gradio interface...", flush=True)
+    print(f"[MAIN] [{STARTUP_ID}] [Thread-{main_thread_id}] Setting up Gradio interface...", flush=True)
     cv_db = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
     cv_db.connect()
     print("[MAIN] CV DB connected", flush=True)

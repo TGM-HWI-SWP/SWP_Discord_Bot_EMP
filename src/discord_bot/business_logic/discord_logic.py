@@ -31,8 +31,12 @@ class DiscordLogic(Model, DiscordLogicPort):
     
     def run(self):
         self.logging("Starting Discord bot...")
-        self.client.run(DiscordConfigLoader.DISCORD_TOKEN)
-    
+        token = DiscordConfigLoader.DISCORD_TOKEN
+
+        token_preview = f'{token[:10]}...{token[-4:]}' if len(token) > 14 else "***"
+        self.logging(f'Starting Discord bot with token: {token_preview}')
+        self.client.run(token)
+
     def stop(self):
         asyncio.create_task(self.client.close())
 

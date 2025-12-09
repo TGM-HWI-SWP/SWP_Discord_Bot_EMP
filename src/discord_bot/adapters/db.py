@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.database import Database
@@ -7,23 +8,33 @@ from discord_bot.contracts.ports import DatabasePort
 from discord_bot.init.config_loader import DBConfigLoader
 
 class DBMS(DatabasePort):
-    def __init__(self, uri: str | None = None, db_name: str | None = None):
+    def __init__(self, uri: str | None = None, db_name: str | None = None) -> None:
         self.uri = uri or DBConfigLoader.MONGO_URI
         self.db_name = db_name or DBConfigLoader.CV_DB_NAME
         self.client: MongoClient | None = None
         self.db: Database | None = None
 
-    def connect(self):
+    def connect(self, max_attempts: int = 10, delay_seconds: float = 2) -> None:
         if self.client is not None:
             return
-        try:
-            self.client = MongoClient(self.uri)
-            self.client.admin.command("ping")
-            self.db = self.client[self.db_name]
-        except Exception as error:
-            self.client = None
-            self.db = None
-            raise ConnectionFailure(f"Mongo connect failed (uri={self.uri}): {error}")
+
+        last_error: Exception | None = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                self.client = MongoClient(self.uri)
+                self.client.admin.command("ping")
+                self.db = self.client[self.db_name]
+                return
+            except Exception as error:
+                self.client = None
+                self.db = None
+                last_error = error
+
+                if attempt == max_attempts:
+                    break
+                time.sleep(delay_seconds)
+
+        raise ConnectionFailure(f"Mongo connect failed after {max_attempts} attempts (uri={self.uri}): {last_error}")
 
     def _collection(self, table: str):
         if self.db is None:
