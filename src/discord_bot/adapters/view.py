@@ -1,6 +1,7 @@
 import gradio as gr
 import discord
 from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort
+import datetime
 
 
 
@@ -259,15 +260,25 @@ class AdminPanel(ViewPort):
                         success = self.discord_bot.send_message(0, channel_id, message)
                         return "Message sent successfully" if success else "Failed to send message"
                     
-                    def placeholder_update_settings():
-                        return "Placeholder: Update settings"
+                    def update_settings(prefix: str, status: str, auto_reply_enabled: bool, log_enabled: bool):
+                        if not self.check_available():
+                            return "No discord bot instance"
+                        if not self.check_connection():
+                            return "Bot offline"
+                        
+                        success = self.discord_bot.update_settings(prefix, status, auto_reply_enabled, log_enabled)
+                        
+                        if success:
+                            return f"Settings updated:\n- Prefix: `{prefix}`\n- Status: {status}\n- Auto Reply: {'ON' if auto_reply_enabled else 'OFF'}\n- Logging: {'ON' if log_enabled else 'OFF'}"
+                        else:
+                            return "Failed to save settings"
                     
                     refresh_servers_btn.click(fn=refresh_server_list, outputs=[server_list, server_status])
                     leave_server_btn.click(fn=leave_server, inputs=[server_list], outputs=[server_list, server_status])
                     block_user_btn.click(fn=block_user, inputs=[user_id_input], outputs=user_status)
                     unblock_user_btn.click(fn=unblock_user, inputs=[user_id_input], outputs=user_status)
                     send_message_btn.click(fn=send_message, inputs=[channel_id_input, message_input], outputs=message_status)
-                    update_settings_btn.click(fn=placeholder_update_settings, outputs=settings_status)
+                    update_settings_btn.click(fn=update_settings, inputs=[bot_prefix, bot_status_text, auto_reply, log_messages], outputs=settings_status)
                 
                 with gr.Tab("Servers"):
                     gr.Markdown("### Discord Servers")

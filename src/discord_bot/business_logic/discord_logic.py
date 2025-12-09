@@ -179,6 +179,33 @@ class DiscordLogic(Model, DiscordLogicPort):
     def is_connected(self) -> bool:
         return self.client.is_ready()
 
+    def update_settings(self, prefix: str, status_text: str, auto_reply: bool, log_messages: bool) -> bool:
+        
+        if not self.dbms:
+            return False
+        
+        try:
+            settings_data = {
+                "command_prefix": prefix or "!",
+                "status_text": status_text or "Playing",
+                "auto_reply": auto_reply,
+                "log_messages": log_messages,
+                "updated_at": datetime.now().isoformat()
+            }
+
+            existing = self.dbms.get_data("settings", {})
+            if existing:
+                self.dbms.update_data("settings", {}, settings_data)
+            else:
+                self.dbms.insert_data("settings", settings_data)
+                
+            self.logging(f'Settings updated: prefix={prefix}, status={status_text}, auto_reply={auto_reply}, log={log_messages}')
+            return True
+        
+        except Exception as error:
+            self.logging(f'Error updating settings: {error}')
+            return False
+
     def register_command(self, command: str, callback: callable, description: str = "") -> bool:
         if command in self.commands:
             return False
