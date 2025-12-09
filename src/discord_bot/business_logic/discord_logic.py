@@ -12,6 +12,8 @@ class DiscordLogic(Model, DiscordLogicPort):
         super().__init__()
         intents = discord.Intents.default()
         intents.message_content = True
+        intents.guilds = True
+        intents.members = True
         self.client = discord.Client(intents=intents)
         self.tree = app_commands.CommandTree(self.client)
         self.commands = {}

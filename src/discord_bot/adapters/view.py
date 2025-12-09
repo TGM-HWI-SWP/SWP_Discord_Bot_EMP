@@ -91,9 +91,13 @@ class AdminPanel(ViewPort):
         return self.check_available() and getattr(self.discord_bot, 'is_connected', lambda: False)()  
     
     def build_interface(self) -> gr.Blocks:
-        with gr.Blocks(title="Discord Bot Admin Panel", css=ADMIN_PANEL_CSS) as app:
+        with gr.Blocks(title="Discord Bot Admin Panel") as app:
             
-            gr.HTML("""
+            
+            gr.HTML(f"""
+                <style>
+                {ADMIN_PANEL_CSS}
+                </style>
                 <div class="admin-header">
                     <h1>Discord Bot Admin Panel</h1>
                     <p style="font-size: 1.2em; margin-top: 10px; opacity: 0.9;">
@@ -165,11 +169,6 @@ class AdminPanel(ViewPort):
                     settings_status = gr.Markdown("")
                     
                     
-                    
-                    
-                    
-                    
-                    
                     def refresh_server_list():
                         if not self.check_available():
                             return gr.update(), "No discord bot instance"
@@ -239,10 +238,10 @@ class AdminPanel(ViewPort):
                     server_view_status = gr.Markdown("")
                     
                     def load_server_list():
-                        if not self.check_bot_available():
+                        if not self.check_available():
                             return [], "Discord bot not available (runs in separate container)"
                         
-                        if not self.check_bot_connected():
+                        if not self.check_connected():
                             return [], "Bot is offline"
                         
                         try:
@@ -250,13 +249,13 @@ class AdminPanel(ViewPort):
                             if not servers:
                                 return [], "No servers found"
                             
-                            # Get additional info for each server
+                            
                             server_data = []
                             for server in servers:
                                 server_id = server.get("id", "N/A")
                                 server_name = server.get("name", "Unknown")
                                 
-                                # Try to get member count from guild
+                                
                                 member_count = "N/A"
                                 try:
                                     guild = self.discord_bot.client.get_guild(server_id)
@@ -491,6 +490,7 @@ if __name__ == "__main__":
         dbms=db,
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
-        translator=translator
+        translator=translator,
+        port=7861  
     )
     panel.launch()
