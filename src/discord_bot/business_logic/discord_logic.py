@@ -96,25 +96,79 @@ class DiscordLogic(Model, DiscordLogicPort):
     def send_message(self, server_id: int, channel_id: int, message: str) -> bool:
         try:
             channel = self.client.get_channel(channel_id)
-            if channel and channel.guild.id == server_id:
-                asyncio.create_task(channel.send(message))
-                return True
-            return False
+            if not channel:
+                return False
+            
+            # If server_id is 0, skip server check (DM or any channel)
+            if server_id != 0 and hasattr(channel, 'guild') and channel.guild.id != server_id:
+                return False
+            
+            async def _send():
+                await channel.send(message)
+            
+            asyncio.create_task(_send())
+            return True
         except Exception:
             return False
 
     def send_dm(self, user_id: int, message: str) -> bool:
         try:
             user = self.client.get_user(user_id)
-            if user:
-                asyncio.create_task(user.send(message))
-                return True
-            return False
+            if not user:
+                return False
+            
+            async def _send():
+                await user.send(message)
+            
+            asyncio.create_task(_send())
+            return True
         except Exception:
             return False
 
     def get_servers(self) -> list[dict]:
         return [{"id": guild.id, "name": guild.name} for guild in self.client.guilds]
+
+    def leave_server(self, server_id: int) -> bool:
+        try:
+            guild = self.client.get_guild(server_id)
+            if not guild:
+                return False
+            
+            async def _leave():
+                await guild.leave()
+            
+            asyncio.create_task(_leave())
+            return True
+        except Exception:
+            return False
+
+    def block_user(self, user_id: int) -> bool:
+        try:
+            user = self.client.get_user(user_id)
+            if not user:
+                return False
+            
+            async def _block():
+                await user.block()
+            
+            asyncio.create_task(_block())
+            return True
+        except Exception:
+            return False
+    
+    def unblock_user(self, user_id: int) -> bool:
+        try:
+            user = self.client.get_user(user_id)
+            if not user:
+                return False
+            
+            async def _unblock():
+                await user.unblock()
+            
+            asyncio.create_task(_unblock())
+            return True
+        except Exception:
+            return False
 
     def get_channels(self, server_id: int) -> list[dict]:
         guild = self.client.get_guild(server_id)

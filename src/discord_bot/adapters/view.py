@@ -82,8 +82,6 @@ class AdminPanel(ViewPort):
     def get_user_input(self, interactable_element: str) -> str:
         return ""
     
-    
-    @property
     def check_available(self) -> bool:
         return self.discord_bot is not None
                     
@@ -183,17 +181,65 @@ class AdminPanel(ViewPort):
                         choices = [f'{server["name"]} ({server["id"]})' for server in servers]
                         return gr.update(choices=choices), f"Found {len(servers)} servers"
                     
+                    def leave_server(server_selection: str):
+                        if not self.check_available():
+                            return gr.update(), "No discord bot instance"
+                        if not self.check_connection():
+                            return gr.update(), "Bot offline"
+                        if not server_selection:
+                            return gr.update(), "Please select a server"
+                        try:
+                            server_id = int(server_selection.split('(')[-1].rstrip(')'))
+                        except (ValueError, IndexError):
+                            return gr.update(), "Invalid server selection"
+                        
+                        success = self.discord_bot.leave_server(server_id)
+                        if success:
+                            return refresh_server_list()
+                        else:
+                            return gr.update(), f"Failed to leave server (ID: {server_id})"
                     
+                    def block_user(user_id: str):
+                        if not self.check_available():
+                            return "No discord bot instance"
+                        
+                        if not self.check_connection():
+                            return "Bot offline"
+                        
+                        if not user_id:
+                            return "Please enter a User ID"
+                        
+                        try:
+                            user_id_int = int(user_id)
+                        except ValueError:
+                            return "Invalid User ID (must be a number)"
+                        
+                        success = self.discord_bot.block_user(user_id_int)
+                        if success:
+                            return f"Successfully blocked user (ID: {user_id_int})"
+                        else:
+                            return f"Failed to block user (ID: {user_id_int})"
                     
-                    
-                    def placeholder_leave_server():
-                        return "Placeholder: Leave server"
-                    
-                    def placeholder_block_user():
-                        return "Placeholder: Block user"
-                    
-                    def placeholder_unblock_user():
-                        return "Placeholder: Unblock user"
+                    def unblock_user(user_id: str):
+                        if not self.check_available():
+                            return "No discord bot instance"
+                        
+                        if not self.check_connection():
+                            return "Bot offline"
+                        
+                        if not user_id:
+                            return "Please enter a User ID"
+                        
+                        try:
+                            user_id_int = int(user_id)
+                        except ValueError:
+                            return "Invalid User ID (must be a number)"
+                        
+                        success = self.discord_bot.unblock_user(user_id_int)
+                        if success:
+                            return f"Successfully unblocked user (ID: {user_id_int})"
+                        else:
+                            return f"Failed to unblock user (ID: {user_id_int})"
                     
                     def send_message(channel_id: str, message: str):
                         if not self.check_available():
@@ -217,9 +263,9 @@ class AdminPanel(ViewPort):
                         return "Placeholder: Update settings"
                     
                     refresh_servers_btn.click(fn=refresh_server_list, outputs=[server_list, server_status])
-                    leave_server_btn.click(fn=placeholder_leave_server, outputs=server_status)
-                    block_user_btn.click(fn=placeholder_block_user, outputs=user_status)
-                    unblock_user_btn.click(fn=placeholder_unblock_user, outputs=user_status)
+                    leave_server_btn.click(fn=leave_server, inputs=[server_list], outputs=[server_list, server_status])
+                    block_user_btn.click(fn=block_user, inputs=[user_id_input], outputs=user_status)
+                    unblock_user_btn.click(fn=unblock_user, inputs=[user_id_input], outputs=user_status)
                     send_message_btn.click(fn=send_message, inputs=[channel_id_input, message_input], outputs=message_status)
                     update_settings_btn.click(fn=placeholder_update_settings, outputs=settings_status)
                 
@@ -241,7 +287,7 @@ class AdminPanel(ViewPort):
                         if not self.check_available():
                             return [], "Discord bot not available (runs in separate container)"
                         
-                        if not self.check_connected():
+                        if not self.check_connection():
                             return [], "Bot is offline"
                         
                         try:
@@ -249,12 +295,10 @@ class AdminPanel(ViewPort):
                             if not servers:
                                 return [], "No servers found"
                             
-                            
                             server_data = []
                             for server in servers:
                                 server_id = server.get("id", "N/A")
                                 server_name = server.get("name", "Unknown")
-                                
                                 
                                 member_count = "N/A"
                                 try:
