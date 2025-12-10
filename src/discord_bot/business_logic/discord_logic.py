@@ -127,6 +127,17 @@ class DiscordLogic(Model, DiscordLogicPort):
 
     def get_servers(self) -> list[dict]:
         return [{"id": guild.id, "name": guild.name} for guild in self.client.guilds]
+    
+    def get_guild_info(self, server_id: int) -> dict | None:
+        
+        guild = self.client.get_guild(server_id)
+        if guild:
+            return {
+                "id": guild.id,
+                "name": guild.name,
+                "member_count": guild.member_count
+            }
+        return None
 
     def leave_server(self, server_id: int) -> bool:
         try:

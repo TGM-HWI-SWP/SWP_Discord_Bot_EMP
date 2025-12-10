@@ -1,6 +1,6 @@
 import gradio as gr
 import discord
-from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort
+from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort, ControllerPort
 import datetime
 
 
@@ -68,6 +68,7 @@ class AdminPanel(ViewPort):
         dish_selector: DishPort | None = None,
         fun_fact_selector: FunFactPort | None = None,
         translator: TranslatePort | None = None,
+        controller: ControllerPort | None = None,
         host: str = "0.0.0.0",
         port: int = 7860
     ):
@@ -76,6 +77,7 @@ class AdminPanel(ViewPort):
         self.dish_selector = dish_selector
         self.fun_fact_selector = fun_fact_selector
         self.translator = translator
+        self.controller = controller
         self.host = host
         self.port = port
         self.app = None
@@ -269,7 +271,7 @@ class AdminPanel(ViewPort):
                         success = self.discord_bot.update_settings(prefix, status, auto_reply_enabled, log_enabled)
                         
                         if success:
-                            return f"Settings updated:\n- Prefix: `{prefix}`\n- Status: {status}\n- Auto Reply: {'ON' if auto_reply_enabled else 'OFF'}\n- Logging: {'ON' if log_enabled else 'OFF'}"
+                            return f"Settings updated:\n- Prefix: {prefix}\n- Status: {status}\n- Auto Reply: {'ON' if auto_reply_enabled else 'OFF'}\n- Logging: {'ON' if log_enabled else 'OFF'}"
                         else:
                             return "Failed to save settings"
                     
@@ -312,12 +314,10 @@ class AdminPanel(ViewPort):
                                 server_name = server.get("name", "Unknown")
                                 
                                 member_count = "N/A"
-                                try:
-                                    guild = self.discord_bot.client.get_guild(server_id)
-                                    if guild:
-                                        member_count = guild.member_count
-                                except:
-                                    pass
+                                # Use proper encapsulation to get guild info
+                                guild_info = self.discord_bot.get_guild_info(server_id)
+                                if guild_info:
+                                    member_count = guild_info.get("member_count", "N/A")
                                 
                                 server_data.append([server_id, server_name, member_count])
                             
@@ -398,6 +398,9 @@ class AdminPanel(ViewPort):
                                 return f"Success: Deleted ID {int(dish_id)}" if success else "Error: Failed"
                             
                             def test_dish(cat):
+                                # Use Controller pattern if available, otherwise fall back to direct access
+                                if self.controller:
+                                    return self.controller.get_dish_suggestion(cat)
                                 return self.dish_selector.execute_function(cat) if self.dish_selector else "N/A"
                             
                             search_btn.click(fn=search_dishes, inputs=[search_query, search_cat], outputs=results)
@@ -449,6 +452,9 @@ class AdminPanel(ViewPort):
                                 return f"Success: Deleted ID {int(fact_id)}" if success else "Error: Failed"
                             
                             def test_fact():
+                                # Use Controller pattern if available, otherwise fall back to direct access
+                                if self.controller:
+                                    return self.controller.get_fun_fact()
                                 return self.fun_fact_selector.execute_function() if self.fun_fact_selector else "N/A"
                             
                             fact_search_btn.click(fn=search_facts, inputs=fact_query, outputs=fact_results)
@@ -468,7 +474,11 @@ class AdminPanel(ViewPort):
                             def translate(text):
                                 if not text:
                                     return "Enter text"
-                                return self.translator.execute_function(text) if self.translator else "N/A"
+                                if self.controller:
+                                    return self.controller.translate_text(text)
+                                elif self.translator:
+                                    return self.translator.execute_function(text)
+                                return "N/A"
                             
                             trans_btn.click(fn=translate, inputs=trans_input, outputs=trans_output)
                         
