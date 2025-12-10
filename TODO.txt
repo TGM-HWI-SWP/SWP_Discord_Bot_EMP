@@ -4,7 +4,7 @@ TODO:
 discord bot still needs translate and auto translate methods (also need to be integrated in view.py via controller.py and the respective ports need to be added to ports.py)
 
 # urgent
-and dish selection as well as auto translate and translate need to accept params over on discord (maybe @user for the auto translate and a dropdown or premade selection for dish category if possible)
+and auto translate and translate need to accept params over on discord (maybe @user for the auto translate and somehow pass the message to normal translate *)
 
 # high priority
 view.py needs to be refactored entirely and simplified
@@ -24,3 +24,6 @@ readme and license need to be updated
 
 # at the end 
 remove discord token from config.ini and replace it with a placeholder token that is not valid and will not work and run it so the .env file gets updated
+
+
+*Message context menu (best UX for slash-based flow): Add an app command of type message (a Message Command). Users right-click a message → Apps → your command. In the handler, interaction.target_id (and interaction.target.message) gives you the message ID and content without extra params.
