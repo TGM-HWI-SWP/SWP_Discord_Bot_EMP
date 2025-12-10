@@ -543,6 +543,7 @@ if __name__ == "__main__":
     from discord_bot.business_logic.dish_selector import DishSelector
     from discord_bot.business_logic.fun_fact_selector import FunFactSelector
     from discord_bot.business_logic.translator import Translator
+    from discord_bot.adapters.controller.controller import Controller
     
     db = DBMS()
     db.connect()
@@ -551,11 +552,18 @@ if __name__ == "__main__":
     fun_fact_selector = FunFactSelector(dbms=db)
     translator = Translator()
     
+    controller = Controller(
+        dish_selector=dish_selector,
+        fun_fact_selector=fun_fact_selector,
+        translator=translator
+    )
+    
     panel = AdminPanel(
         dbms=db,
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
         translator=translator,
+        controller=controller,
         port=7861  
     )
     panel.launch()

@@ -10,6 +10,7 @@ from discord_bot.business_logic.translator import Translator
 from discord_bot.business_logic.discord_logic import DiscordLogic
 from discord_bot.init.config_loader import DBConfigLoader
 from discord_bot.adapters.view import AdminPanel
+from discord_bot.adapters.controller.controller import Controller
 
 def start_bot():
     try:
@@ -84,12 +85,21 @@ if __name__ == "__main__":
     fun_fact_selector = FunFactSelector(dbms=cv_db)
     translator = Translator(dbms=discord_db)
     print("[MAIN] Selectors created", flush=True)
+
+
+    controller = Controller(
+        dish_selector=dish_selector,
+        fun_fact_selector=fun_fact_selector,
+        translator=translator
+    )
+    print("[MAIN] Controller created", flush=True)
     
     panel = AdminPanel(
         dbms=cv_db,
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
-        translator=translator
+        translator=translator,
+        controller=controller
     )
     print("[MAIN] AdminPanel created, launching Gradio (this may take time)...", flush=True)
     panel.launch()
