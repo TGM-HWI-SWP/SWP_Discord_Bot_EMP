@@ -289,7 +289,9 @@ class AdminPanel(ViewPort):
                 
                 with gr.Tab("Control Panel"):
                     section_selector = gr.Dropdown(label="Select Section", choices=["Server Management", "User Management", "Custom Messages", "Bot Settings"], value="Server Management",interactive=True)
-                    with gr.Column():
+                    
+                    # Server Management Section
+                    with gr.Column(visible=True) as server_mgmt_section:
                         gr.Markdown("## Server Management")
                         server_view = gr.Dropdown(label="Select Server to Leave", choices=[], interactive=True)
                         leave_btn = gr.Button("Leave Server", size="lg", interactive=True)
@@ -329,9 +331,12 @@ class AdminPanel(ViewPort):
                     refresh_btn.click(fn=refresh_server_list, outputs=[server_view, server_status])
                     leave_btn.click(fn=leave_server, inputs=[server_view], outputs=[server_status])
                 
-                    with gr.Column():
+                    # User Management Section
+                    with gr.Column(visible=False) as user_mgmt_section:
                         gr.Markdown("## User Management")
-                        user_id_input = gr.Textbox(label="User ID", placeholder="Enter User ID to Block/Unblock")
+                        user_search = gr.Textbox(label="Search User", placeholder="Enter username to search")
+                        search_user_btn = gr.Button("Search User", size="lg", interactive=True)
+                        user_dropdown = gr.Dropdown(label="Select User to Block/Unblock", choices=[], interactive=True)
                         block_btn = gr.Button("Block User", size="lg", interactive=True)
                         unblock_btn = gr.Button("Unblock User", size="lg", interactive=True)
                         user_status = gr.Markdown("")
@@ -367,11 +372,21 @@ class AdminPanel(ViewPort):
                                 return "Successfully unblocked user"
                             else:
                                 return "Failed to unblock user"
-                        except ValueError:
-                            return "Invalid User ID (must be a number)"
+                        except (ValueError, IndexError):
+                            return "Invalid user selection"
                     
-                    block_btn.click(fn=block_user, inputs=[user_id_input], outputs=[user_status])
-                    unblock_btn.click(fn=unblock_user, inputs=[user_id_input], outputs=[user_status])
+                    def switch_section(section):
+                        if section == "Server Management":
+                            return gr.update(visible=True), gr.update(visible=False)
+                        elif section == "User Management":
+                            return gr.update(visible=False), gr.update(visible=True)
+                        else:
+                            return gr.update(visible=False), gr.update(visible=False)
+                    
+                    section_selector.change(fn=switch_section, inputs=[section_selector], outputs=[server_mgmt_section, user_mgmt_section])
+                    search_user_btn.click(fn=block_user, inputs=[user_search], outputs=[user_dropdown, user_status])
+                    block_btn.click(fn=block_user, inputs=[user_dropdown], outputs=[user_status])
+                    unblock_btn.click(fn=unblock_user, inputs=[user_dropdown], outputs=[user_status])
                         
                             
                 
