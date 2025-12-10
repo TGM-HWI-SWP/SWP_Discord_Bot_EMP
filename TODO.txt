@@ -17,6 +17,7 @@ maybe a dark and light mode toggle in view.py
 
 # at the end
 entire code needs to be checked for readability and understandability (comments where necessary, constant variable names across files, docstrings in google style for every function and class, typehinting everywhere, and one-line docstrings or comments in the first line of every file describing its purpose)
+definatly also add comments in the config.ini file to describe what each section and each variable is for
 
 # at the end
 readme and license need to be updated
