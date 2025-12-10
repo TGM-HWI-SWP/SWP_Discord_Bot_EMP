@@ -296,15 +296,15 @@ class AdminPanel(ViewPort):
                         refresh_btn = gr.Button("Refresh Servers", size="lg", interactive=True)
                         server_status = gr.Markdown("")
                             
-                    def leave_server(server_id):
+                    def leave_server(server_selection):
                         if not self.check_available():
                             return "No discord bot instance"
                         if not self.check_connection():
                             return "Bot offline"
-                        if not server_id:
+                        if not server_selection:
                             return "Please select a server"
                         try:
-                            server_id = int(server_id)
+                            server_id = int(server_selection.split("ID: ")[1].rstrip(")"))
                             success = self.discord_bot.leave_server(server_id)
                             if success:
                                 return "Successfully left server"
@@ -312,9 +312,69 @@ class AdminPanel(ViewPort):
                                 return "Failed to leave server"
                         except (ValueError, IndexError):
                             return "Invalid server selection"
-                    server_view.choices = [str(server["id"]) for server in self.discord_bot.get_servers()] if self.check_available() and self.check_connection() else []
-                    leave_btn.click(fn=leave_server, inputs=[section_selector], outputs=server_status)
-                    refresh_btn.click(fn=leave_server, inputs=[section_selector], outputs=server_status)
+                    
+                    def refresh_server_list():
+                        if not self.check_available():
+                            return gr.update(choices=[]), "No discord bot instance"
+                        if not self.check_connection():
+                            return gr.update(choices=[]), "Bot offline"
+                        
+                        servers = self.discord_bot.get_servers()
+                        if not servers:
+                            return gr.update(choices=[]), "No servers found"
+                        
+                        choices = [f"{server['name']} (ID: {server['id']})" for server in servers]
+                        return gr.update(choices=choices), f"Found {len(servers)} servers"
+                    
+                    refresh_btn.click(fn=refresh_server_list, outputs=[server_view, server_status])
+                    leave_btn.click(fn=leave_server, inputs=[server_view], outputs=[server_status])
+                
+                    with gr.Column():
+                        gr.Markdown("## User Management")
+                        user_id_input = gr.Textbox(label="User ID", placeholder="Enter User ID to Block/Unblock")
+                        block_btn = gr.Button("Block User", size="lg", interactive=True)
+                        unblock_btn = gr.Button("Unblock User", size="lg", interactive=True)
+                        user_status = gr.Markdown("")
+
+                    def block_user(user_id):
+                        if not self.check_available():
+                            return "No discord bot instance"
+                        if not self.check_connection():
+                            return "Bot offline"
+                        if not user_id:
+                            return "Please enter a User ID"
+                        try:
+                            user_id_int = int(user_id)
+                            success = self.discord_bot.block_user(user_id_int)
+                            if success:
+                                return "Successfully blocked user"
+                            else:
+                                return "Failed to block user"
+                        except ValueError:
+                            return "Invalid User ID (must be a number)"
+                    
+                    def unblock_user(user_id):
+                        if not self.check_available():
+                            return "No discord bot instance"
+                        if not self.check_connection():
+                            return "Bot offline"
+                        if not user_id:
+                            return "Please enter a User ID"
+                        try:
+                            user_id_int = int(user_id)
+                            success = self.discord_bot.unblock_user(user_id_int)
+                            if success:
+                                return "Successfully unblocked user"
+                            else:
+                                return "Failed to unblock user"
+                        except ValueError:
+                            return "Invalid User ID (must be a number)"
+                    
+                    block_btn.click(fn=block_user, inputs=[user_id_input], outputs=[user_status])
+                    unblock_btn.click(fn=unblock_user, inputs=[user_id_input], outputs=[user_status])
+                        
+                            
+                
                 
                 with gr.Tab("Servers"):
                     gr.Markdown("### Discord Servers")
