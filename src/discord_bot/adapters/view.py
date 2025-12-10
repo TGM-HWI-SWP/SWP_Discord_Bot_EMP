@@ -290,7 +290,7 @@ class AdminPanel(ViewPort):
                 with gr.Tab("Control Panel"):
                     section_selector = gr.Dropdown(label="Select Section", choices=["Server Management", "User Management", "Custom Messages", "Bot Settings"], value="Server Management",interactive=True)
                     
-                    # Server Management Section
+                   
                     with gr.Column(visible=True) as server_mgmt_section:
                         gr.Markdown("## Server Management")
                         server_view = gr.Dropdown(label="Select Server to Leave", choices=[], interactive=True)
@@ -331,7 +331,6 @@ class AdminPanel(ViewPort):
                     refresh_btn.click(fn=refresh_server_list, outputs=[server_view, server_status])
                     leave_btn.click(fn=leave_server, inputs=[server_view], outputs=[server_status])
                 
-                    # User Management Section
                     with gr.Column(visible=False) as user_mgmt_section:
                         gr.Markdown("## User Management")
                         user_search = gr.Textbox(label="Search User", placeholder="Enter username to search")
@@ -341,33 +340,61 @@ class AdminPanel(ViewPort):
                         unblock_btn = gr.Button("Unblock User", size="lg", interactive=True)
                         user_status = gr.Markdown("")
 
-                    def block_user(user_id):
+                    def search_users(username):
+                        if not self.check_available():
+                            return gr.update(choices=[]), "No discord bot instance"
+                        if not self.check_connection():
+                            return gr.update(choices=[]), "Bot offline"
+                        if not username:
+                            return gr.update(choices=[]), "Please enter a username"
+                        
+                        try:
+                            servers = self.discord_bot.get_servers()
+                            matching_users = []
+                            
+                            for server in servers:
+                                guild = self.discord_bot.client.get_guild(server['id'])
+                                if guild:
+                                    for member in guild.members:
+                                        if username.lower() in member.name.lower() or username.lower() in str(member.display_name).lower():
+                                            user_entry = f"{member.name}#{member.discriminator} (ID: {member.id})"
+                                            if user_entry not in matching_users:
+                                                matching_users.append(user_entry)
+                            
+                            if not matching_users:
+                                return gr.update(choices=[]), "No users found"
+                            
+                            return gr.update(choices=matching_users), f"Found {len(matching_users)} user(s)"
+                        except Exception as e:
+                            return gr.update(choices=[]), f"Error searching users: {str(e)}"
+                    
+                    def block_user(user_selection):
                         if not self.check_available():
                             return "No discord bot instance"
                         if not self.check_connection():
                             return "Bot offline"
-                        if not user_id:
-                            return "Please enter a User ID"
+                        if not user_selection:
+                            return "Please select a user"
                         try:
-                            user_id_int = int(user_id)
-                            success = self.discord_bot.block_user(user_id_int)
+                            user_id = int(user_selection.split("ID: ")[1].rstrip(")"))
+                            success = self.discord_bot.block_user(user_id)
                             if success:
                                 return "Successfully blocked user"
                             else:
                                 return "Failed to block user"
-                        except ValueError:
-                            return "Invalid User ID (must be a number)"
+                        except (ValueError, IndexError):
+                            return "Invalid user selection"
                     
-                    def unblock_user(user_id):
+                    def unblock_user(user_selection):
                         if not self.check_available():
                             return "No discord bot instance"
                         if not self.check_connection():
                             return "Bot offline"
-                        if not user_id:
-                            return "Please enter a User ID"
+                        if not user_selection:
+                            return "Please select a user"
                         try:
-                            user_id_int = int(user_id)
-                            success = self.discord_bot.unblock_user(user_id_int)
+                            user_id = int(user_selection.split("ID: ")[1].rstrip(")"))
+                            success = self.discord_bot.unblock_user(user_id)
                             if success:
                                 return "Successfully unblocked user"
                             else:
@@ -375,22 +402,54 @@ class AdminPanel(ViewPort):
                         except (ValueError, IndexError):
                             return "Invalid user selection"
                     
+                    with gr.Column(visible=False) as custom_msg_section:
+                        gr.Markdown("## Custom Messages")
+                        channel_id_input = gr.Textbox(label="Channel ID", placeholder="Enter Discord Channel ID")
+                        message_input = gr.Textbox(label="Message", placeholder="Enter message to send", lines=3)
+                        send_message_btn = gr.Button("Send Message", size="lg", interactive=True)
+                        message_status = gr.Markdown("")
+                        
+                    def send_custom_message(channel_id, message):
+                        if not self.check_available():
+                            return "No discord bot instance"
+                        if not self.check_connection():
+                            return "Bot offline"
+                        if not channel_id or not message:
+                            return "Channel ID and message required"
+                        try:
+                            channel_id_int = int(channel_id)
+                            success = self.discord_bot.send_message(0, channel_id_int, message)
+                            if success:
+                                return "Message sent successfully"
+                            else:
+                                return "Failed to send message"
+                        except ValueError:
+                            return "Invalid channel ID (must be a number)"
+                    
+                    with gr.Column(visible=False) as bot_settings_section:
+                        gr.Markdown("## Bot Settings")
+                        gr.Markdown("Bot settings will be implemented here")
+                    
+                    
                     def switch_section(section):
                         if section == "Server Management":
-                            return gr.update(visible=True), gr.update(visible=False)
+                            return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
                         elif section == "User Management":
-                            return gr.update(visible=False), gr.update(visible=True)
+                            return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+                        elif section == "Custom Messages":
+                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
+                        elif section == "Bot Settings":
+                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
                         else:
-                            return gr.update(visible=False), gr.update(visible=False)
+                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
                     
-                    section_selector.change(fn=switch_section, inputs=[section_selector], outputs=[server_mgmt_section, user_mgmt_section])
-                    search_user_btn.click(fn=block_user, inputs=[user_search], outputs=[user_dropdown, user_status])
+                    section_selector.change(fn=switch_section, inputs=[section_selector], outputs=[server_mgmt_section, user_mgmt_section, custom_msg_section, bot_settings_section])
+                    search_user_btn.click(fn=search_users, inputs=[user_search], outputs=[user_dropdown, user_status])
                     block_btn.click(fn=block_user, inputs=[user_dropdown], outputs=[user_status])
                     unblock_btn.click(fn=unblock_user, inputs=[user_dropdown], outputs=[user_status])
+                    send_message_btn.click(fn=send_custom_message, inputs=[channel_id_input, message_input], outputs=[message_status])
                         
-                            
-                
-                
+              
                 with gr.Tab("Servers"):
                     gr.Markdown("### Discord Servers")
                     gr.Markdown("All servers where the bot is currently active")
@@ -421,9 +480,7 @@ class AdminPanel(ViewPort):
                             for server in servers:
                                 server_id = server.get("id", "N/A")
                                 server_name = server.get("name", "Unknown")
-                                
                                 member_count = "N/A"
-                                # Use proper encapsulation to get guild info
                                 guild_info = self.discord_bot.get_guild_info(server_id)
                                 if guild_info:
                                     member_count = guild_info.get("member_count", "N/A")
