@@ -189,6 +189,22 @@ class DiscordLogic(Model, DiscordLogicPort):
 
     def is_connected(self) -> bool:
         return self.client.is_ready()
+    
+    def get_bot_stats(self) -> dict:
+        """Get bot statistics: status, server count, and total user count"""
+        if not self.is_connected():
+            return {"status": "Offline", "servers": 0, "users": 0}
+        
+        try:
+            total_members = sum(guild.member_count for guild in self.client.guilds)
+            return {
+                "status": "Online",
+                "servers": len(self.client.guilds),
+                "users": total_members
+            }
+        except Exception as e:
+            self.logging(f"Error getting bot stats: {e}")
+            return {"status": "Error", "servers": 0, "users": 0}
 
     def update_settings(self, prefix: str, status_text: str, auto_reply: bool, log_messages: bool) -> bool:
         
