@@ -9,8 +9,6 @@ from discord_bot.business_logic.discord_logic import DiscordLogic
 from discord_bot.init.config_loader import DBConfigLoader
 from discord_bot.adapters.view import AdminPanel
 
-
-# ALL OF THE [xxx] ARE LOGGING MESSAGES AND NEED TO BE REMOVED AFTER TESTING ALSO UUID SHOULD BE REMOVED
 def start_bot():
     cv_db = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
     cv_db.connect()
