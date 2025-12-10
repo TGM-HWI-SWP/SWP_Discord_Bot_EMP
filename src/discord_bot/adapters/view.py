@@ -60,6 +60,8 @@ import datetime
 # }
 # """
 
+
+
 class AdminPanel(ViewPort):
     def __init__(
         self,
@@ -105,7 +107,7 @@ class AdminPanel(ViewPort):
             #     </div>
             # """)
 
-        with gr.Blocks(title="Leberkas Larry Admin Panel", theme=gr.themes.Soft(primary_hue="blue")) as app:        
+        with gr.Blocks(title="Leberkas Larry Admin Panel") as app:        
             with gr.Tabs():
                 with gr.Tab("Overview"):
                     gr.Markdown("### Bot Status")
@@ -136,8 +138,6 @@ class AdminPanel(ViewPort):
                
                
                 with gr.Tab("Bot Control"):
-                  
-                    
                     
                     gr.Markdown("### Discord Bot Management")
                     
@@ -540,7 +540,8 @@ class AdminPanel(ViewPort):
         self.app.launch(
             server_name=self.host,
             server_port=self.port,
-            share=share
+            share=share,
+            theme=gr.themes.Soft(primary_hue="blue")
         )
 
 if __name__ == "__main__":
