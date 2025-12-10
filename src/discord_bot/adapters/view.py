@@ -107,33 +107,66 @@ class AdminPanel(ViewPort):
                 </div>
             """)
             
+            # with gr.Tabs():
+                
+            #     with gr.Tab("Dashboard"):
+            #         gr.Markdown("### Discord Bot Status")
+                    
+            #         refresh_btn = gr.Button("Refresh Status", size="lg")
+                    
+            #         with gr.Row():
+            #             bot_status = gr.Markdown("### Loading...")
+            #             servers_stat = gr.Markdown("### Loading...")
+            #             users_stat = gr.Markdown("### Loading...")
+                    
+            #         bot_info = gr.JSON(label="Bot Information")
+                    
+            #         def load_dashboard():
+            #             status = {"status": "online", "servers": 0, "users": 0}
+                        
+            #             status_md = f'<div class="stat-card"><div class="stat-label">Status</div><div class="stat-number">Online</div></div>'
+            #             servers_md = f'<div class="stat-card"><div class="stat-label">Servers</div><div class="stat-number">{status["servers"]}</div></div>'
+            #             users_md = f'<div class="stat-card"><div class="stat-label">Users</div><div class="stat-number">{status["users"]}</div></div>'
+                        
+            #             return status_md, servers_md, users_md, status
+                    
+            #         refresh_btn.click(fn=load_dashboard, outputs=[bot_status, servers_stat, users_stat, bot_info])
+            #         app.load(fn=load_dashboard, outputs=[bot_status, servers_stat, users_stat, bot_info])
+                
+                
             with gr.Tabs():
-                
-                with gr.Tab("Dashboard"):
-                    gr.Markdown("### Discord Bot Status")
-                    
-                    refresh_btn = gr.Button("Refresh Status", size="lg")
-                    
+                with gr.Tab("Overview"):
+                    gr.Markdown("### Bot Status")
+
                     with gr.Row():
-                        bot_status = gr.Markdown("### Loading...")
-                        servers_stat = gr.Markdown("### Loading...")
-                        users_stat = gr.Markdown("### Loading...")
+                        with gr.Column():
+                            bot_status = gr.Textbox(label="Status", value="Loading...", interactive=False)
+                        with gr.Column():
+                            server_count = gr.Textbox(
+                                label="Servers", value="Loading...", interactive=False)
+                        with gr.Column():
+                            user_count = gr.Textbox(label="Total Users", value="Loading...", interactive=False)
                     
-                    bot_info = gr.JSON(label="Bot Information")
+                    refresh_btn = gr.Button("Refresh", variant="primary")
                     
-                    def load_dashboard():
-                        status = {"status": "online", "servers": 0, "users": 0}
+                    def load_bot_status():
+                        if not self.check_available():
+                            return "Unavailable", "0", "0"
                         
-                        status_md = f'<div class="stat-card"><div class="stat-label">Status</div><div class="stat-number">Online</div></div>'
-                        servers_md = f'<div class="stat-card"><div class="stat-label">Servers</div><div class="stat-number">{status["servers"]}</div></div>'
-                        users_md = f'<div class="stat-card"><div class="stat-label">Users</div><div class="stat-number">{status["users"]}</div></div>'
-                        
-                        return status_md, servers_md, users_md, status
+                        try:
+                            stats = self.discord_bot.get_bot_stats()
+                            return stats["status"], str(stats["servers"]), f"{stats['users']:,}"
+                        except Exception as e:
+                            return "Error", "0", "0"
                     
-                    refresh_btn.click(fn=load_dashboard, outputs=[bot_status, servers_stat, users_stat, bot_info])
-                    app.load(fn=load_dashboard, outputs=[bot_status, servers_stat, users_stat, bot_info])
-                
+                    refresh_btn.click(fn=load_bot_status, outputs=[bot_status, server_count, user_count])
+                    app.load(fn=load_bot_status, outputs=[bot_status, server_count, user_count])
+               
+               
                 with gr.Tab("Bot Control"):
+                  
+                    
+                    
                     gr.Markdown("### Discord Bot Management")
                     
                     with gr.Row():
