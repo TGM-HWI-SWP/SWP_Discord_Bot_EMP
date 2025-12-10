@@ -29,6 +29,16 @@ class DatabasePort(ABC):
             list[dict]: A list of dictionaries representing the fetched data.
         """
         ...
+
+    @abstractmethod
+    def get_distinct_values(self, table: str, field: str) -> list[str]:
+        """Get the distinct values of the specified field in the specified table.
+
+        Args:
+            table (str): The name of the table to get the distinct values from.
+            field (str): The field to get the distinct values from.
+        """
+        ...
     
     @abstractmethod
     def insert_data(self, table: str, data: dict) -> bool:
@@ -274,12 +284,15 @@ class DiscordLogicPort(ABC):
         ...
 
     @abstractmethod
-    def register_command(self, command: str, callback: callable) -> bool:
-        """Register a command handler for the Discord bot.
+    def register_command(self, command: str, callback: callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None) -> bool:
+        """Register a slash command with optional parameters.
 
         Args:
             command (str): The command name (without prefix, e.g., 'funfact').
             callback (callable): The async function to call when the command is invoked.
+            description (str): The description of the command.
+            option_name (str | None): The name of the option (for dropdown menu).
+            choices (list[str] | None): The choices of the option (for dropdown menu).
 
         Returns:
             bool: True if the command was registered successfully, False otherwise.

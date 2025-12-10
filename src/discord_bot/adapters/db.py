@@ -62,6 +62,12 @@ class DBMS(DatabasePort):
     def get_data(self, table: str, query: dict) -> list[dict]:
         return [document for document in self._collection(table).find(query)]
 
+    def get_distinct_values(self, table: str, field: str) -> list[str]:
+        return sorted(
+            v for v in self._collection(table).distinct(field)
+            if v is not None
+        )
+
     def insert_data(self, table: str, data: dict) -> bool:
         return self._collection(table).insert_one(data).acknowledged
 

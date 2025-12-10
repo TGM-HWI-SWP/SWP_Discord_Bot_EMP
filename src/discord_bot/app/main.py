@@ -1,5 +1,6 @@
 import discord
 import runpy
+import threading
 
 from discord_bot.business_logic.fun_fact_selector import FunFactSelector
 from discord_bot.business_logic.dish_selector import DishSelector
@@ -33,9 +34,11 @@ def start_bot():
 
     async def auto_translate_command(interaction: discord.Interaction):
         await interaction.response.send_message(translator.execute_function()) # also needs text to be passed on execution from command parameter and auto-translate target to be passed
-    
+
+    dish_categories = cv_db.get_distinct_values("dishes", "category")
+
     discord_bot.register_command("funfact", funfact_command, description="Get a random fun fact")
-    discord_bot.register_command("dish", dish_command, description="Get a dish suggestion")
+    discord_bot.register_command("dish", dish_command, description="Get a dish suggestion based on the category", option_name="category", choices=dish_categories)
     discord_bot.register_command("translate", translate_command, description="Translate message to target language")
     discord_bot.register_command("auto-translate", auto_translate_command, description="Auto-translate message to target language based on user_id")
 
@@ -63,4 +66,7 @@ if __name__ == "__main__":
         fun_fact_selector=fun_fact_selector,
         translator=translator
     )
+
+    threading.Thread(target=start_bot, daemon=True).start()
+
     panel.launch()

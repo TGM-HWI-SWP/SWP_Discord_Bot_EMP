@@ -127,15 +127,33 @@ class DiscordLogic(Model, DiscordLogicPort):
     def is_connected(self) -> bool:
         return self.client.is_ready()
 
-    def register_command(self, command: str, callback: callable, description: str = "") -> bool:
+    def register_command(self, command: str, callback: callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None) -> bool:
         if command in self.commands:
             return False
-        
-        @self.tree.command(name=command, description=description or f"{command} command")
-        async def slash_command(interaction: discord.Interaction):
-            await callback(interaction)
-            self._update_command_usage(command)
-        
+
+        if option_name and choices:
+            trimmed_choices = [c for c in choices if c][:25]
+
+            @self.tree.command(name=command, description=description or f"{command} command")
+            @app_commands.rename(selection=option_name)
+            @app_commands.describe(selection=f"Select {option_name}")
+            @app_commands.choices(
+                selection=[
+                    app_commands.Choice(name=choice, value=choice) for choice in trimmed_choices
+                ]
+            )
+            async def slash_command(
+                interaction: discord.Interaction, selection: app_commands.Choice[str]
+            ):
+                await callback(interaction, selection.value)
+                self._update_command_usage(command)
+        else:
+
+            @self.tree.command(name=command, description=description or f"{command} command")
+            async def slash_command(interaction: discord.Interaction):
+                await callback(interaction)
+                self._update_command_usage(command)
+
         self.commands[command] = callback
         self._save_command(command, description or f"{command} command")
         return True
