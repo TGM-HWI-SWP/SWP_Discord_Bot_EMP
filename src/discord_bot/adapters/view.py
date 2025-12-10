@@ -92,9 +92,7 @@ class AdminPanel(ViewPort):
         return self.check_available() and getattr(self.discord_bot, 'is_connected', lambda: False)()  
     
     def build_interface(self) -> gr.Blocks:
-        with gr.Blocks(title="Discord Bot Admin Panel") as app:
-            
-            
+
             # gr.HTML(f"""
             #     <style>
             #     {ADMIN_PANEL_CSS}
@@ -107,7 +105,7 @@ class AdminPanel(ViewPort):
             #     </div>
             # """)
 
-                
+        with gr.Blocks(title="Leberkas Larry Admin Panel", theme=gr.themes.Soft(primary_hue="blue")) as app:        
             with gr.Tabs():
                 with gr.Tab("Overview"):
                     gr.Markdown("### Bot Status")
