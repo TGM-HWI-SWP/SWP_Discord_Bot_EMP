@@ -10,6 +10,8 @@ files_read = config.read(config_path)
 
 class DBConfigLoader:
     IN_DOCKER = os.path.exists("/.dockerenv")
+
+    TIMEZONE = config.get("docker", "timezone", fallback="Europe/Vienna")
     
     MONGO_ROOT_USER = config.get("mongo", "mongo_root_user", fallback="root")
     MONGO_ROOT_PASSWORD = config.get("mongo", "mongo_root_password", fallback="rot")
@@ -31,6 +33,9 @@ class DBConfigLoader:
         
         env_content = f"""# Auto-generated from config.ini - Do not edit manually
 # Regenerate by calling DatabaseConfig.generate_env()
+
+# Docker Configuration
+TZ={DBConfigLoader.TIMEZONE}
 
 # MongoDB Configuration
 MONGO_INITDB_ROOT_USERNAME={DBConfigLoader.MONGO_ROOT_USER}

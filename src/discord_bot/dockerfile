@@ -7,7 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -r
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 ENV UV_PROJECT_ENVIRONMENT=/usr/local/venv
-ENV TZ=Europe/Vienna
+
+ARG TZ=Europe/Vienna
+ENV TZ=${TZ}
 
 COPY . .
 
