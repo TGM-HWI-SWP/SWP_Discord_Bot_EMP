@@ -1,9 +1,6 @@
 TODO:
 
-# urgent 
-add docker timezone to config.ini
-
-# urgent
+# URGENT URGENT URGENT URGENT urgent
 discord bot still needs translate and auto translate methods (also need to be integrated in view.py via controller.py and the respective ports need to be added to ports.py)
 
 # urgent
