@@ -6,59 +6,59 @@ import datetime
 
 
 
-ADMIN_PANEL_CSS = """
-.gradio-container {
-    font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-.admin-header {
-    background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
-    color: white;
-    padding: 30px;
-    border-radius: 12px;
-    text-align: center;
-    margin-bottom: 25px;
-    box-shadow: 0 8px 24px rgba(88, 101, 242, 0.4);
-}
-.admin-header h1 {
-    margin: 0;
-    font-size: 2.8em;
-    font-weight: 700;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-}
-.stat-card {
-    background: linear-gradient(135deg, #2C2F33 0%, #23272A 100%);
-    color: white;
-    padding: 25px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    border: 3px solid #5865F2;
-}
-.stat-number {
-    font-size: 3em;
-    font-weight: 700;
-    color: white;
-}
-.stat-label {
-    font-size: 1.2em;
-    color: #99AAB5;
-    text-transform: uppercase;
-}
+# ADMIN_PANEL_CSS = """
+# .gradio-container {
+#     font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+# }
+# .admin-header {
+#     background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+#     color: white;
+#     padding: 30px;
+#     border-radius: 12px;
+#     text-align: center;
+#     margin-bottom: 25px;
+#     box-shadow: 0 8px 24px rgba(88, 101, 242, 0.4);
+# }
+# .admin-header h1 {
+#     margin: 0;
+#     font-size: 2.8em;
+#     font-weight: 700;
+#     text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+# }
+# .stat-card {
+#     background: linear-gradient(135deg, #2C2F33 0%, #23272A 100%);
+#     color: white;
+#     padding: 25px;
+#     border-radius: 12px;
+#     text-align: center;
+#     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+#     border: 3px solid #5865F2;
+# }
+# .stat-number {
+#     font-size: 3em;
+#     font-weight: 700;
+#     color: white;
+# }
+# .stat-label {
+#     font-size: 1.2em;
+#     color: #99AAB5;
+#     text-transform: uppercase;
+# }
 
-/* Override Gradio orange colors with Discord blue */
-button.primary, .gr-button-primary {
-    background: #5865F2 !important;
-    border-color: #5865F2 !important;
-}
-button.primary:hover, .gr-button-primary:hover {
-    background: #4752C4 !important;
-    border-color: #4752C4 !important;
-}
-.tabs button[aria-selected="true"] {
-    border-bottom-color: #5865F2 !important;
-    color: #5865F2 !important;
-}
-"""
+# /* Override Gradio orange colors with Discord blue */
+# button.primary, .gr-button-primary {
+#     background: #5865F2 !important;
+#     border-color: #5865F2 !important;
+# }
+# button.primary:hover, .gr-button-primary:hover {
+#     background: #4752C4 !important;
+#     border-color: #4752C4 !important;
+# }
+# .tabs button[aria-selected="true"] {
+#     border-bottom-color: #5865F2 !important;
+#     color: #5865F2 !important;
+# }
+# """
 
 class AdminPanel(ViewPort):
     def __init__(
@@ -69,7 +69,7 @@ class AdminPanel(ViewPort):
         fun_fact_selector: FunFactPort | None = None,
         translator: TranslatePort | None = None,
         controller: ControllerPort | None = None,
-        host: str = "0.0.0.0",
+        host: str = "localhost",
         port: int = 7860
     ):
         self.dbms = dbms
@@ -95,48 +95,24 @@ class AdminPanel(ViewPort):
         with gr.Blocks(title="Discord Bot Admin Panel") as app:
             
             
-            gr.HTML(f"""
-                <style>
-                {ADMIN_PANEL_CSS}
-                </style>
-                <div class="admin-header">
-                    <h1>Discord Bot Admin Panel</h1>
-                    <p style="font-size: 1.2em; margin-top: 10px; opacity: 0.9;">
-                        Bot Control & Database Management
-                    </p>
-                </div>
-            """)
-            
-            # with gr.Tabs():
-                
-            #     with gr.Tab("Dashboard"):
-            #         gr.Markdown("### Discord Bot Status")
-                    
-            #         refresh_btn = gr.Button("Refresh Status", size="lg")
-                    
-            #         with gr.Row():
-            #             bot_status = gr.Markdown("### Loading...")
-            #             servers_stat = gr.Markdown("### Loading...")
-            #             users_stat = gr.Markdown("### Loading...")
-                    
-            #         bot_info = gr.JSON(label="Bot Information")
-                    
-            #         def load_dashboard():
-            #             status = {"status": "online", "servers": 0, "users": 0}
-                        
-            #             status_md = f'<div class="stat-card"><div class="stat-label">Status</div><div class="stat-number">Online</div></div>'
-            #             servers_md = f'<div class="stat-card"><div class="stat-label">Servers</div><div class="stat-number">{status["servers"]}</div></div>'
-            #             users_md = f'<div class="stat-card"><div class="stat-label">Users</div><div class="stat-number">{status["users"]}</div></div>'
-                        
-            #             return status_md, servers_md, users_md, status
-                    
-            #         refresh_btn.click(fn=load_dashboard, outputs=[bot_status, servers_stat, users_stat, bot_info])
-            #         app.load(fn=load_dashboard, outputs=[bot_status, servers_stat, users_stat, bot_info])
-                
+            # gr.HTML(f"""
+            #     <style>
+            #     {ADMIN_PANEL_CSS}
+            #     </style>
+            #     <div class="admin-header">
+            #         <h1>Discord Bot Admin Panel</h1>
+            #         <p style="font-size: 1.2em; margin-top: 10px; opacity: 0.9;">
+            #             Bot Control & Database Management
+            #         </p>
+            #     </div>
+            # """)
+
                 
             with gr.Tabs():
                 with gr.Tab("Overview"):
                     gr.Markdown("### Bot Status")
+
+                    refresh_btn = gr.Button("Refresh", variant="primary")
 
                     with gr.Row():
                         with gr.Column():
@@ -146,8 +122,6 @@ class AdminPanel(ViewPort):
                                 label="Servers", value="Loading...", interactive=False)
                         with gr.Column():
                             user_count = gr.Textbox(label="Total Users", value="Loading...", interactive=False)
-                    
-                    refresh_btn = gr.Button("Refresh", variant="primary")
                     
                     def load_bot_status():
                         if not self.check_available():
