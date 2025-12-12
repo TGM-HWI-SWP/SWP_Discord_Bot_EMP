@@ -1,7 +1,7 @@
 import gradio as gr
 import discord
 from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort, ControllerPort
-import datetime
+#import datetime
 
 
 
@@ -416,12 +416,47 @@ class AdminPanel(ViewPort):
                     
                     with gr.Column(visible=False) as bot_settings_section:
                         gr.Markdown("## Bot Settings")
-                        gr.Markdown("Bot settings will be implemented here")
+                        
+                        with gr.Group():
+                            gr.Markdown("### Translation Settings")
+                            auto_translate_checkbox = gr.Checkbox(label="Auto Translate", value=False, interactive=True, info="Automatically translate all incoming messages")
+                            input_translate_language = gr.Dropdown(label="Target Language", choices=["en", "de", "es", "fr", "it", "ja", "zh-CN"], value="de", interactive=True,info="Language to translate messages to")
+                        
+                        with gr.Group():
+                            gr.Markdown("### Command Settings")
+                            log_messages_checkbox = gr.Checkbox(label="Log Messages", value=True, interactive=True)
+                            command_prefix_input = gr.Dropdown(label="Command Prefix", choices=["!", "/"], value="!", interactive=True)
+                        
+                        save_settings_btn = gr.Button("Save Settings", variant="primary", size="lg", interactive=True)
+                        settings_status = gr.Markdown("")
                     
-                    with gr.Row(visible=False) as server_mgmt_section:
-                        gr.Markdown("## Bot Settings")
-                        auto_translate_checkbox =gr.checkbox(label="Auto Translate", default = False, interactive=True)
-                        save_settings_btn = gr.Button("Save Settings", size="lg", interactive=True)
+                    def save_bot_settings(auto_translate_enabled, target_language, log_messages, command_prefix):
+                        if not self.check_available():
+                            return "No discord bot instance"
+                        if not self.check_connection():
+                            return "Bot offline"
+                        
+                        success = True
+                        if hasattr(self.discord_bot, 'update_auto_translate'):
+                            success = self.discord_bot.update_auto_translate(auto_translate_enabled, target_language)
+                        
+                        if hasattr(self.discord_bot, 'update_log_messages'):
+                            log_success = self.discord_bot.update_log_messages(log_messages)
+                            success = success and log_success
+                        
+                        if success:
+                            status_parts = [
+                                f"**Settings saved successfully!**",
+                                f"\n- Auto Translate: **{'ON' if auto_translate_enabled else 'OFF'}**",
+                                f"\n- Target Language: **{target_language.upper()}**" if auto_translate_enabled else "",
+                                f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
+                                f"\n- Command Prefix: **{command_prefix}**"
+                            ]
+                            status_message = "".join(status_parts)
+                            
+                            return f"**Settings saved successfully!**\n\n{status_message}"
+                        else:
+                            return "**Failed to save settings.**\n\nPlease check the bot connection."
                         
                                             
                     def switch_section(section):
@@ -441,6 +476,7 @@ class AdminPanel(ViewPort):
                     block_btn.click(fn=block_user, inputs=[user_dropdown], outputs=[user_status])
                     unblock_btn.click(fn=unblock_user, inputs=[user_dropdown], outputs=[user_status])
                     send_message_btn.click(fn=send_custom_message, inputs=[channel_id_input, message_input], outputs=[message_status])
+                    save_settings_btn.click(fn=save_bot_settings, inputs=[auto_translate_checkbox, input_translate_language, log_messages_checkbox, command_prefix_input], outputs=[settings_status])
                         
               
                 with gr.Tab("Servers"):
@@ -610,7 +646,6 @@ class AdminPanel(ViewPort):
                                 return f"Success: Deleted ID {int(fact_id)}" if success else "Error: Failed"
                             
                             def test_fact():
-                                # Use Controller pattern if available, otherwise fall back to direct access
                                 if self.controller:
                                     return self.controller.get_fun_fact()
                                 return self.fun_fact_selector.execute_function() if self.fun_fact_selector else "N/A"
