@@ -86,10 +86,20 @@ class DiscordLogic(Model, DiscordLogicPort):
             }
             self._save_message(message_data)
 
-        if self.translator and message.content and message.author.id in self.auto_translate_targets:
-            for subscriber_id in list(self.auto_translate_targets.get(message.author.id, set())):
-                translated = self.translator.execute_function(message.content, user_id=subscriber_id)
-                self.send_dm(subscriber_id, f'Auto-translate from {message.author.display_name}:\n{translated}')
+        if self.translator and message.author.id in self.auto_translate_targets:
+            subscribers = list(self.auto_translate_targets.get(message.author.id, set()))
+            text_content = (message.content or "").strip()
+
+            if not text_content or text_content.startswith("http"):
+                self.logging(f'Auto-translate skipped for {message.author.display_name}: no translatable text content.', log_file_name="translator")
+                return
+
+            for subscriber_id in subscribers:
+                translated = self.translator.execute_function(text_content, user_id=subscriber_id)
+                try:
+                    await message.channel.send(f'**Auto-translate for <@{subscriber_id}>** from {message.author.display_name}:\n**Translated**: {translated}')
+                except Exception as error:
+                    self.logging(f'Failed to send auto-translation in channel: {error}', log_file_name="translator")
     
     def get_unread_dms(self) -> list[dict]:
         return [dm for dm in self.unread_dms if not dm["read"]]
@@ -285,14 +295,23 @@ class DiscordLogic(Model, DiscordLogicPort):
         except Exception as error:
             self.logging(f'Error loading auto-translate targets: {error}')
 
-    def enable_auto_translate(self, target_user_id: int, subscriber_user_id: int) -> None:
+    def enable_auto_translate(self, target_user_id: int, subscriber_user_id: int, target_user_name: str | None = None, subscriber_user_name: str | None = None) -> None:
         self.auto_translate_targets.setdefault(target_user_id, set()).add(subscriber_user_id)
         if not self.dbms:
             return
         exists = self.dbms.get_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
         if exists:
             return
-        self.dbms.insert_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id, "created_at": datetime.now().isoformat()})
+        self.dbms.insert_data(
+            "auto_translate",
+            {
+                "target_user_id": target_user_id,
+                "subscriber_user_id": subscriber_user_id,
+                "target_user_name": target_user_name,
+                "subscriber_user_name": subscriber_user_name,
+                "created_at": datetime.now().isoformat(),
+            },
+        )
 
     def disable_auto_translate(self, target_user_id: int, subscriber_user_id: int) -> None:
         if target_user_id in self.auto_translate_targets:
@@ -303,7 +322,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             return
         self.dbms.delete_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from discord_bot.adapters.db import DBMS
     from discord_bot.init.config_loader import DBConfigLoader
     

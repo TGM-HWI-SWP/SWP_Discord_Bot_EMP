@@ -1,7 +1,7 @@
-TODO:
+TODO (YES THIS IS IN ORDER OF PRIORITY SO FOLLOW IT):
 
 # urgent
-auto-translate and auto-translate remove not adding properly and registering params
+translate logs arent correctly stating whats auto translated and normaly translated
 
 # urgent
 statistics message count in db doesnt work yet and also unique users and servers isnt counting yet (maybe)
@@ -16,19 +16,18 @@ orange theme in view.py needs to go (should be blue like discord)
 maybe a dark and light mode toggle in view.py
 
 # at the end
+have ai redo the ports.py so any new ports are added to the file and any old ports are removed
+
+# at the end
 entire code needs to be checked for readability and understandability (comments where necessary, constant variable names across files, docstrings in google style for every function and class, typehinting everywhere, and one-line docstrings or comments in the first line of every file describing its purpose)
 definatly also add comments in the config.ini file to describe what each section and each variable is for
 
 # at the end
-readme and license need to be updated
+let ai check the code for any problems (only errror nothing else) and make the code PEP 8 compliant
 
 # at the end 
 remove discord token from config.ini and replace it with a placeholder token that is not valid and will not work and run it so the .env file gets updated
 
 # at the end
-have ai redo the ports.py so any new ports are added to the file and any old ports are removed
+readme and license need to be updated
 
-# at the end
-let ai check the code for any problems (only errror nothing else) and make the code PEP 8 compliant
-
-*Message context menu (best UX for slash-based flow): Add an app command of type message (a Message Command). Users right-click a message → Apps → your command. In the handler, interaction.target_id (and interaction.target.message) gives you the message ID and content without extra params.

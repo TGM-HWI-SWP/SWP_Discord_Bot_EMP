@@ -21,9 +21,12 @@ class LogLoader:
 
         print("Log files setup complete.")
     
-    def get_log_file_path(self, class_name: str) -> Path:
-        filename = re.sub(r'(?<!^)(?=[A-Z])', '_', class_name).lower()
-        
+    def get_log_file_path(self, name: str, *, treat_as_filename: bool = False) -> Path:
+        if treat_as_filename:
+            filename = name if name.endswith(".log") else f'{name}.log'
+            return self.log_dir / filename
+
+        filename = re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
         return self.log_dir / f'{filename}.log'
 
 if __name__ == "__main__":
