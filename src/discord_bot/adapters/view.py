@@ -95,18 +95,6 @@ class AdminPanel(ViewPort):
     
     def build_interface(self) -> gr.Blocks:
 
-            # gr.HTML(f"""
-            #     <style>
-            #     {ADMIN_PANEL_CSS}
-            #     </style>
-            #     <div class="admin-header">
-            #         <h1>Discord Bot Admin Panel</h1>
-            #         <p style="font-size: 1.2em; margin-top: 10px; opacity: 0.9;">
-            #             Bot Control & Database Management
-            #         </p>
-            #     </div>
-            # """)
-
         with gr.Blocks(title="Leberkas Larry Admin Panel") as app:        
             with gr.Tabs():
                 with gr.Tab("Overview"):
@@ -430,7 +418,12 @@ class AdminPanel(ViewPort):
                         gr.Markdown("## Bot Settings")
                         gr.Markdown("Bot settings will be implemented here")
                     
-                    
+                    with gr.Row(visible=False) as server_mgmt_section:
+                        gr.Markdown("## Bot Settings")
+                        auto_translate_checkbox =gr.checkbox(label="Auto Translate", default = False, interactive=True)
+                        save_settings_btn = gr.Button("Save Settings", size="lg", interactive=True)
+                        
+                                            
                     def switch_section(section):
                         if section == "Server Management":
                             return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
@@ -564,7 +557,6 @@ class AdminPanel(ViewPort):
                                 return f"Success: Deleted ID {int(dish_id)}" if success else "Error: Failed"
                             
                             def test_dish(cat):
-                                # Use Controller pattern if available, otherwise fall back to direct access
                                 if self.controller:
                                     return self.controller.get_dish_suggestion(cat)
                                 return self.dish_selector.execute_function(cat) if self.dish_selector else "N/A"
