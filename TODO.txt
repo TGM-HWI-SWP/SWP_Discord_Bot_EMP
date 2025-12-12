@@ -15,6 +15,9 @@ discord bot still needs translate and auto translate methods (also need to be in
 # urgent
 and dish selection as well as auto translate and translate need to accept params over on discord (maybe @user for the auto translate and a dropdown or premade selection for dish category if possible)
 
+#urgent
+notification if dc bot gets message
+
 # high priority
 view.py needs to be refactored entirely and simplified
 
