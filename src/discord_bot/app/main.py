@@ -37,17 +37,12 @@ def start_bot():
             await interaction.response.send_message("This message has no text content to translate.", ephemeral=True)
             return
 
-        translated_text = translator.execute_function(text_to_translate, user_id=interaction.user.id)
+        translated_text = translator.execute_function(text_to_translate) # for what do i need the user id here? (, user_id=interaction.user.id)
 
         await interaction.response.send_message(f'**Original:** {text_to_translate}\n**Translated:** {translated_text}', ephemeral=True)
 
     async def auto_translate_command(interaction: discord.Interaction, target: discord.Member):
-        discord_bot.enable_auto_translate(
-            target_user_id=target.id,
-            subscriber_user_id=interaction.user.id,
-            target_user_name=target.display_name,
-            subscriber_user_name=interaction.user.display_name,
-        )
+        discord_bot.enable_auto_translate(target_user_id=target.id, subscriber_user_id=interaction.user.id, target_user_name=target.display_name, subscriber_user_name=interaction.user.display_name)
         await interaction.response.send_message(f'Auto-translate enabled for {target.display_name}.')
         discord_bot._update_command_usage("auto-translate")
 
@@ -69,13 +64,13 @@ def start_bot():
 
         target_lines: list[str] = []
         for target_id, subscribers in targets.items():
-            target_name = None
+            # target_name = None
             subscriber_names: dict[int, str] = {}
 
             if discord_bot.dbms:
-                target_records = discord_bot.dbms.get_data("auto_translate", {"target_user_id": target_id})
-                if target_records:
-                    target_name = target_records[0].get("target_user_name")
+                # target_records = discord_bot.dbms.get_data("auto_translate", {"target_user_id": target_id})
+                # if target_records:
+                #     target_name = target_records[0].get("target_user_name")
 
                 for sid in subscribers:
                     sub_records = discord_bot.dbms.get_data("auto_translate", {"target_user_id": target_id, "subscriber_user_id": sid})

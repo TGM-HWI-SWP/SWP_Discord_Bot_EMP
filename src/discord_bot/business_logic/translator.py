@@ -24,7 +24,7 @@ class Translator(Model, TranslatePort):
                 if user_id:
                     self.logging(f'Successfully auto-translated: \'{text}\' -> \'{result}\' (target: {target_language})')
                 else:
-                    self.logging(f'Successfully translated: \'{text}\' -> \'{result}\'')
+                    self.logging(f'Successfully translated: \'{text}\' -> \'{result}\' (target: {target_language})')
                 return result
             except Exception as error:
                 self.logging(f'Translation error (attempt {attempt + 1}/10): {error}')

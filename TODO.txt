@@ -1,9 +1,6 @@
 TODO (YES THIS IS IN ORDER OF PRIORITY SO FOLLOW IT):
 
 # urgent
-translate logs arent correctly stating whats auto translated and normaly translated
-
-# urgent
 statistics message count in db doesnt work yet and also unique users and servers isnt counting yet (maybe)
 
 # high priority
