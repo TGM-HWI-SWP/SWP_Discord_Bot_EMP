@@ -38,7 +38,7 @@ class DBLoader:
     def initialize_discord_collections(self):
         self.discord_dbms.connect()
         
-        collections = ["messages", "direct_messages", "commands", "statistics"]
+        collections = ["messages", "direct_messages", "commands", "statistics", "auto_translate"]
         
         for collection_name in collections:
             existing_count = self.discord_dbms.get_table_size(collection_name)

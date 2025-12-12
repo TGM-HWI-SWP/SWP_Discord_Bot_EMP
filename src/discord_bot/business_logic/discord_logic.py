@@ -3,7 +3,7 @@ from datetime import datetime
 import discord
 from discord import app_commands
 
-from discord_bot.contracts.ports import DiscordLogicPort, DatabasePort
+from discord_bot.contracts.ports import DiscordLogicPort, DatabasePort, TranslatePort
 from discord_bot.init.config_loader import DiscordConfigLoader
 from discord_bot.business_logic.model import Model
 
@@ -17,6 +17,10 @@ class DiscordLogic(Model, DiscordLogicPort):
         self.commands = {}
         self.unread_dms = []
         self.dbms = dbms
+        self.translator: TranslatePort | None = None
+        self.auto_translate_targets: dict[int, set[int]] = {}
+        if self.dbms:
+            self._load_auto_translate_targets()
         
         @self.client.event
         async def on_ready():
@@ -39,6 +43,9 @@ class DiscordLogic(Model, DiscordLogicPort):
 
     def stop(self):
         asyncio.create_task(self.client.close())
+
+    def set_translator(self, translator: TranslatePort) -> None:
+        self.translator = translator
 
     async def on_ready(self):
         self.logging(f'Logged in as {self.client.user}')
@@ -78,6 +85,11 @@ class DiscordLogic(Model, DiscordLogicPort):
                 "is_command": message.content.startswith("/")
             }
             self._save_message(message_data)
+
+        if self.translator and message.content and message.author.id in self.auto_translate_targets:
+            for subscriber_id in list(self.auto_translate_targets.get(message.author.id, set())):
+                translated = self.translator.execute_function(message.content, user_id=subscriber_id)
+                self.send_dm(subscriber_id, f'Auto-translate from {message.author.display_name}:\n{translated}')
     
     def get_unread_dms(self) -> list[dict]:
         return [dm for dm in self.unread_dms if not dm["read"]]
@@ -127,35 +139,45 @@ class DiscordLogic(Model, DiscordLogicPort):
     def is_connected(self) -> bool:
         return self.client.is_ready()
 
-    def register_command(self, command: str, callback: callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None) -> bool:
-        if command in self.commands:
+    def register_command(self, command: str, callback: callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None, context_menu: bool = False, user_option: bool = False) -> bool:
+        if command in self.commands or (context_menu and f'context_{command}' in self.commands):
             return False
 
-        if option_name and choices:
+        if context_menu:
+            @self.tree.context_menu(name=command)
+            async def context_command(interaction: discord.Interaction, message: discord.Message):
+                await callback(interaction, message)
+                self._update_command_usage(command)
+
+            self.commands[f'context_{command}'] = callback
+            self._save_command(command, description or f'{command} context menu')
+            return True
+
+        if user_option:
+            @self.tree.command(name=command, description=description or f'{command} command')
+            @app_commands.describe(target="Select a user")
+            async def slash_command(interaction: discord.Interaction, target: discord.Member):
+                await callback(interaction, target)
+                self._update_command_usage(command)
+        elif option_name and choices:
             trimmed_choices = [c for c in choices if c][:25]
 
-            @self.tree.command(name=command, description=description or f"{command} command")
+            @self.tree.command(name=command, description=description or f'{command} command')
             @app_commands.rename(selection=option_name)
-            @app_commands.describe(selection=f"Select {option_name}")
-            @app_commands.choices(
-                selection=[
-                    app_commands.Choice(name=choice, value=choice) for choice in trimmed_choices
-                ]
-            )
-            async def slash_command(
-                interaction: discord.Interaction, selection: app_commands.Choice[str]
-            ):
+            @app_commands.describe(selection=f'Select {option_name}')
+            @app_commands.choices(selection=[app_commands.Choice(name=choice, value=choice) for choice in trimmed_choices])
+            async def slash_command(interaction: discord.Interaction, selection: app_commands.Choice[str]):
                 await callback(interaction, selection.value)
                 self._update_command_usage(command)
         else:
 
-            @self.tree.command(name=command, description=description or f"{command} command")
+            @self.tree.command(name=command, description=description or f'{command} command')
             async def slash_command(interaction: discord.Interaction):
                 await callback(interaction)
                 self._update_command_usage(command)
 
         self.commands[command] = callback
-        self._save_command(command, description or f"{command} command")
+        self._save_command(command, description or f'{command} command')
         return True
     
     def _save_message(self, message_data: dict) -> None:
@@ -248,6 +270,38 @@ class DiscordLogic(Model, DiscordLogicPort):
                 self.dbms.update_data("statistics", {"date": today}, stat)
         except Exception as error:
             self.logging(f'Error updating command stats: {error}')
+
+    def _load_auto_translate_targets(self) -> None:
+        try:
+            targets: dict[int, set[int]] = {}
+            for record in self.dbms.get_data("auto_translate", {}):
+                try:
+                    target = int(record.get("target_user_id"))
+                    subscriber = int(record.get("subscriber_user_id"))
+                except (TypeError, ValueError):
+                    continue
+                targets.setdefault(target, set()).add(subscriber)
+            self.auto_translate_targets = targets
+        except Exception as error:
+            self.logging(f'Error loading auto-translate targets: {error}')
+
+    def enable_auto_translate(self, target_user_id: int, subscriber_user_id: int) -> None:
+        self.auto_translate_targets.setdefault(target_user_id, set()).add(subscriber_user_id)
+        if not self.dbms:
+            return
+        exists = self.dbms.get_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
+        if exists:
+            return
+        self.dbms.insert_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id, "created_at": datetime.now().isoformat()})
+
+    def disable_auto_translate(self, target_user_id: int, subscriber_user_id: int) -> None:
+        if target_user_id in self.auto_translate_targets:
+            self.auto_translate_targets[target_user_id].discard(subscriber_user_id)
+            if not self.auto_translate_targets[target_user_id]:
+                self.auto_translate_targets.pop(target_user_id)
+        if not self.dbms:
+            return
+        self.dbms.delete_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
 
 if __name__ == '__main__':
     from discord_bot.adapters.db import DBMS

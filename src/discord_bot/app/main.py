@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 import runpy
 import threading
 
@@ -22,6 +23,7 @@ def start_bot():
 
     translator = Translator(dbms=discord_db)
     discord_bot = DiscordLogic(dbms=discord_db)
+    discord_bot.set_translator(translator)
 
     async def funfact_command(interaction: discord.Interaction):
         await interaction.response.send_message(fun_fact_selector.execute_function())
@@ -29,18 +31,34 @@ def start_bot():
     async def dish_command(interaction: discord.Interaction, category: str):
         await interaction.response.send_message(dish_selector.execute_function(category))
 
-    async def translate_command(interaction: discord.Interaction):
-        await interaction.response.send_message(translator.execute_function()) # also needs text to be passed on execution from command parameter
+    async def translate_command(interaction: discord.Interaction, message: discord.Message):
+        text_to_translate = message.content
 
-    async def auto_translate_command(interaction: discord.Interaction):
-        await interaction.response.send_message(translator.execute_function()) # also needs text to be passed on execution from command parameter and auto-translate target to be passed
+        if not text_to_translate:
+            await interaction.response.send_message("This message has no text content to translate.", ephemeral=True)
+            return
+
+        translated_text = translator.execute_function(text_to_translate, user_id=interaction.user.id)
+
+        await interaction.response.send_message(f'**Original:** {text_to_translate}\n**Translated:** {translated_text}', ephemeral=True)
+
+    async def auto_translate_command(interaction: discord.Interaction, target: discord.Member):
+        discord_bot.enable_auto_translate(target_user_id=target.id, subscriber_user_id=interaction.user.id)
+        await interaction.response.send_message(f'Auto-translate enabled for {target.display_name}.', ephemeral=True)
+        discord_bot._update_command_usage("auto-translate")
+
+    async def auto_translate_remove_command(interaction: discord.Interaction, target: discord.Member):
+        discord_bot.disable_auto_translate(target_user_id=target.id, subscriber_user_id=interaction.user.id)
+        await interaction.response.send_message(f'Auto-translate disabled for {target.display_name}.', ephemeral=True)
+        discord_bot._update_command_usage("auto-translate-remove")
 
     dish_categories = cv_db.get_distinct_values("dishes", "category")
 
     discord_bot.register_command("funfact", funfact_command, description="Get a random fun fact")
     discord_bot.register_command("dish", dish_command, description="Get a dish suggestion based on the category", option_name="category", choices=dish_categories)
-    discord_bot.register_command("translate", translate_command, description="Translate message to target language")
-    discord_bot.register_command("auto-translate", auto_translate_command, description="Auto-translate message to target language based on user_id")
+    discord_bot.register_command("Translate", translate_command, description="Translate a message", context_menu=True)
+    discord_bot.register_command("auto-translate", auto_translate_command, description="Auto-translate a user's messages", user_option=True)
+    discord_bot.register_command("auto-translate-remove", auto_translate_remove_command, description="Stop auto-translate for a user", user_option=True)
 
     discord_bot.run()
     
