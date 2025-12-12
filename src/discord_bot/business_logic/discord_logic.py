@@ -97,7 +97,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             for subscriber_id in subscribers:
                 translated = self.translator.execute_function(text_content, user_id=subscriber_id)
                 try:
-                    await message.channel.send(f'**Auto-translate for <@{subscriber_id}>** from {message.author.display_name}:\n**Translated**: {translated}')
+                    await message.channel.send(f'**Auto-translate** for <@{subscriber_id}> from <@{message.author.id}>:\n**Translated**: {translated}')
                 except Exception as error:
                     self.logging(f'Failed to send auto-translation in channel: {error}', log_file_name="translator")
     
