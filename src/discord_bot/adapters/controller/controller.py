@@ -14,3 +14,4 @@ class Controller(ControllerPort):
 
     def translate_text(self, text: str) -> str:
         return self.translator.execute_function(text)
+    

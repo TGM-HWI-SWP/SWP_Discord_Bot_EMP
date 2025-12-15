@@ -216,11 +216,11 @@ class ViewPort(ABC):
 
 class DiscordLogicPort(ABC):
     @abstractmethod
-    def send_message(self, server_id: int, channel_id: int, message: str) -> bool:
-        """Send a message to the specified Discord server and channel.
+    def send_message(self, guild_id: int, channel_id: int, message: str) -> bool:
+        """Send a message to the specified Discord guild and channel.
 
         Args:
-            server_id (int): The ID of the Discord server.
+            guild_id (int): The ID of the Discord guild.
             channel_id (int): The ID of the channel to send the message to.
             message (str): The message to be sent.
 
@@ -244,7 +244,7 @@ class DiscordLogicPort(ABC):
 
     @abstractmethod
     def run(self) -> None:
-        """Start the Discord bot and connect to Discord servers.
+        """Start the Discord bot and connect to Discord guilds.
         
         This method should be called to initialize the bot connection and start
         listening for events and commands.
@@ -252,21 +252,21 @@ class DiscordLogicPort(ABC):
         ...
 
     @abstractmethod
-    def get_servers(self) -> list[dict]:
-        """Get information about all servers the bot is connected to.
+    def get_guilds(self) -> list[dict]:
+        """Get information about all guilds the bot is connected to.
 
         Returns:
-            list[dict]: A list of dictionaries containing server information.
+            list[dict]: A list of dictionaries containing guild information.
                 Each dictionary should include at least 'id' and 'name' keys.
         """
         ...
 
     @abstractmethod
-    def get_channels(self, server_id: int) -> list[dict]:
-        """Get all channels for a specific server.
+    def get_channels(self, guild_id: int) -> list[dict]:
+        """Get all channels for a specific guild.
 
         Args:
-            server_id (int): The ID of the Discord server.
+            guild_id (int): The ID of the Discord guild.
 
         Returns:
             list[dict]: A list of dictionaries containing channel information.

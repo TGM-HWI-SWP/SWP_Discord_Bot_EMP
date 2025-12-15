@@ -57,8 +57,7 @@ class DBLoader:
                 "total_messages": 0,
                 "total_commands": 0,
                 "total_dms": 0,
-                "unique_users": 0,
-                "unique_servers": 0,
+                "unique_guilds": 0,
                 "command_breakdown": {}
             }
             self.discord_dbms.insert_data("statistics", initial_stats)

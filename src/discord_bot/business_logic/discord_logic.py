@@ -57,6 +57,8 @@ class DiscordLogic(Model, DiscordLogicPort):
             await self.tree.sync(guild=guild)
             self.logging(f'Synced to guild: {guild.name}')
 
+        self._save_guilds()
+
     async def on_message(self, message):
         if message.author == self.client.user:
             return
@@ -69,20 +71,20 @@ class DiscordLogic(Model, DiscordLogicPort):
                 "content": message.content,
                 "timestamp": message.created_at.isoformat(),
                 "read": False,
-                "is_command": message.content.startswith("/")
+                "is_command": message.content.startswith("/") and message.content in self.commands
             }
             self.unread_dms.append(dm_data)
             self._save_direct_message(dm_data)
         else:
             message_data = {
                 "message_id": message.id,
-                "server_id": message.guild.id if message.guild else None,
+                "guild_id": message.guild.id if message.guild else None,
                 "channel_id": message.channel.id,
                 "user_id": message.author.id,
                 "user_name": str(message.author),
                 "content": message.content,
                 "timestamp": message.created_at.isoformat(),
-                "is_command": message.content.startswith("/")
+                "is_command": message.content.startswith("/") and message.content in self.commands
             }
             self._save_message(message_data)
 
@@ -117,10 +119,10 @@ class DiscordLogic(Model, DiscordLogicPort):
             dm["read"] = True
         return count
 
-    def send_message(self, server_id: int, channel_id: int, message: str) -> bool:
+    def send_message(self, guild_id: int, channel_id: int, message: str) -> bool:
         try:
             channel = self.client.get_channel(channel_id)
-            if channel and channel.guild.id == server_id:
+            if channel and channel.guild.id == guild_id:
                 asyncio.create_task(channel.send(message))
                 return True
             return False
@@ -137,11 +139,11 @@ class DiscordLogic(Model, DiscordLogicPort):
         except Exception:
             return False
 
-    def get_servers(self) -> list[dict]:
+    def get_guilds(self) -> list[dict]:
         return [{"id": guild.id, "name": guild.name} for guild in self.client.guilds]
 
-    def get_channels(self, server_id: int) -> list[dict]:
-        guild = self.client.get_guild(server_id)
+    def get_channels(self, guild_id: int) -> list[dict]:
+        guild = self.client.get_guild(guild_id)
         if not guild:
             return []
         return [{"id": channel.id, "name": channel.name} for channel in guild.text_channels]
@@ -190,6 +192,17 @@ class DiscordLogic(Model, DiscordLogicPort):
         self._save_command(command, description or f'{command} command')
         return True
     
+    def _save_guilds(self) -> None:
+        if not self.dbms:
+            return
+        guilds = self.get_guilds()
+        for _ in guilds:
+            try:
+                guild_count += 1
+                self.dbms.insert_data("statistics", {"unique_guilds": guild_count})
+            except Exception as error:
+                self.logging(f'Error saving guild count: {error}')
+        
     def _save_message(self, message_data: dict) -> None:
         if not self.dbms:
             return
