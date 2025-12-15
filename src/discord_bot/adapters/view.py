@@ -71,7 +71,7 @@ class AdminPanel(ViewPort):
         fun_fact_selector: FunFactPort | None = None,
         translator: TranslatePort | None = None,
         controller: ControllerPort | None = None,
-        host: str = "localhost",
+        host: str = "0.0.0.0",
         port: int = 7860
     ):
         self.dbms = dbms
