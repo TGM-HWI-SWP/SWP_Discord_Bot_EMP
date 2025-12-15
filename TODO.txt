@@ -6,7 +6,7 @@ ALWAYS ON A NEW BRANCH
 make sure every function that doesnt start with "_" is properly defined in ports.py
 
 # urgent (maybe emir)
-make sure every variable is consistent across files (e.g. collection vs table)
+make sure every variable is consistent across files (e.g. table instead of collection and server instead of guild)
 
 # high priority
 view.py needs to be refactored entirely and simplified
