@@ -279,194 +279,194 @@ class AdminPanel(ViewPort):
                     section_selector = gr.Dropdown(label="Select Section", choices=["Server Management", "User Management", "Custom Messages", "Bot Settings"], value="Server Management",interactive=True)
                     
                    
-                    with gr.Column(visible=True) as server_mgmt_section:
-                        gr.Markdown("## Server Management")
-                        server_view = gr.Dropdown(label="Select Server to Leave", choices=[], interactive=True)
-                        leave_btn = gr.Button("Leave Server", size="lg", interactive=True)
-                        refresh_btn = gr.Button("Refresh Servers", size="lg", interactive=True)
-                        server_status = gr.Markdown("")
+                    with gr.Row(visible=True) as server_mgmt_section:
+                        with gr.Column():
+                            gr.Markdown("## Server Management")
+                            server_view = gr.Dropdown(label="Select Server to Leave", choices=[], interactive=True)
+                            leave_btn = gr.Button("Leave Server", size="lg", interactive=True)
+                            refresh_btn = gr.Button("Refresh Servers", size="lg", interactive=True)
+                            server_status = gr.Markdown("")
                             
-                    def leave_server(server_selection):
-                        if not self.check_available():
-                            return "No discord bot instance"
-                        if not self.check_connection():
-                            return "Bot offline"
-                        if not server_selection:
-                            return "Please select a server"
-                        try:
-                            server_id = int(server_selection.split("ID: ")[1].rstrip(")"))
-                            success = self.discord_bot.leave_server(server_id)
-                            if success:
-                                return "Successfully left server"
-                            else:
-                                return "Failed to leave server"
-                        except (ValueError, IndexError):
-                            return "Invalid server selection"
-                    
-                    def refresh_server_list():
-                        if not self.check_available():
-                            return gr.update(choices=[]), "No discord bot instance"
-                        if not self.check_connection():
-                            return gr.update(choices=[]), "Bot offline"
-                        
-                        servers = self.discord_bot.get_servers()
-                        if not servers:
-                            return gr.update(choices=[]), "No servers found"
-                        
-                        choices = [f"{server['name']} (ID: {server['id']})" for server in servers]
-                        return gr.update(choices=choices), f"Found {len(servers)} servers"
-                    
-                    refresh_btn.click(fn=refresh_server_list, outputs=[server_view, server_status])
-                    leave_btn.click(fn=leave_server, inputs=[server_view], outputs=[server_status])
+                            def leave_server(server_selection):
+                                if not self.check_available():
+                                    return "No discord bot instance"
+                                if not self.check_connection():
+                                    return "Bot offline"
+                                if not server_selection:
+                                    return "Please select a server"
+                                try:
+                                    server_id = int(server_selection.split("ID: ")[1].rstrip(")"))
+                                    success = self.discord_bot.leave_server(server_id)
+                                    if success:
+                                        return "Successfully left server"
+                                    else:
+                                        return "Failed to leave server"
+                                except (ValueError, IndexError):
+                                    return "Invalid server selection"
+                            
+                            def refresh_server_list():
+                                if not self.check_available():
+                                    return gr.update(choices=[]), "No discord bot instance"
+                                if not self.check_connection():
+                                    return gr.update(choices=[]), "Bot offline"
+                                
+                                servers = self.discord_bot.get_servers()
+                                if not servers:
+                                    return gr.update(choices=[]), "No servers found"
+                                
+                                choices = [f"{server['name']} (ID: {server['id']})" for server in servers]
+                                return gr.update(choices=choices), f"Found {len(servers)} servers"
                 
-                    with gr.Column(visible=False) as user_mgmt_section:
-                        gr.Markdown("## User Management")
-                        user_search = gr.Textbox(label="Search User", placeholder="Enter username to search")
-                        search_user_btn = gr.Button("Search User", size="lg", interactive=True)
-                        user_dropdown = gr.Dropdown(label="Select User to Block/Unblock", choices=[], interactive=True)
-                        block_btn = gr.Button("Block User", size="lg", interactive=True)
-                        unblock_btn = gr.Button("Unblock User", size="lg", interactive=True)
-                        user_status = gr.Markdown("")
+                    with gr.Row(visible=False) as user_mgmt_section:
+                        with gr.Column():
+                            gr.Markdown("## User Management")
+                            user_search = gr.Textbox(label="Search User", placeholder="Enter username to search")
+                            search_user_btn = gr.Button("Search User", size="lg", interactive=True)
+                            user_dropdown = gr.Dropdown(label="Select User to Block/Unblock", choices=[], interactive=True)
+                            block_btn = gr.Button("Block User", size="lg", interactive=True)
+                            unblock_btn = gr.Button("Unblock User", size="lg", interactive=True)
+                            user_status = gr.Markdown("")
 
-                    def search_users(username):
-                        if not self.check_available():
-                            return gr.update(choices=[]), "No discord bot instance"
-                        if not self.check_connection():
-                            return gr.update(choices=[]), "Bot offline"
-                        if not username:
-                            return gr.update(choices=[]), "Please enter a username"
-                        
-                        try:
-                            servers = self.discord_bot.get_servers()
-                            matching_users = []
+                            def search_users(username):
+                                if not self.check_available():
+                                    return gr.update(choices=[]), "No discord bot instance"
+                                if not self.check_connection():
+                                    return gr.update(choices=[]), "Bot offline"
+                                if not username:
+                                    return gr.update(choices=[]), "Please enter a username"
+                                
+                                try:
+                                    servers = self.discord_bot.get_servers()
+                                    matching_users = []
+                                    
+                                    for server in servers:
+                                        guild = self.discord_bot.client.get_guild(server['id'])
+                                        if guild:
+                                            for member in guild.members:
+                                                if username.lower() in member.name.lower() or username.lower() in str(member.display_name).lower():
+                                                    user_entry = f"{member.name}#{member.discriminator} (ID: {member.id})"
+                                                    if user_entry not in matching_users:
+                                                        matching_users.append(user_entry)
+                                    
+                                    if not matching_users:
+                                        return gr.update(choices=[]), "No users found"
+                                    
+                                    return gr.update(choices=matching_users), f"Found {len(matching_users)} user(s)"
+                                except Exception as e:
+                                    return gr.update(choices=[]), f"Error searching users: {str(e)}"
                             
-                            for server in servers:
-                                guild = self.discord_bot.client.get_guild(server['id'])
-                                if guild:
-                                    for member in guild.members:
-                                        if username.lower() in member.name.lower() or username.lower() in str(member.display_name).lower():
-                                            user_entry = f"{member.name}#{member.discriminator} (ID: {member.id})"
-                                            if user_entry not in matching_users:
-                                                matching_users.append(user_entry)
+                            def block_user(user_selection):
+                                if not self.check_available():
+                                    return "No discord bot instance"
+                                if not self.check_connection():
+                                    return "Bot offline"
+                                if not user_selection:
+                                    return "Please select a user"
+                                try:
+                                    user_id = int(user_selection.split("ID: ")[1].rstrip(")"))
+                                    success = self.discord_bot.block_user(user_id)
+                                    if success:
+                                        return "Successfully blocked user"
+                                    else:
+                                        return "Failed to block user"
+                                except (ValueError, IndexError):
+                                    return "Invalid user selection"
                             
-                            if not matching_users:
-                                return gr.update(choices=[]), "No users found"
-                            
-                            return gr.update(choices=matching_users), f"Found {len(matching_users)} user(s)"
-                        except Exception as e:
-                            return gr.update(choices=[]), f"Error searching users: {str(e)}"
+                            def unblock_user(user_selection):
+                                if not self.check_available():
+                                    return "No discord bot instance"
+                                if not self.check_connection():
+                                    return "Bot offline"
+                                if not user_selection:
+                                    return "Please select a user"
+                                try:
+                                    user_id = int(user_selection.split("ID: ")[1].rstrip(")"))
+                                    success = self.discord_bot.unblock_user(user_id)
+                                    if success:
+                                        return "Successfully unblocked user"
+                                    else:
+                                        return "Failed to unblock user"
+                                except (ValueError, IndexError):
+                                    return "Invalid user selection"
                     
-                    def block_user(user_selection):
-                        if not self.check_available():
-                            return "No discord bot instance"
-                        if not self.check_connection():
-                            return "Bot offline"
-                        if not user_selection:
-                            return "Please select a user"
-                        try:
-                            user_id = int(user_selection.split("ID: ")[1].rstrip(")"))
-                            success = self.discord_bot.block_user(user_id)
-                            if success:
-                                return "Successfully blocked user"
-                            else:
-                                return "Failed to block user"
-                        except (ValueError, IndexError):
-                            return "Invalid user selection"
-                    
-                    def unblock_user(user_selection):
-                        if not self.check_available():
-                            return "No discord bot instance"
-                        if not self.check_connection():
-                            return "Bot offline"
-                        if not user_selection:
-                            return "Please select a user"
-                        try:
-                            user_id = int(user_selection.split("ID: ")[1].rstrip(")"))
-                            success = self.discord_bot.unblock_user(user_id)
-                            if success:
-                                return "Successfully unblocked user"
-                            else:
-                                return "Failed to unblock user"
-                        except (ValueError, IndexError):
-                            return "Invalid user selection"
-                    
-                    with gr.Column(visible=False) as custom_msg_section:
-                        gr.Markdown("## Custom Messages")
-                        channel_id_input = gr.Textbox(label="Channel ID", placeholder="Enter Discord Channel ID")
-                        message_input = gr.Textbox(label="Message", placeholder="Enter message to send", lines=3)
-                        send_message_btn = gr.Button("Send Message", size="lg", interactive=True)
-                        message_status = gr.Markdown("")
-                        
-                    def send_custom_message(channel_id, message):
-                        if not self.check_available():
-                            return "No discord bot instance"
-                        if not self.check_connection():
-                            return "Bot offline"
-                        if not channel_id or not message:
-                            return "Channel ID and message required"
-                        try:
-                            channel_id_int = int(channel_id)
-                            success = self.discord_bot.send_message(0, channel_id_int, message)
-                            if success:
-                                return "Message sent successfully"
-                            else:
-                                return "Failed to send message"
-                        except ValueError:
-                            return "Invalid channel ID (must be a number)"
-                    
-                    with gr.Column(visible=False) as bot_settings_section:
-                        gr.Markdown("## Bot Settings")
-                        
-                        with gr.Group():
-                            gr.Markdown("### Translation Settings")
-                            auto_translate_checkbox = gr.Checkbox(label="Auto Translate", value=False, interactive=True, info="Automatically translate all incoming messages")
-                            input_translate_language = gr.Dropdown(label="Target Language", choices=["en", "de", "es", "fr", "it", "ja", "zh-CN"], value="de", interactive=True,info="Language to translate messages to")
-                        
-                        with gr.Group():
-                            gr.Markdown("### Command Settings")
-                            log_messages_checkbox = gr.Checkbox(label="Log Messages", value=True, interactive=True)
+                    with gr.Row(visible=False) as custom_msg_section:
+                        with gr.Column():
+                            gr.Markdown("## Custom Messages")
+                            channel_id_input = gr.Textbox(label="Channel ID", placeholder="Enter Discord Channel ID")
+                            message_input = gr.Textbox(label="Message", placeholder="Enter message to send", lines=3)
+                            send_message_btn = gr.Button("Send Message", size="lg", interactive=True)
+                            message_status = gr.Markdown("")
                             
-                        
-                        save_settings_btn = gr.Button("Save Settings", variant="primary", size="lg", interactive=True)
-                        settings_status = gr.Markdown("")
+                            def send_custom_message(channel_id, message):
+                                if not self.check_available():
+                                    return "No discord bot instance"
+                                if not self.check_connection():
+                                    return "Bot offline"
+                                if not channel_id or not message:
+                                    return "Channel ID and message required"
+                                try:
+                                    channel_id_int = int(channel_id)
+                                    success = self.discord_bot.send_message(0, channel_id_int, message)
+                                    if success:
+                                        return "Message sent successfully"
+                                    else:
+                                        return "Failed to send message"
+                                except ValueError:
+                                    return "Invalid channel ID (must be a number)"
                     
-                    def save_bot_settings(auto_translate_enabled, target_language, log_messages):
-                        if not self.check_available():
-                            return "No discord bot instance"
-                        if not self.check_connection():
-                            return "Bot offline"
-                        
-                        success = True
-                        if hasattr(self.discord_bot, 'update_auto_translate'):
-                            success = self.discord_bot.update_auto_translate(auto_translate_enabled, target_language)
-                        
-                        if hasattr(self.discord_bot, 'update_log_messages'):
-                            log_success = self.discord_bot.update_log_messages(log_messages)
-                            success = success and log_success
-                     
-                        try:
-                            from discord_bot.init.config_loader import DiscordConfigLoader
-                                        
-                            DiscordConfigLoader.TARGET_LANGUAGE = target_language
+                    with gr.Row(visible=False) as bot_settings_section:
+                        with gr.Column():
+                            gr.Markdown("## Bot Settings")
                             
-                            self.logging(f"Updated DiscordConfigLoader.TARGET_LANGUAGE = {target_language}")
-                        except Exception as e:
-                            self.logging(f"Error updating config_loader: {e}")
-                            success = False
-                        
-                        if success:
-                            status_parts = [
-                                f"**Settings saved successfully!**",
-                                f"\n- Auto Translate: **{'ON' if auto_translate_enabled else 'OFF'}**",
-                                f"\n- Target Language: **{target_language.upper()}**" if auto_translate_enabled else "",
-                                f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
-                            ]
-                            status_message = "".join(status_parts)
+                            with gr.Group():
+                                gr.Markdown("### Translation Settings")
+                                auto_translate_checkbox = gr.Checkbox(label="Auto Translate", value=False, interactive=True, info="Automatically translate all incoming messages")
+                                input_translate_language = gr.Dropdown(label="Target Language", choices=["en", "de", "es", "fr", "it", "ja", "zh-CN"], value="de", interactive=True,info="Language to translate messages to")
                             
-                            return f"**Settings saved successfully!**\n\n{status_message}"
-                        else:
-                            return "**Failed to save settings.**\n\nPlease check the bot connection."
-                        
+                            with gr.Group():
+                                gr.Markdown("### Command Settings")
+                                log_messages_checkbox = gr.Checkbox(label="Log Messages", value=True, interactive=True)
+                                
+                            
+                            save_settings_btn = gr.Button("Save Settings", variant="primary", size="lg", interactive=True)
+                            settings_status = gr.Markdown("")
+                            
+                            def save_bot_settings(auto_translate_enabled, target_language, log_messages):
+                                if not self.check_available():
+                                    return "No discord bot instance"
+                                if not self.check_connection():
+                                    return "Bot offline"
+                                
+                                success = True
+                                if hasattr(self.discord_bot, 'update_auto_translate'):
+                                    success = self.discord_bot.update_auto_translate(auto_translate_enabled, target_language)
+                                
+                                if hasattr(self.discord_bot, 'update_log_messages'):
+                                    log_success = self.discord_bot.update_log_messages(log_messages)
+                                    success = success and log_success
+                             
+                                try:
+                                    from discord_bot.init.config_loader import DiscordConfigLoader
+                                                
+                                    DiscordConfigLoader.TARGET_LANGUAGE = target_language
+                                    
+                                    self.logging(f"Updated DiscordConfigLoader.TARGET_LANGUAGE = {target_language}")
+                                except Exception as e:
+                                    self.logging(f"Error updating config_loader: {e}")
+                                    success = False
+                                
+                                if success:
+                                    status_parts = [
+                                        f"**Settings saved successfully!**",
+                                        f"\n- Auto Translate: **{'ON' if auto_translate_enabled else 'OFF'}**",
+                                        f"\n- Target Language: **{target_language.upper()}**" if auto_translate_enabled else "",
+                                        f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
+                                    ]
+                                    status_message = "".join(status_parts)
+                                    
+                                    return f"**Settings saved successfully!**\n\n{status_message}"
+                                else:
+                                    return "**Failed to save settings.**\n\nPlease check the bot connection."
                                             
                     def switch_section(section):
                         if section == "Server Management":
@@ -480,12 +480,30 @@ class AdminPanel(ViewPort):
                         else:
                             return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
                     
-                    section_selector.change(fn=switch_section, inputs=[section_selector], outputs=[server_mgmt_section, user_mgmt_section, custom_msg_section, bot_settings_section])
+                    gr.on(
+                        triggers=[section_selector.change],
+                        fn=switch_section,
+                        inputs=section_selector,
+                        outputs=[
+                            server_mgmt_section,
+                            user_mgmt_section,
+                            custom_msg_section,
+                            bot_settings_section,
+                        ],
+                    )
+                    
+                    # Event handlers AFTER all sections are closed
+                    refresh_btn.click(fn=refresh_server_list, outputs=[server_view, server_status])
+                    leave_btn.click(fn=leave_server, inputs=[server_view], outputs=[server_status])
+                    
                     search_user_btn.click(fn=search_users, inputs=[user_search], outputs=[user_dropdown, user_status])
                     block_btn.click(fn=block_user, inputs=[user_dropdown], outputs=[user_status])
                     unblock_btn.click(fn=unblock_user, inputs=[user_dropdown], outputs=[user_status])
+                    
                     send_message_btn.click(fn=send_custom_message, inputs=[channel_id_input, message_input], outputs=[message_status])
+                    
                     save_settings_btn.click(fn=save_bot_settings, inputs=[auto_translate_checkbox, input_translate_language, log_messages_checkbox], outputs=[settings_status])
+
                         
               
                 with gr.Tab("Database"):
