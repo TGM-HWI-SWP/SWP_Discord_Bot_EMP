@@ -425,7 +425,7 @@ class AdminPanel(ViewPort):
                         with gr.Group():
                             gr.Markdown("### Command Settings")
                             log_messages_checkbox = gr.Checkbox(label="Log Messages", value=True, interactive=True)
-                            command_prefix_input = gr.Dropdown(label="Command Prefix", choices=["!", "/"], value="!", interactive=True)
+                            
                         
                         save_settings_btn = gr.Button("Save Settings", variant="primary", size="lg", interactive=True)
                         settings_status = gr.Markdown("")
@@ -476,7 +476,7 @@ class AdminPanel(ViewPort):
                     block_btn.click(fn=block_user, inputs=[user_dropdown], outputs=[user_status])
                     unblock_btn.click(fn=unblock_user, inputs=[user_dropdown], outputs=[user_status])
                     send_message_btn.click(fn=send_custom_message, inputs=[channel_id_input, message_input], outputs=[message_status])
-                    save_settings_btn.click(fn=save_bot_settings, inputs=[auto_translate_checkbox, input_translate_language, log_messages_checkbox, command_prefix_input], outputs=[settings_status])
+                    save_settings_btn.click(fn=save_bot_settings, inputs=[auto_translate_checkbox, input_translate_language, log_messages_checkbox], outputs=[settings_status])
                         
               
                 with gr.Tab("Servers"):
