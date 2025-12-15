@@ -68,7 +68,7 @@ if __name__ == "__main__":
         print(f"[INIT] DB loader failed: {e}", flush=True)
     
     print("=== Starting application ===", flush=True)
-    bot_thread = threading.Thread(target=start_bot, daemon=False, name="DiscordBot")
+    bot_thread = threading.Thread(target=start_bot, daemon=True, name="DiscordBot")
     bot_thread.start()
     print("[MAIN] Discord bot thread started, waiting 2 seconds...", flush=True)
     time.sleep(2)
@@ -84,7 +84,8 @@ if __name__ == "__main__":
     dish_selector = DishSelector(dbms=cv_db)
     fun_fact_selector = FunFactSelector(dbms=cv_db)
     translator = Translator(dbms=discord_db)
-    print("[MAIN] Selectors created", flush=True)
+    discord_bot = DiscordLogic(dbms=discord_db)
+    print("[MAIN] Selectors and bot instance created", flush=True)
 
 
     controller = Controller(
@@ -96,11 +97,17 @@ if __name__ == "__main__":
     
     panel = AdminPanel(
         dbms=cv_db,
+        discord_bot=discord_bot,
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
         translator=translator,
         controller=controller
     )
     print("[MAIN] AdminPanel created, launching Gradio (this may take time)...", flush=True)
-    panel.launch()
-    print("[MAIN] Gradio interface launched", flush=True)
+    try:
+        panel.launch()
+        print("[MAIN] Gradio interface launched successfully!", flush=True)
+    except Exception as e:
+        print(f"[MAIN] ERROR launching Gradio: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
