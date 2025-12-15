@@ -430,7 +430,7 @@ class AdminPanel(ViewPort):
                         save_settings_btn = gr.Button("Save Settings", variant="primary", size="lg", interactive=True)
                         settings_status = gr.Markdown("")
                     
-                    def save_bot_settings(auto_translate_enabled, target_language, log_messages, command_prefix):
+                    def save_bot_settings(auto_translate_enabled, target_language, log_messages):
                         if not self.check_available():
                             return "No discord bot instance"
                         if not self.check_connection():
@@ -443,6 +443,16 @@ class AdminPanel(ViewPort):
                         if hasattr(self.discord_bot, 'update_log_messages'):
                             log_success = self.discord_bot.update_log_messages(log_messages)
                             success = success and log_success
+                     
+                        try:
+                            from discord_bot.init.config_loader import DiscordConfigLoader
+                                        
+                            DiscordConfigLoader.TARGET_LANGUAGE = target_language
+                            
+                            self.logging(f"Updated DiscordConfigLoader.TARGET_LANGUAGE = {target_language}")
+                        except Exception as e:
+                            self.logging(f"Error updating config_loader: {e}")
+                            success = False
                         
                         if success:
                             status_parts = [
@@ -450,7 +460,6 @@ class AdminPanel(ViewPort):
                                 f"\n- Auto Translate: **{'ON' if auto_translate_enabled else 'OFF'}**",
                                 f"\n- Target Language: **{target_language.upper()}**" if auto_translate_enabled else "",
                                 f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
-                                f"\n- Command Prefix: **{command_prefix}**"
                             ]
                             status_message = "".join(status_parts)
                             
@@ -479,50 +488,6 @@ class AdminPanel(ViewPort):
                     save_settings_btn.click(fn=save_bot_settings, inputs=[auto_translate_checkbox, input_translate_language, log_messages_checkbox], outputs=[settings_status])
                         
               
-                with gr.Tab("Servers"):
-                    gr.Markdown("### Discord Servers")
-                    gr.Markdown("All servers where the bot is currently active")
-                    
-                    refresh_server_view_btn = gr.Button("Refresh Server List", size="lg")
-                    
-                    server_table = gr.Dataframe(
-                        headers=["Server ID", "Server Name", "Member Count"],
-                        label="Connected Servers",
-                        interactive=False
-                    )
-                    
-                    server_view_status = gr.Markdown("")
-                    
-                    def load_server_list():
-                        if not self.check_available():
-                            return [], "Discord bot not available (runs in separate container)"
-                        
-                        if not self.check_connection():
-                            return [], "Bot is offline"
-                        
-                        try:
-                            servers = self.discord_bot.get_servers()
-                            if not servers:
-                                return [], "No servers found"
-                            
-                            server_data = []
-                            for server in servers:
-                                server_id = server.get("id", "N/A")
-                                server_name = server.get("name", "Unknown")
-                                member_count = "N/A"
-                                guild_info = self.discord_bot.get_guild_info(server_id)
-                                if guild_info:
-                                    member_count = guild_info.get("member_count", "N/A")
-                                
-                                server_data.append([server_id, server_name, member_count])
-                            
-                            return server_data, f"Found {len(servers)} server(s)"
-                        except Exception as e:
-                            return [], f"Error loading servers: {str(e)}"
-                    
-                    refresh_server_view_btn.click(fn=load_server_list, outputs=[server_table, server_view_status])
-                    app.load(fn=load_server_list, outputs=[server_table, server_view_status])
-                
                 with gr.Tab("Database"):
                     with gr.Tabs():
                         with gr.Tab("Dishes"):
