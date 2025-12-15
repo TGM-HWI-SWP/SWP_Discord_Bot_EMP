@@ -96,6 +96,7 @@ class AdminPanel(ViewPort):
             
             with gr.Tabs():
                 
+
                 with gr.Tab("Dashboard"):
                     gr.Markdown("### Discord Bot Status")
                     
@@ -214,7 +215,8 @@ class AdminPanel(ViewPort):
                     unblock_user_btn.click(fn=placeholder_unblock_user, outputs=user_status)
                     send_message_btn.click(fn=send_message, inputs=[channel_id_input, message_input], outputs=message_status)
                     update_settings_btn.click(fn=placeholder_update_settings, outputs=settings_status)
-                
+                    view_theme.change(fn=update_theme, inputs=view_theme, outputs=app)
+
                 with gr.Tab("Database"):
                     with gr.Tabs():
                         with gr.Tab("Dishes"):
@@ -396,6 +398,25 @@ class AdminPanel(ViewPort):
                             refresh_stats_btn.click(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
                             app.load(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
             
+
+                        with gr.Tab("View Settings"):
+                                with gr.Row():
+                                    view_theme = gr.Dropdown(
+                                        choices=["light", "dark", "auto"],
+                                        value="auto",
+                                        label="Theme"
+                                    )
+                                    def update_theme(view_theme: str):
+                                        if view_theme == "light":
+                                            theme = gr.themes.Soft()
+                                        elif view_theme == "dark":
+                                            theme = gr.themes.Base()
+                                        elif view_theme == "auto":
+                                            theme = "system"
+                                        else:
+                                            theme = "system"
+                                        return gr.update(theme=theme)
+                                    view_theme.change(fn=update_theme, inputs=view_theme, outputs=app)
             gr.HTML("""
                 <div style="text-align: center; padding: 20px; color: #99AAB5; margin-top: 20px;">
                     <p>Discord Bot Admin Panel v1.0</p>
