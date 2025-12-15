@@ -14,6 +14,7 @@ class DiscordLogic(Model, DiscordLogicPort):
         intents.message_content = True
         self.client = discord.Client(intents=intents)
         self.tree = app_commands.CommandTree(self.client)
+        self.guild_count = 0
         self.commands = {}
         self.unread_dms = []
         self.dbms = dbms
@@ -29,6 +30,16 @@ class DiscordLogic(Model, DiscordLogicPort):
         @self.client.event
         async def on_message(message):
             await self.on_message(message)
+
+        @self.client.event
+        async def on_guild_join(guild: discord.Guild):
+            self.logging(f'Joined guild: {guild.name} ({guild.id})')
+            self._update_connected_guilds()
+
+        @self.client.event
+        async def on_guild_remove(guild: discord.Guild):
+            self.logging(f'Left guild: {guild.name} ({guild.id})')
+            self._update_connected_guilds()
     
     def execute_function(self):
         pass
@@ -57,7 +68,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             await self.tree.sync(guild=guild)
             self.logging(f'Synced to guild: {guild.name}')
 
-        self._save_guilds()
+        self._update_connected_guilds()
 
     async def on_message(self, message):
         if message.author == self.client.user:
@@ -191,18 +202,20 @@ class DiscordLogic(Model, DiscordLogicPort):
         self.commands[command] = callback
         self._save_command(command, description or f'{command} command')
         return True
-    
-    def _save_guilds(self) -> None:
+            
+    def _update_connected_guilds(self) -> None:
         if not self.dbms:
             return
-        guilds = self.get_guilds()
-        for _ in guilds:
-            try:
-                guild_count += 1
-                self.dbms.insert_data("statistics", {"unique_guilds": guild_count})
-            except Exception as error:
-                self.logging(f'Error saving guild count: {error}')
-        
+        try:
+            guild_count = len(self.client.guilds)
+            self.guild_count = guild_count
+
+            self.dbms.update_data(table="statistics", query={}, data={"connected_guilds": guild_count})
+            self.logging(f"Connected guilds updated: {guild_count}")
+
+        except Exception as error:
+            self.logging(f"Error updating connected guilds: {error}")
+
     def _save_message(self, message_data: dict) -> None:
         if not self.dbms:
             return

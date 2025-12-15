@@ -1,8 +1,12 @@
 TODO (YES THIS IS IN ORDER OF PRIORITY SO FOLLOW IT):
 
-# urgent
-statistics message count in db doesnt work yet and also unique users and servers isnt counting yet (maybe needs to recount on startup to not miss any already connected servers and users)
-unique users removed and unique guilds needs to be fixed
+ALWAYS ON A NEW BRANCH
+
+# urgent (maybe emir)
+make sure every function that doesnt start with "_" is properly defined in ports.py
+
+# urgent (maybe emir)
+make sure every variable is consistent across files (e.g. collection vs table)
 
 # high priority
 view.py needs to be refactored entirely and simplified
