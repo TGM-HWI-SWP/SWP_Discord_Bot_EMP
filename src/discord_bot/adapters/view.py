@@ -302,7 +302,7 @@ class AdminPanel(ViewPort):
                                     dish_categories = self.dbms.get_distinct_values("dishes", "category")
                                     search_query = gr.Textbox(label="Search", placeholder="Enter dish name...")
                                     search_cat = gr.Dropdown(
-                                        choices="All" + dish_categories,
+                                        choices=["All"] + dish_categories,
                                         value="All",
                                         label="Category"
                                     )

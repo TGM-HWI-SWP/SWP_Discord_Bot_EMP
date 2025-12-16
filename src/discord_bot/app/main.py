@@ -3,6 +3,7 @@
 import discord
 import runpy
 import threading
+import asyncio
 
 from discord_bot.business_logic.fun_fact_selector import FunFactSelector
 from discord_bot.business_logic.dish_selector import DishSelector
@@ -129,6 +130,18 @@ def start_bot() -> None:
 
     discord_bot.run()
 
+    # # test
+    # # BLOCK until shutdown requested
+    # shutdown_event.wait()
+
+    # # Now shut Discord down cleanly
+    # if discord_bot.client and not discord_bot.client.is_closed():
+    #     fut = asyncio.run_coroutine_threadsafe(
+    #         discord_bot.client.close(),
+    #         discord_bot.client.loop,
+    #     )
+    #     fut.result(timeout=10)
+
 if __name__ == "__main__":
     runpy.run_module("discord_bot.init.log_loader", run_name="__main__")
     runpy.run_module("discord_bot.init.db_loader", run_name="__main__")
@@ -160,6 +173,15 @@ if __name__ == "__main__":
         controller=controller 
     )
 
+    #shutdown_event = threading.Event() # test
+
     # Run the bot in a background thread so the admin panel can stay responsive.
-    threading.Thread(target=start_bot, daemon=True).start()
+    threading.Thread(target=start_bot, daemon=False).start()
+    # bot_thread = threading.Thread(target=start_bot, args=(shutdown_event,), daemon=False)
+    # bot_thread.start()
     panel.launch()
+    # try:
+    #     panel.launch()
+    # finally:
+    #     shutdown_event.set()
+    #     bot_thread.join(timeout=15)
