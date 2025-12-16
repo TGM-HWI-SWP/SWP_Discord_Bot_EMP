@@ -1,11 +1,11 @@
 TODO:
 
+THREADING ERROR IN GRADIO CONTAINER
+
 #urgent
 notification if dc bot gets message
 
 # high priority
-ALSO USE dish_categories = cv_db.get_distinct_values("dishes", "category") TO GET THE DISHES INSTEAD OF HARDCODING
-
 view should have buttons for reseting fun facts and dish tables simply delete the table and then call import_tables from db_loader and also add entry buttons dont work yet
 
 Remove User management entirely and remove everything inside bot management but leave log messages (make sure it works)
@@ -16,6 +16,7 @@ maybe a dark and light mode toggle in view.py
 # at the end
 make sure matejas new view.py also has matching docstrings and comments as the rest of the code and update ports.py to acomadate any new changes from view.py
 and rewrite the controller and its ports.py and obv also and comemnts and docstrings in there
+make sure tha variable names are consistent with the other files like e is in every other file called error instead so it should also be changed in view.py
 
 # at the end 
 remove discord token from config.ini and replace it with a placeholder token that is not valid and will not work and run it so the .env file gets updated

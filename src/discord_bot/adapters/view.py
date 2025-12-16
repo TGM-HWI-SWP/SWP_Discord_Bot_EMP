@@ -59,7 +59,7 @@ class AdminPanel(ViewPort):
                         
                         try:
                             stats = self.discord_bot.get_bot_stats()
-                            return stats["status"], str(stats["servers"]), f"{stats['users']:,}"
+                            return stats["status"], str(stats["servers"]), f'{stats['users']:,}'
                         except Exception as e:
                             return "Error", "0", "0"
                     
@@ -104,8 +104,8 @@ class AdminPanel(ViewPort):
                                 if not servers:
                                     return gr.update(choices=[]), "No servers found"
                                 
-                                choices = [f"{server['name']} (ID: {server['id']})" for server in servers]
-                                return gr.update(choices=choices), f"Found {len(servers)} servers"
+                                choices = [f'{server['name']} (ID: {server['id']})' for server in servers]
+                                return gr.update(choices=choices), f'Found {len(servers)} servers'
                 
                     with gr.Row(visible=False) as user_mgmt_section:
                         with gr.Column():
@@ -134,16 +134,16 @@ class AdminPanel(ViewPort):
                                         if guild:
                                             for member in guild.members:
                                                 if username.lower() in member.name.lower() or username.lower() in str(member.display_name).lower():
-                                                    user_entry = f"{member.name}#{member.discriminator} (ID: {member.id})"
+                                                    user_entry = f'{member.name}#{member.discriminator} (ID: {member.id})'
                                                     if user_entry not in matching_users:
                                                         matching_users.append(user_entry)
                                     
                                     if not matching_users:
                                         return gr.update(choices=[]), "No users found"
                                     
-                                    return gr.update(choices=matching_users), f"Found {len(matching_users)} user(s)"
+                                    return gr.update(choices=matching_users), f'Found {len(matching_users)} user(s)'
                                 except Exception as e:
-                                    return gr.update(choices=[]), f"Error searching users: {str(e)}"
+                                    return gr.update(choices=[]), f'Error searching users: {str(e)}'
                             
                             def block_user(user_selection):
                                 if not self.check_available():
@@ -239,21 +239,21 @@ class AdminPanel(ViewPort):
                                                 
                                     DiscordConfigLoader.TARGET_LANGUAGE = target_language
                                     
-                                    self.logging(f"Updated DiscordConfigLoader.TARGET_LANGUAGE = {target_language}")
+                                    self.logging(f'Updated DiscordConfigLoader.TARGET_LANGUAGE = {target_language}')
                                 except Exception as e:
-                                    self.logging(f"Error updating config_loader: {e}")
+                                    self.logging(f'Error updating config_loader: {e}')
                                     success = False
                                 
                                 if success:
                                     status_parts = [
-                                        f"**Settings saved successfully!**",
-                                        f"\n- Auto Translate: **{'ON' if auto_translate_enabled else 'OFF'}**",
-                                        f"\n- Target Language: **{target_language.upper()}**" if auto_translate_enabled else "",
-                                        f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
+                                        f'**Settings saved successfully!**',
+                                        f'\n- Auto Translate: **{'ON' if auto_translate_enabled else 'OFF'}**',
+                                        f'\n- Target Language: **{target_language.upper()}**" if auto_translate_enabled else "',
+                                        f'\n- Log Messages: **{'ON' if log_messages else 'OFF'}**',
                                     ]
                                     status_message = "".join(status_parts)
                                     
-                                    return f"**Settings saved successfully!**\n\n{status_message}"
+                                    return f'**Settings saved successfully!**\n\n{status_message}'
                                 else:
                                     return "**Failed to save settings.**\n\nPlease check the bot connection."
                                             
@@ -299,12 +299,10 @@ class AdminPanel(ViewPort):
                             with gr.Row():
                                 with gr.Column():
                                     gr.Markdown("### Search & View")
+                                    dish_categories = self.dbms.get_distinct_values("dishes", "category")
                                     search_query = gr.Textbox(label="Search", placeholder="Enter dish name...")
                                     search_cat = gr.Dropdown(
-                                        choices=["All", "Italian", "German", "Austrian", "Mexican", "Chinese", 
-                                                "Japanese", "Indian", "American", "French", "Spanish", "Greek",
-                                                "Turkish", "Thai", "Korean", "British", "African", "Middle Eastern",
-                                                "Vegan", "Dessert", "Seafood"],
+                                        choices="All" + dish_categories,
                                         value="All",
                                         label="Category"
                                     )
@@ -314,10 +312,7 @@ class AdminPanel(ViewPort):
                                 with gr.Column():
                                     gr.Markdown("### Add New Dish")
                                     new_cat = gr.Dropdown(
-                                        choices=["Italian", "German", "Austrian", "Mexican", "Chinese", 
-                                                "Japanese", "Indian", "American", "French", "Spanish", "Greek",
-                                                "Turkish", "Thai", "Korean", "British", "African", "Middle Eastern",
-                                                "Vegan", "Dessert", "Seafood"],
+                                        choices=dish_categories,
                                         value="Italian",
                                         label="Category"
                                     )
@@ -332,10 +327,7 @@ class AdminPanel(ViewPort):
                     
                             gr.Markdown("### Test Random Dish")
                             test_cat = gr.Dropdown(
-                                choices=["Italian", "German", "Austrian", "Mexican", "Chinese", 
-                                        "Japanese", "Indian", "American", "French", "Spanish", "Greek",
-                                        "Turkish", "Thai", "Korean", "British", "African", "Middle Eastern",
-                                        "Vegan", "Dessert", "Seafood"],
+                                choices=dish_categories,
                                 value="Italian"
                             )
                             test_btn = gr.Button("Get Random")
@@ -529,5 +521,5 @@ if __name__ == "__main__":
         translator=translator,
         controller=controller,  
     )
-    
+
     panel.launch()
