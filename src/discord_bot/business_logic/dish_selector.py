@@ -1,3 +1,5 @@
+"""Select a random dish suggestion from the `dishes` table."""
+
 from discord_bot.contracts.ports import DatabasePort, DishPort
 from discord_bot.business_logic.model import Model
 

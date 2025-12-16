@@ -1,3 +1,5 @@
+"""Business-logic wrapper around `deep_translator` for Discord messages."""
+
 from deep_translator import GoogleTranslator
 
 from discord_bot.contracts.ports import TranslatePort, DatabasePort

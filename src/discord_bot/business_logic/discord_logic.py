@@ -1,3 +1,5 @@
+"""Concrete implementation of `DiscordLogicPort` using `discord.py`."""
+
 import asyncio
 from datetime import datetime
 import discord
@@ -41,10 +43,10 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Left guild: {guild.name} ({guild.id})')
             self._update_connected_guilds()
     
-    def execute_function(self):
+    def execute_function(self) -> None:
         pass
     
-    def run(self):
+    def run(self) -> None:
         self.logging("Starting Discord bot...")
         token = DiscordConfigLoader.DISCORD_TOKEN
 
@@ -52,13 +54,13 @@ class DiscordLogic(Model, DiscordLogicPort):
         self.logging(f'Starting Discord bot with token: {token_preview}')
         self.client.run(token)
 
-    def stop(self):
+    def stop(self) -> None:
         asyncio.create_task(self.client.close())
 
     def set_translator(self, translator: TranslatePort) -> None:
         self.translator = translator
 
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         self.logging(f'Logged in as {self.client.user}')
         
         await self.tree.sync()
@@ -70,7 +72,7 @@ class DiscordLogic(Model, DiscordLogicPort):
 
         self._update_connected_guilds()
 
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message) -> None:
         if message.author == self.client.user:
             return
         
@@ -204,6 +206,7 @@ class DiscordLogic(Model, DiscordLogicPort):
         return True
             
     def _update_connected_guilds(self) -> None:
+        """Update the connected guilds statistic in the database, if available."""
         if not self.dbms:
             return
         try:
@@ -217,6 +220,11 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Error updating connected guilds: {error}')
 
     def _save_message(self, message_data: dict) -> None:
+        """Persist a public guild message to the database and update statistics.
+
+        Args:
+            message_data (dict): Serialized message payload.
+        """
         if not self.dbms:
             return
         try:
@@ -226,6 +234,11 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Error saving message: {error}')
     
     def _save_direct_message(self, dm_data: dict) -> None:
+        """Persist a direct message to the database and update statistics.
+
+        Args:
+            dm_data (dict): Serialized DM payload.
+        """
         if not self.dbms:
             return
         try:
@@ -235,6 +248,12 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Error saving direct message: {error}')
     
     def _save_command(self, command_name: str, description: str) -> None:
+        """Ensure a command row exists in the `commands` table.
+
+        Args:
+            command_name (str): Name of the command.
+            description (str): Human-readable description.
+        """
         if not self.dbms:
             return
         try:
@@ -252,6 +271,11 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Error saving command: {error}')
     
     def _update_command_usage(self, command_name: str) -> None:
+        """Increment usage counters for a command and update statistics.
+
+        Args:
+            command_name (str): Name of the command that was invoked.
+        """
         if not self.dbms:
             return
         try:
@@ -266,6 +290,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Error updating command usage: {error}')
     
     def _increment_message_stats(self) -> None:
+        """Increment the daily total message counter in statistics."""
         if not self.dbms:
             return
         try:
@@ -279,6 +304,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Error updating message stats: {error}')
     
     def _increment_dm_stats(self) -> None:
+        """Increment the daily total DM counter in statistics."""
         if not self.dbms:
             return
         try:
@@ -292,6 +318,11 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Error updating DM stats: {error}')
     
     def _increment_command_stats(self, command_name: str) -> None:
+        """Increment the daily command counters for the given command.
+
+        Args:
+            command_name (str): Command whose usage should be counted.
+        """
         if not self.dbms:
             return
         try:
@@ -308,6 +339,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.logging(f'Error updating command stats: {error}')
 
     def _load_auto_translate_targets(self) -> None:
+        """Load all auto-translate target subscriptions from the database."""
         try:
             targets: dict[int, set[int]] = {}
             for record in self.dbms.get_data("auto_translate", {}):
@@ -335,7 +367,7 @@ class DiscordLogic(Model, DiscordLogicPort):
                 "subscriber_user_id": subscriber_user_id,
                 "target_user_name": target_user_name,
                 "subscriber_user_name": subscriber_user_name,
-                "created_at": datetime.now().isoformat(),
+                "created_at": datetime.now().isoformat()
             },
         )
 

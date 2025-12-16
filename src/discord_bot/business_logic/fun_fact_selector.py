@@ -1,3 +1,5 @@
+"""Return random fun facts from the `fun_facts` table."""
+
 from discord_bot.contracts.ports import DatabasePort, FunFactPort
 from discord_bot.business_logic.model import Model
 

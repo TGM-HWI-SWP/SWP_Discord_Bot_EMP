@@ -1,3 +1,5 @@
+"""Load initial data from CSV files into MongoDB-backed tables."""
+
 import csv
 from pathlib import Path
 from datetime import datetime
@@ -11,7 +13,12 @@ class DBLoader:
         self.discord_dbms = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
         self.db_data_path = Path(__file__).parent / "db_data"
     
-    def import_tables(self, force_reload: bool = False):
+    def import_tables(self, force_reload: bool = False) -> None:
+        """Import constant-value tables from CSV files into the CV database.
+
+        Args:
+            force_reload (bool): If True, always reload all tables even when data exists.
+        """
         self.cv_dbms.connect()
 
         for csv_file in self.db_data_path.glob("*.csv"):
@@ -35,7 +42,8 @@ class DBLoader:
         
         print("Constant values database initialization complete")
     
-    def initialize_discord_tables(self):
+    def initialize_discord_tables(self) -> None:
+        """Initialize empty tables and statistics documents for the Discord database."""
         self.discord_dbms.connect()
 
         tables = ["messages", "direct_messages", "commands", "statistics", "auto_translate"]

@@ -1,3 +1,5 @@
+"""Entry point for starting the Discord bot and admin panel."""
+
 import discord
 import runpy
 import threading
@@ -10,7 +12,9 @@ from discord_bot.business_logic.discord_logic import DiscordLogic
 from discord_bot.init.config_loader import DBConfigLoader
 from discord_bot.adapters.view import AdminPanel
 
-def start_bot():
+
+def start_bot() -> None:
+    """Create database connections, initialize logic, and start the Discord bot."""
     cv_db = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
     cv_db.connect()
 
@@ -24,13 +28,30 @@ def start_bot():
     discord_bot = DiscordLogic(dbms=discord_db)
     discord_bot.set_translator(translator)
 
-    async def funfact_command(interaction: discord.Interaction):
+    async def funfact_command(interaction: discord.Interaction) -> None:
+        """Handle the `/funfact` command and send a random fun fact response.
+
+        Args:
+            interaction (discord.Interaction): Interaction context for the command.
+        """
         await interaction.response.send_message(fun_fact_selector.execute_function())
 
-    async def dish_command(interaction: discord.Interaction, category: str):
+    async def dish_command(interaction: discord.Interaction, category: str) -> None:
+        """Handle the `/dish` command and send a dish suggestion.
+
+        Args:
+            interaction (discord.Interaction): Interaction context for the command.
+            category (str): Dish category chosen by the user.
+        """
         await interaction.response.send_message(dish_selector.execute_function(category))
 
-    async def translate_command(interaction: discord.Interaction, message: discord.Message):
+    async def translate_command(interaction: discord.Interaction, message: discord.Message) -> None:
+        """Handle the context-menu translate command for a specific message.
+
+        Args:
+            interaction (discord.Interaction): Interaction context for the command.
+            message (discord.Message): Message object whose content should be translated.
+        """
         text_to_translate = (message.content or "").strip()
 
         if not text_to_translate or text_to_translate.startswith("http"):
@@ -41,12 +62,24 @@ def start_bot():
 
         await interaction.response.send_message(f'**Original:** {text_to_translate}\n**Translated:** {translated_text}', ephemeral=True)
 
-    async def auto_translate_command(interaction: discord.Interaction, target: discord.Member):
+    async def auto_translate_command(interaction: discord.Interaction, target: discord.Member) -> None:
+        """Enable auto-translation of a member's messages for the current user.
+
+        Args:
+            interaction (discord.Interaction): Interaction context for the command.
+            target (discord.Member): Member to auto-translate.
+        """
         discord_bot.enable_auto_translate(target_user_id=target.id, subscriber_user_id=interaction.user.id, target_user_name=target.display_name, subscriber_user_name=interaction.user.display_name)
         await interaction.response.send_message(f'Auto-translate enabled for <@{target.id}>.')
         discord_bot._update_command_usage("auto-translate")
 
-    async def auto_translate_remove_command(interaction: discord.Interaction, target: discord.Member):
+    async def auto_translate_remove_command(interaction: discord.Interaction, target: discord.Member) -> None:
+        """Disable auto-translation previously enabled for a member.
+
+        Args:
+            interaction (discord.Interaction): Interaction context for the command.
+            target (discord.Member): Member to disable auto-translation for.
+        """
         current = discord_bot.auto_translate_targets.get(target.id, set())
         if interaction.user.id not in current:
             await interaction.response.send_message(f'No auto-translate is set up for <@{target.id}>.')
@@ -56,7 +89,12 @@ def start_bot():
         await interaction.response.send_message(f'Auto-translate disabled for <@{target.id}>.')
         discord_bot._update_command_usage("auto-translate-remove")
 
-    async def auto_translate_list_command(interaction: discord.Interaction):
+    async def auto_translate_list_command(interaction: discord.Interaction) -> None:
+        """List all configured auto-translate targets in the guild.
+
+        Args:
+            interaction (discord.Interaction): Interaction context for the command.
+        """
         targets = discord_bot.auto_translate_targets
         if not targets:
             await interaction.response.send_message("No auto-translate targets are configured.")

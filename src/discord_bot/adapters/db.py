@@ -1,3 +1,5 @@
+"""MongoDB-backed implementation of the `DatabasePort` interface."""
+
 import numpy as np
 import time
 from pymongo import MongoClient
@@ -37,6 +39,17 @@ class DBMS(DatabasePort):
         raise ConnectionFailure(f'Mongo connect failed after {max_attempts} attempts (uri={self.uri}): {last_error}')
 
     def _table(self, table_name: str):
+        """Return the Mongo collection for the given table name.
+
+        Args:
+            table_name (str): Name of the collection/table.
+
+        Returns:
+            Collection: PyMongo collection object.
+
+        Raises:
+            RuntimeError: If called before a successful `connect`.
+        """
         if self.db is None:
             raise RuntimeError("DBMS not connected. Call connect() first.")
 

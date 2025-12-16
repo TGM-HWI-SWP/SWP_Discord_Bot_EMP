@@ -1,3 +1,5 @@
+"""Provide utilities for locating and preparing log files for models."""
+
 from pathlib import Path
 import re
 
@@ -7,6 +9,7 @@ class LogLoader:
         self.business_logic_dir = Path(__file__).parent.parent / "business_logic"
     
     def setup_log_files(self) -> None:
+        """Create empty log files for each business-logic module if missing."""
         self.log_dir.mkdir(parents=True, exist_ok=True)
         
         business_logic_files = [
@@ -22,6 +25,15 @@ class LogLoader:
         print("Log files setup complete.")
     
     def get_log_file_path(self, name: str, *, treat_as_filename: bool = False) -> Path:
+        """Return the file system path for a given logical log name.
+
+        Args:
+            name (str): Class or filename base to resolve.
+            treat_as_filename (bool): Whether to treat ``name`` as a literal filename.
+
+        Returns:
+            Path: Fully-qualified path to the log file.
+        """
         if treat_as_filename:
             filename = name if name.endswith(".log") else f'{name}.log'
             return self.log_dir / filename

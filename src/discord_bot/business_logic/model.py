@@ -1,10 +1,13 @@
+"""Provide a base model class with logging support."""
+
 from datetime import datetime
 
 from discord_bot.contracts.ports import ModelPort
 from discord_bot.init.log_loader import LogLoader
 
+
 class Model(ModelPort):
-    def __init__(self):
+    def __init__(self) -> None:
         self.log_loader = LogLoader()
 
     def logging(self, message: str = "Model logging", log_file_name: str | None = None) -> None:
@@ -14,9 +17,9 @@ class Model(ModelPort):
             else:
                 class_name = self.__class__.__name__
                 log_file = self.log_loader.get_log_file_path(class_name)
-            
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
+
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             log_file.parent.mkdir(parents=True, exist_ok=True)
             if not log_file.exists():
                 log_file.touch()

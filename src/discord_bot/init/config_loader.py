@@ -1,3 +1,5 @@
+"""Load configuration values for databases, Discord, and runtime settings."""
+
 import configparser
 import os
 from pathlib import Path
@@ -28,7 +30,12 @@ class DBConfigLoader:
     DISCORD_DB_NAME = os.getenv("DISCORD_DB_NAME", config.get("database", "discord_db_name", fallback="discord"))
     
     @staticmethod
-    def generate_env():
+    def generate_env() -> None:
+        """Generate a `.env` file from the current `config.ini` values.
+
+        Raises:
+            OSError: If the `.env` file cannot be written.
+        """
         env_path = project_root / ".env"
         
         env_content = f"""# Auto-generated from config.ini - Do not edit manually
