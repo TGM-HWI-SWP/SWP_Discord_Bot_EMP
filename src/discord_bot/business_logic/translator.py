@@ -35,6 +35,6 @@ if __name__ == "__main__":
     translator = Translator()
     sample_text = "Hello, how are you?"
     translated_text = translator.execute_function(sample_text)
-    print(f"Original: {sample_text}")
-    print(f"Translated: {translated_text}")
+    print(f'Original: {sample_text}')
+    print(f'Translated: {translated_text}')
     

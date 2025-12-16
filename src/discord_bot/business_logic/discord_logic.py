@@ -210,11 +210,11 @@ class DiscordLogic(Model, DiscordLogicPort):
             guild_count = len(self.client.guilds)
             self.guild_count = guild_count
 
-            self.dbms.update_data(table="statistics", query={}, data={"connected_guilds": guild_count})
-            self.logging(f"Connected guilds updated: {guild_count}")
+            self.dbms.update_data("statistics", {}, {"connected_guilds": guild_count})
+            self.logging(f'Connected guilds updated: {guild_count}')
 
         except Exception as error:
-            self.logging(f"Error updating connected guilds: {error}")
+            self.logging(f'Error updating connected guilds: {error}')
 
     def _save_message(self, message_data: dict) -> None:
         if not self.dbms:

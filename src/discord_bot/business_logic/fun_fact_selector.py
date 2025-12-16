@@ -7,12 +7,12 @@ class FunFactSelector(Model, FunFactPort):
         self.dbms = dbms
 
     def execute_function(self) -> str:
-        fun_fact = self.dbms.get_random_entry(table="fun_facts", category=None)
+        fun_fact = self.dbms.get_random_entry("fun_facts", None)
         if not fun_fact:
             self.logging("No fun fact found.")
             return ""
         result = fun_fact.get("fun_fact") or str(fun_fact)
-        self.logging(f"Fun fact selected: {result}")
+        self.logging(f'Fun fact selected: {result}')
         return result
 
 if __name__ == "__main__":

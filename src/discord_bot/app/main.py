@@ -90,23 +90,21 @@ def start_bot():
     discord_bot.register_command("auto-translate-list", auto_translate_list_command, description="List current auto-translate targets")
 
     discord_bot.run()
-    
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     runpy.run_module("discord_bot.init.log_loader", run_name="__main__")
-    
     runpy.run_module("discord_bot.init.db_loader", run_name="__main__")
-    
+
     cv_db = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
     cv_db.connect()
 
     discord_db = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
     discord_db.connect()
-    
+
     dish_selector = DishSelector(dbms=cv_db)
     fun_fact_selector = FunFactSelector(dbms=cv_db)
     translator = Translator(dbms=discord_db)
-    
+
     panel = AdminPanel(
         dbms=cv_db,
         dish_selector=dish_selector,
@@ -115,5 +113,4 @@ if __name__ == "__main__":
     )
 
     threading.Thread(target=start_bot, daemon=True).start()
-
     panel.launch()

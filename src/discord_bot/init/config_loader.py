@@ -19,8 +19,8 @@ class DBConfigLoader:
     BASIC_AUTH_USERNAME = config.get("mongo_express", "basic_auth_username", fallback="admin")
     BASIC_AUTH_PASSWORD = config.get("mongo_express", "basic_auth_password", fallback="admin")
 
-    URI_DOCKER = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@mongo:27017/"
-    URI_LOCAL = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@localhost:27017/"
+    URI_DOCKER = f'mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@mongo:27017/'
+    URI_LOCAL = f'mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@localhost:27017/'
     
     MONGO_URI = os.getenv("MONGO_URI", URI_DOCKER if IN_DOCKER else URI_LOCAL)
     

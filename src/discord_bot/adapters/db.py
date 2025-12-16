@@ -34,64 +34,64 @@ class DBMS(DatabasePort):
                     break
                 time.sleep(delay_seconds)
 
-        raise ConnectionFailure(f"Mongo connect failed after {max_attempts} attempts (uri={self.uri}): {last_error}")
+        raise ConnectionFailure(f'Mongo connect failed after {max_attempts} attempts (uri={self.uri}): {last_error}')
 
-    def _collection(self, table: str):
+    def _table(self, table_name: str):
         if self.db is None:
             raise RuntimeError("DBMS not connected. Call connect() first.")
-        
-        return self.db[table]
 
-    def get_table_size(self, table: str, category: str | None = None) -> int:
-        query = {"category": category} if category is not None else {}
-        return self._collection(table).count_documents(query)
+        return self.db[table_name]
 
-    def get_random_entry(self, table: str, category: str | None) -> dict:
+    def get_table_size(self, table_name: str, category: str | None = None) -> int:
         query = {"category": category} if category is not None else {}
-        size = self.get_table_size(table, category)
+        return self._table(table_name).count_documents(query)
+
+    def get_random_entry(self, table_name: str, category: str | None) -> dict:
+        query = {"category": category} if category is not None else {}
+        size = self.get_table_size(table_name, category)
         if size == 0:
             return {}
         
         index = int(np.random.randint(0, size))
-        cursor = self._collection(table).find(query).skip(index).limit(1)
+        cursor = self._table(table_name).find(query).skip(index).limit(1)
 
         for document in cursor:
             return document
         return {}
 
-    def get_data(self, table: str, query: dict) -> list[dict]:
-        return [document for document in self._collection(table).find(query)]
+    def get_data(self, table_name: str, query: dict) -> list[dict]:
+        return [document for document in self._table(table_name).find(query)]
 
-    def get_distinct_values(self, table: str, field: str) -> list[str]:
+    def get_distinct_values(self, table_name: str, field: str) -> list[str]:
         return sorted(
-            v for v in self._collection(table).distinct(field)
-            if v is not None
+            value for value in self._table(table_name).distinct(field)
+            if value is not None
         )
 
-    def insert_data(self, table: str, data: dict) -> bool:
-        return self._collection(table).insert_one(data).acknowledged
+    def insert_data(self, table_name: str, data: dict) -> bool:
+        return self._table(table_name).insert_one(data).acknowledged
 
-    def update_data(self, table: str, query: dict, data: dict) -> bool:
-        return self._collection(table).update_many(query, {"$set": data}).acknowledged
+    def update_data(self, table_name: str, query: dict, data: dict) -> bool:
+        return self._table(table_name).update_many(query, {"$set": data}).acknowledged
 
-    def delete_data(self, table: str, query: dict) -> bool:
-        return self._collection(table).delete_many(query).acknowledged
+    def delete_data(self, table_name: str, query: dict) -> bool:
+        return self._table(table_name).delete_many(query).acknowledged
 
-    def upload_collection(self, db_name: str, collection_name: str, data: list[dict], drop_existing: bool = True) -> bool:
+    def upload_table(self, db_name: str, table_name: str, data: list[dict], drop_existing: bool = True) -> bool:
         if self.client is None:
             raise RuntimeError("DBMS not connected. Call connect() first.")
-        
+
         try:
             target_db = self.client[db_name]
-            collection = target_db[collection_name]
-            
+            table = target_db[table_name]
+
             if drop_existing:
-                collection.drop()
-            
+                table.drop()
+
             if data:
-                collection.insert_many(data)
+                table.insert_many(data)
                 return True
             return False
-        
+
         except Exception as error:
-            raise RuntimeError(f"Error uploading collection: {error}")
+            raise RuntimeError(f'Error uploading table: {error}')

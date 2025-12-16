@@ -11,16 +11,16 @@ class DBLoader:
         self.discord_dbms = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
         self.db_data_path = Path(__file__).parent / "db_data"
     
-    def import_collections(self, force_reload: bool = False):
+    def import_tables(self, force_reload: bool = False):
         self.cv_dbms.connect()
-        
-        for csv_file in self.db_data_path.glob('*.csv'):
-            collection_name = csv_file.stem
+
+        for csv_file in self.db_data_path.glob("*.csv"):
+            table_name = csv_file.stem
 
             if not force_reload:
-                existing_count = self.cv_dbms.get_table_size(collection_name)
+                existing_count = self.cv_dbms.get_table_size(table_name)
                 if existing_count > 0:
-                    print(f'Skipping \'{collection_name}\' - already contains {existing_count} documents')
+                    print(f'Skipping "{table_name}" - already contains {existing_count} documents')
                     continue
 
             with open(csv_file, "r", encoding="utf-8") as file:
@@ -30,24 +30,24 @@ class DBLoader:
                     for row in reader
                 ]
 
-            self.cv_dbms.upload_collection(DBConfigLoader.CV_DB_NAME, collection_name, data)
-            print(f'Imported \'{collection_name}\' - {len(data)} documents')
+            self.cv_dbms.upload_table(DBConfigLoader.CV_DB_NAME, table_name, data)
+            print(f'Imported "{table_name}" - {len(data)} documents')
         
         print("Constant values database initialization complete")
     
-    def initialize_discord_collections(self):
+    def initialize_discord_tables(self):
         self.discord_dbms.connect()
-        
-        collections = ["messages", "direct_messages", "commands", "statistics", "auto_translate"]
-        
-        for collection_name in collections:
-            existing_count = self.discord_dbms.get_table_size(collection_name)
+
+        tables = ["messages", "direct_messages", "commands", "statistics", "auto_translate"]
+
+        for table_name in tables:
+            existing_count = self.discord_dbms.get_table_size(table_name)
             if existing_count == 0:
-                self.discord_dbms.insert_data(collection_name, {"_init": True})
-                self.discord_dbms.delete_data(collection_name, {"_init": True})
-                print(f'Initialized empty collection \'{collection_name}\'')
+                self.discord_dbms.insert_data(table_name, {"_init": True})
+                self.discord_dbms.delete_data(table_name, {"_init": True})
+                print(f'Initialized empty table "{table_name}"')
             else:
-                print(f'Collection \'{collection_name}\' already exists with {existing_count} documents')
+                print(f'Table "{table_name}" already exists with {existing_count} documents')
         
         today = datetime.now().date().isoformat()
         existing_stats = self.discord_dbms.get_data("statistics", {"date": today})
@@ -58,7 +58,7 @@ class DBLoader:
                 "total_commands": 0,
                 "total_dms": 0,
                 "connected_guilds": 0,
-                "command_breakdown": {}
+                "command_breakdown": {},
             }
             self.discord_dbms.insert_data("statistics", initial_stats)
             print(f'Initialized statistics for {today}')
@@ -67,5 +67,5 @@ class DBLoader:
 
 if __name__ == "__main__":
     loader = DBLoader()
-    loader.import_collections()
-    loader.initialize_discord_collections()
+    loader.import_tables()
+    loader.initialize_discord_tables()

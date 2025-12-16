@@ -34,7 +34,7 @@ class DiscordBotView(ViewPort):
         server_name = os.getenv("GRADIO_SERVER_NAME", "0.0.0.0")
         
         with gr.Blocks() as interface:
-            gr.Markdown(f"# {title}")
+            gr.Markdown(f'# {title}')
             server_choice = gr.Dropdown(label="Server", choices=["Server 1", "Server 2"], interactive=True)
             channel_id = gr.Number(label="Channel ID", value=0, precision=0)
             message_input = gr.Textbox(label="Enter your message")
@@ -52,7 +52,7 @@ class DiscordBotView(ViewPort):
             share=share,
             server_name=server_name
         )
-        return f"Interface rendered successfully (port: {port})"
+        return f'Interface rendered successfully (port: {port})'
     
     def get_user_input(self, interactable_element: str) -> str:
         """Get user input from a specific interactable element.
@@ -72,7 +72,7 @@ if __name__ == "__main__":
             return True
 
         def handle_message(self, server, channel_id: int, message: str) -> bool:
-            return f"Handled message: {message}"
+            return f'Handled message: {message}'
 
         def get_server_info() -> list[dict]:
             return [{"id": 1, "name": "Test Server"}]

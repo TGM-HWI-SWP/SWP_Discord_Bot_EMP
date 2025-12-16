@@ -18,11 +18,11 @@ class DatabasePort(ABC):
         ...
 
     @abstractmethod
-    def get_data(self, table: str, query: dict) -> list[dict]:
+    def get_data(self, table_name: str, query: dict) -> list[dict]:
         """Fetch data from the specified table based on the query.
 
         Args:
-            table (str): The name of the table to fetch data from.
+            table_name (str): The name of the table to fetch data from.
             query (dict): The query parameters to filter the data.
 
         Returns:
@@ -31,21 +31,21 @@ class DatabasePort(ABC):
         ...
 
     @abstractmethod
-    def get_distinct_values(self, table: str, field: str) -> list[str]:
+    def get_distinct_values(self, table_name: str, field: str) -> list[str]:
         """Get the distinct values of the specified field in the specified table.
 
         Args:
-            table (str): The name of the table to get the distinct values from.
+            table_name (str): The name of the table to get the distinct values from.
             field (str): The field to get the distinct values from.
         """
         ...
     
     @abstractmethod
-    def insert_data(self, table: str, data: dict) -> bool:
+    def insert_data(self, table_name: str, data: dict) -> bool:
         """Insert data into the specified table.
 
         Args:
-            table (str): The name of the table to insert data into.
+            table_name (str): The name of the table to insert data into.
             data (dict): The data to be inserted.
 
         Returns:
@@ -54,11 +54,11 @@ class DatabasePort(ABC):
         ...
     
     @abstractmethod
-    def update_data(self, table: str, query: dict, data: dict) -> bool:
+    def update_data(self, table_name: str, query: dict, data: dict) -> bool:
         """Update data in the specified table based on the query.
 
         Args:
-            table (str): The name of the table to update data in.
+            table_name (str): The name of the table to update data in.
             query (dict): The query parameters to filter the data to be updated.
             data (dict): The new data to be updated.
         
@@ -68,11 +68,11 @@ class DatabasePort(ABC):
         ...
 
     @abstractmethod
-    def delete_data(self, table: str, query: dict) -> bool:
+    def delete_data(self, table_name: str, query: dict) -> bool:
         """Delete data from the specified table based on the query.
 
         Args:
-            table (str): The name of the table to delete data from.
+            table_name (str): The name of the table to delete data from.
             query (dict): The query parameters to filter the data to be deleted.
         
         Returns:
@@ -81,11 +81,11 @@ class DatabasePort(ABC):
         ...
 
     @abstractmethod
-    def get_random_entry(self, table: str, category: str | None) -> dict:
+    def get_random_entry(self, table_name: str, category: str | None) -> dict:
         """Fetch a random entry from the specified table and category.
 
         Args:
-            table (str): The name of the table to fetch data from.
+            table_name (str): The name of the table to fetch data from.
             category (str): The category to filter the data (optional).
             
         Returns:
@@ -94,11 +94,11 @@ class DatabasePort(ABC):
         ...
     
     @abstractmethod
-    def get_table_size(self, table: str, category: str | None = None) -> int:
+    def get_table_size(self, table_name: str, category: str | None = None) -> int:
         """Get the size of the specified table, optionally filtered by category.
 
         Args:
-            table (str): The name of the table.
+            table_name (str): The name of the table.
             category (str | None): The category to filter by. If None, count all entries.
 
         Returns:
