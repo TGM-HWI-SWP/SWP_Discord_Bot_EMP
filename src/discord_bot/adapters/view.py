@@ -1,64 +1,7 @@
 import gradio as gr
 import discord
 from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort, ControllerPort
-#import datetime
 
-
-
-
-# ADMIN_PANEL_CSS = """
-# .gradio-container {
-#     font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-# }
-# .admin-header {
-#     background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
-#     color: white;
-#     padding: 30px;
-#     border-radius: 12px;
-#     text-align: center;
-#     margin-bottom: 25px;
-#     box-shadow: 0 8px 24px rgba(88, 101, 242, 0.4);
-# }
-# .admin-header h1 {
-#     margin: 0;
-#     font-size: 2.8em;
-#     font-weight: 700;
-#     text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-# }
-# .stat-card {
-#     background: linear-gradient(135deg, #2C2F33 0%, #23272A 100%);
-#     color: white;
-#     padding: 25px;
-#     border-radius: 12px;
-#     text-align: center;
-#     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-#     border: 3px solid #5865F2;
-# }
-# .stat-number {
-#     font-size: 3em;
-#     font-weight: 700;
-#     color: white;
-# }
-# .stat-label {
-#     font-size: 1.2em;
-#     color: #99AAB5;
-#     text-transform: uppercase;
-# }
-
-# /* Override Gradio orange colors with Discord blue */
-# button.primary, .gr-button-primary {
-#     background: #5865F2 !important;
-#     border-color: #5865F2 !important;
-# }
-# button.primary:hover, .gr-button-primary:hover {
-#     background: #4752C4 !important;
-#     border-color: #4752C4 !important;
-# }
-# .tabs button[aria-selected="true"] {
-#     border-bottom-color: #5865F2 !important;
-#     color: #5865F2 !important;
-# }
-# """
 
 
 
