@@ -1,7 +1,5 @@
 TODO:
 
-THREADING ERROR IN GRADIO CONTAINER
-
 #urgent
 notification if dc bot gets message
 
