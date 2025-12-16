@@ -13,7 +13,6 @@ from discord_bot.init.config_loader import DBConfigLoader
 from discord_bot.adapters.view import AdminPanel
 from discord_bot.adapters.controller.controller import Controller
 
-
 def start_bot() -> None:
     """Create database connections, initialize logic, and start the Discord bot."""
     cv_db = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
