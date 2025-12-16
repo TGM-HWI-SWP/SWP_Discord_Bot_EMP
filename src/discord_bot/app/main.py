@@ -139,15 +139,25 @@ if __name__ == "__main__":
     discord_db = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
     discord_db.connect()
 
+    general_db = DBMS()
+    general_db.connect()
+
     dish_selector = DishSelector(dbms=cv_db)
     fun_fact_selector = FunFactSelector(dbms=cv_db)
     translator = Translator(dbms=discord_db)
 
-    panel = AdminPanel(
-        dbms=cv_db,
+    controller = Controller(
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
         translator=translator
+    )
+
+    panel = AdminPanel(
+        dbms=general_db,
+        dish_selector=dish_selector,
+        fun_fact_selector=fun_fact_selector,
+        translator=translator,
+        controller=controller 
     )
 
     # Run the bot in a background thread so the admin panel can stay responsive.

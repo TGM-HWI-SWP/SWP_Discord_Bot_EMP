@@ -1,15 +1,14 @@
-TODO (YES THIS IS IN ORDER OF PRIORITY SO FOLLOW IT):
-
-ALWAYS ON A NEW BRANCH
+TODO:
 
 #urgent
 notification if dc bot gets message
 
 # high priority
-view.py needs to be refactored entirely and simplified
+ALSO USE dish_categories = cv_db.get_distinct_values("dishes", "category") TO GET THE DISHES INSTEAD OF HARDCODING
 
-# high priority
-orange theme in view.py needs to go (should be blue like discord) 
+view should have buttons for reseting fun facts and dish tables simply delete the table and then call import_tables from db_loader and also add entry buttons dont work yet
+
+Remove User management entirely and remove everything inside bot management but leave log messages (make sure it works)
 
 # optional
 maybe a dark and light mode toggle in view.py

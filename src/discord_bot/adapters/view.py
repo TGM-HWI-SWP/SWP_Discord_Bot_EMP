@@ -1,9 +1,8 @@
+"""This File contains the gradio Web-Interface."""
+
 import gradio as gr
 import discord
 from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort, ControllerPort
-
-
-
 
 class AdminPanel(ViewPort):
     def __init__(
@@ -66,161 +65,9 @@ class AdminPanel(ViewPort):
                     
                     refresh_btn.click(fn=load_bot_status, outputs=[bot_status, server_count, user_count])
                     app.load(fn=load_bot_status, outputs=[bot_status, server_count, user_count])
-               
-               
-                # with gr.Tab("Bot Control"):
-                    
-                #     gr.Markdown("### Discord Bot Management")
-                    
-                #     with gr.Row():
-                #         with gr.Column():
-                #             gr.Markdown("#### Server Management")
-                #             server_list = gr.Dropdown(label="Select Server", choices=[], interactive=True)
-                #             refresh_servers_btn = gr.Button("Refresh Servers")
-                #             leave_server_btn = gr.Button("Leave Server")
-                #             server_status = gr.Markdown("")
-                        
-                #         with gr.Column():
-                #             gr.Markdown("#### User Management")
-                #             user_id_input = gr.Textbox(label="User ID")
-                #             block_user_btn = gr.Button("Block User")
-                #             unblock_user_btn = gr.Button("Unblock User")
-                #             user_status = gr.Markdown("")
-                    
-                #     gr.Markdown("#### Send Custom Message")
-                #     with gr.Row():
-                #         channel_id_input = gr.Textbox(label="Channel ID")
-                #         message_input = gr.Textbox(label="Message", lines=3)
-                #     send_message_btn = gr.Button("Send Message")
-                #     message_status = gr.Markdown("")
-                    
-                #     gr.Markdown("#### Bot Settings")
-                #     with gr.Row():
-                #         with gr.Column():
-                #             bot_prefix = gr.Textbox(label="Command Prefix", value="!")
-                #             bot_status_text = gr.Textbox(label="Status Text", value="Playing")
-                #         with gr.Column():
-                #             auto_reply = gr.Checkbox(label="Auto Reply", value=False)
-                #             log_messages = gr.Checkbox(label="Log Messages", value=True)
-                #     update_settings_btn = gr.Button("Update Settings")
-                #     settings_status = gr.Markdown("")
-                    
-                    
-                #     def refresh_server_list():
-                #         if not self.check_available():
-                #             return gr.update(), "No discord bot instance"
-                        
-                #         if not self.check_connection():
-                #             return gr.update(), "Bot offline"
-                            
-                #         servers = self.discord_bot.get_servers()
-                #         if not servers:
-                #             return gr.update(), "No servers found"
-                            
-                #         choices = [f'{server["name"]} ({server["id"]})' for server in servers]
-                #         return gr.update(choices=choices), f"Found {len(servers)} servers"
-                    
-                #     def leave_server(server_selection: str):
-                #         if not self.check_available():
-                #             return gr.update(), "No discord bot instance"
-                #         if not self.check_connection():
-                #             return gr.update(), "Bot offline"
-                #         if not server_selection:
-                #             return gr.update(), "Please select a server"
-                #         try:
-                #             server_id = int(server_selection.split('(')[-1].rstrip(')'))
-                #         except (ValueError, IndexError):
-                #             return gr.update(), "Invalid server selection"
-                        
-                #         success = self.discord_bot.leave_server(server_id)
-                #         if success:
-                #             return refresh_server_list()
-                #         else:
-                #             return gr.update(), f"Failed to leave server (ID: {server_id})"
-                    
-                #     def block_user(user_id: str):
-                #         if not self.check_available():
-                #             return "No discord bot instance"
-                        
-                #         if not self.check_connection():
-                #             return "Bot offline"
-                        
-                #         if not user_id:
-                #             return "Please enter a User ID"
-                        
-                #         try:
-                #             user_id_int = int(user_id)
-                #         except ValueError:
-                #             return "Invalid User ID (must be a number)"
-                        
-                #         success = self.discord_bot.block_user(user_id_int)
-                #         if success:
-                #             return f"Successfully blocked user (ID: {user_id_int})"
-                #         else:
-                #             return f"Failed to block user (ID: {user_id_int})"
-                    
-                #     def unblock_user(user_id: str):
-                #         if not self.check_available():
-                #             return "No discord bot instance"
-                        
-                #         if not self.check_connection():
-                #             return "Bot offline"
-                        
-                #         if not user_id:
-                #             return "Please enter a User ID"
-                        
-                #         try:
-                #             user_id_int = int(user_id)
-                #         except ValueError:
-                #             return "Invalid User ID (must be a number)"
-                        
-                #         success = self.discord_bot.unblock_user(user_id_int)
-                #         if success:
-                #             return f"Successfully unblocked user (ID: {user_id_int})"
-                #         else:
-                #             return f"Failed to unblock user (ID: {user_id_int})"
-                    
-                #     def send_message(channel_id: str, message: str):
-                #         if not self.check_available():
-                #             return "No discord bot instance"
-                            
-                #         if not self.check_connection():
-                #             return "Bot offline"
-                            
-                #         if not all([channel_id, message]):  
-                #             return "Channel ID and message required"
-            
-                #         try:
-                #             channel_id = int(channel_id)
-                #         except ValueError:
-                #             return "Invalid channel ID"
-                            
-                #         success = self.discord_bot.send_message(0, channel_id, message)
-                #         return "Message sent successfully" if success else "Failed to send message"
-                    
-                #     def update_settings(prefix: str, status: str, auto_reply_enabled: bool, log_enabled: bool):
-                #         if not self.check_available():
-                #             return "No discord bot instance"
-                #         if not self.check_connection():
-                #             return "Bot offline"
-                        
-                #         success = self.discord_bot.update_settings(prefix, status, auto_reply_enabled, log_enabled)
-                        
-                #         if success:
-                #             return f"Settings updated:\n- Prefix: {prefix}\n- Status: {status}\n- Auto Reply: {'ON' if auto_reply_enabled else 'OFF'}\n- Logging: {'ON' if log_enabled else 'OFF'}"
-                #         else:
-                #             return "Failed to save settings"
-                    
-                #     refresh_servers_btn.click(fn=refresh_server_list, outputs=[server_list, server_status])
-                #     leave_server_btn.click(fn=leave_server, inputs=[server_list], outputs=[server_list, server_status])
-                #     block_user_btn.click(fn=block_user, inputs=[user_id_input], outputs=user_status)
-                #     unblock_user_btn.click(fn=unblock_user, inputs=[user_id_input], outputs=user_status)
-                #     send_message_btn.click(fn=send_message, inputs=[channel_id_input, message_input], outputs=message_status)
-                #     update_settings_btn.click(fn=update_settings, inputs=[bot_prefix, bot_status_text, auto_reply, log_messages], outputs=settings_status)
-                
+
                 with gr.Tab("Control Panel"):
                     section_selector = gr.Dropdown(label="Select Section", choices=["Server Management", "User Management", "Custom Messages", "Bot Settings"], value="Server Management",interactive=True)
-                    
                    
                     with gr.Row(visible=True) as server_mgmt_section:
                         with gr.Column():
@@ -370,7 +217,6 @@ class AdminPanel(ViewPort):
                                 gr.Markdown("### Command Settings")
                                 log_messages_checkbox = gr.Checkbox(label="Log Messages", value=True, interactive=True)
                                 
-                            
                             save_settings_btn = gr.Button("Save Settings", variant="primary", size="lg", interactive=True)
                             settings_status = gr.Markdown("")
                             
@@ -447,8 +293,6 @@ class AdminPanel(ViewPort):
                     
                     save_settings_btn.click(fn=save_bot_settings, inputs=[auto_translate_checkbox, input_translate_language, log_messages_checkbox], outputs=[settings_status])
 
-                        
-              
                 with gr.Tab("Database"):
                     with gr.Tabs():
                         with gr.Tab("Dishes"):
@@ -683,7 +527,7 @@ if __name__ == "__main__":
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
         translator=translator,
-        controller=controller,
-        port=7861  
+        controller=controller,  
     )
+    
     panel.launch()
