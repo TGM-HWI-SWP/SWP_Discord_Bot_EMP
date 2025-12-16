@@ -39,11 +39,14 @@ services:
       MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
       GRADIO_SERVER_NAME: 0.0.0.0
       GRADIO_SERVER_PORT: 7860
-    volumes:
-      - .:/usr/src/discord_bot:rw
+      TZ: Europe/Vienna
     depends_on:
       - mongo
     restart: always
+    volumes:
+      - ./src:/usr/src/discord_bot/src:rw
+      - venv_data:/usr/local/venv
   
 volumes:
   mongo_data:
+  venv_data:

@@ -1,19 +1,6 @@
-TODO:
+TODO (YES THIS IS IN ORDER OF PRIORITY SO FOLLOW IT):
 
-# urgent
-.venv still broken in bat file
-
-# urgent
-gradio and codebase both need separate docker container so nothing gets executed twice (gradio volume in docker-compose.yaml)
-
-# urgent
-gradio needs ages to start up
-
-# urgent
-discord bot still needs translate and auto translate methods (also need to be integrated in view.py via controller.py and the respective ports need to be added to ports.py)
-
-# urgent
-and dish selection as well as auto translate and translate need to accept params over on discord (maybe @user for the auto translate and a dropdown or premade selection for dish category if possible)
+ALWAYS ON A NEW BRANCH
 
 #urgent
 notification if dc bot gets message
@@ -28,7 +15,11 @@ orange theme in view.py needs to go (should be blue like discord)
 maybe a dark and light mode toggle in view.py
 
 # at the end
-entire code needs to be checked for readability and understandability (comments where necessary, constant variable names across files, docstrings in google style for every function and class, typehinting everywhere, and one-line docstrings or comments in the first line of every file describing its purpose)
+make sure matejas new view.py also has matching docstrings and comments as the rest of the code and update ports.py to acomadate any new changes from view.py
+and rewrite the controller and its ports.py and obv also and comemnts and docstrings in there
+
+# at the end 
+remove discord token from config.ini and replace it with a placeholder token that is not valid and will not work and run it so the .env file gets updated
 
 # at the end
-readme and license need to be updated
+readme and license need to be updated including a comprehensive guide to set up the bot (copy from other repo hihi)

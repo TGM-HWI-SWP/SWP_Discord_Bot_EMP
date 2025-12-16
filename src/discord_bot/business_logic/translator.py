@@ -1,3 +1,5 @@
+"""Business-logic wrapper around `deep_translator` for Discord messages."""
+
 from deep_translator import GoogleTranslator
 
 from discord_bot.contracts.ports import TranslatePort, DatabasePort
@@ -15,6 +17,7 @@ class Translator(Model, TranslatePort):
         if user_id and self.dbms:
             user_data = self.dbms.get_data("users", {"user_id": user_id})
             if user_data:
+                # Prefer the user's saved target language.
                 target_language = user_data[0].get("target_language", target_language)
         
         for attempt in range(10):
@@ -24,7 +27,7 @@ class Translator(Model, TranslatePort):
                 if user_id:
                     self.logging(f'Successfully auto-translated: \'{text}\' -> \'{result}\' (target: {target_language})')
                 else:
-                    self.logging(f'Successfully translated: \'{text}\' -> \'{result}\'')
+                    self.logging(f'Successfully translated: \'{text}\' -> \'{result}\' (target: {target_language})')
                 return result
             except Exception as error:
                 self.logging(f'Translation error (attempt {attempt + 1}/10): {error}')
@@ -35,6 +38,6 @@ if __name__ == "__main__":
     translator = Translator()
     sample_text = "Hello, how are you?"
     translated_text = translator.execute_function(sample_text)
-    print(f"Original: {sample_text}")
-    print(f"Translated: {translated_text}")
+    print(f'Original: {sample_text}')
+    print(f'Translated: {translated_text}')
     

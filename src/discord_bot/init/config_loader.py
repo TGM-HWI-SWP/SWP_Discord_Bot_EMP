@@ -1,3 +1,5 @@
+"""Load configuration values for databases, Discord, and runtime settings."""
+
 import configparser
 import os
 from pathlib import Path
@@ -10,6 +12,8 @@ files_read = config.read(config_path)
 
 class DBConfigLoader:
     IN_DOCKER = os.path.exists("/.dockerenv")
+
+    TIMEZONE = config.get("docker", "timezone", fallback="Europe/Vienna")
     
     MONGO_ROOT_USER = config.get("mongo", "mongo_root_user", fallback="root")
     MONGO_ROOT_PASSWORD = config.get("mongo", "mongo_root_password", fallback="rot")
@@ -17,8 +21,8 @@ class DBConfigLoader:
     BASIC_AUTH_USERNAME = config.get("mongo_express", "basic_auth_username", fallback="admin")
     BASIC_AUTH_PASSWORD = config.get("mongo_express", "basic_auth_password", fallback="admin")
 
-    URI_DOCKER = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@mongo:27017/"
-    URI_LOCAL = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@localhost:27017/"
+    URI_DOCKER = f'mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@mongo:27017/'
+    URI_LOCAL = f'mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@localhost:27017/'
     
     MONGO_URI = os.getenv("MONGO_URI", URI_DOCKER if IN_DOCKER else URI_LOCAL)
     
@@ -26,11 +30,19 @@ class DBConfigLoader:
     DISCORD_DB_NAME = os.getenv("DISCORD_DB_NAME", config.get("database", "discord_db_name", fallback="discord"))
     
     @staticmethod
-    def generate_env():
+    def generate_env() -> None:
+        """Generate a `.env` file from the current `config.ini` values.
+
+        Raises:
+            OSError: If the `.env` file cannot be written.
+        """
         env_path = project_root / ".env"
         
         env_content = f"""# Auto-generated from config.ini - Do not edit manually
 # Regenerate by calling DatabaseConfig.generate_env()
+
+# Docker Configuration
+TZ={DBConfigLoader.TIMEZONE}
 
 # MongoDB Configuration
 MONGO_INITDB_ROOT_USERNAME={DBConfigLoader.MONGO_ROOT_USER}

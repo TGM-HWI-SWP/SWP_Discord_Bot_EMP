@@ -1,7 +1,15 @@
 FROM python:3.13.7-slim
 WORKDIR /usr/src/discord_bot
 
+# Install timezone data
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/*
+
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+ENV UV_PROJECT_ENVIRONMENT=/usr/local/venv
+
+ARG TZ=Europe/Vienna
+ENV TZ=${TZ}
 
 COPY . .
 

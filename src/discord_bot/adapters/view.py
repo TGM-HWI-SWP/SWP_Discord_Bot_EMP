@@ -510,13 +510,13 @@ class AdminPanel(ViewPort):
                                 all_dishes = self.dbms.get_data("dishes", {})
                                 next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
                                 success = self.dbms.insert_data("dishes", {"id": next_id, "category": cat, "dish": name})
-                                return f"Success: Added {name}" if success else "Error: Failed"
+                                return f'Success: Added {name}' if success else "Error: Failed"
                             
                             def delete_dish(dish_id):
                                 if not dish_id or dish_id <= 0:
                                     return "Error: Invalid ID"
                                 success = self.dbms.delete_data("dishes", {"id": int(dish_id)})
-                                return f"Success: Deleted ID {int(dish_id)}" if success else "Error: Failed"
+                                return f'Success: Deleted ID {int(dish_id)}' if success else "Error: Failed"
                             
                             def test_dish(cat):
                                 if self.controller:
@@ -569,7 +569,7 @@ class AdminPanel(ViewPort):
                                 if not fact_id or fact_id <= 0:
                                     return "Error: Invalid ID"
                                 success = self.dbms.delete_data("fun_facts", {"id": int(fact_id)})
-                                return f"Success: Deleted ID {int(fact_id)}" if success else "Error: Failed"
+                                return f'Success: Deleted ID {int(fact_id)}' if success else "Error: Failed"
                             
                             def test_fact():
                                 if self.controller:
@@ -628,7 +628,7 @@ class AdminPanel(ViewPort):
                                         stats["total_dishes"] += count
                                 
                                 stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
-                                
+
                                 dishes_md = f'<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{stats["total_dishes"]}</div></div>'
                                 facts_md = f'<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{stats["total_fun_facts"]}</div></div>'
                                 cats_md = f'<div class="stat-card"><div class="stat-label">Categories</div><div class="stat-number">{len(stats["dishes"])}</div></div>'
