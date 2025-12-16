@@ -1,4 +1,8 @@
 @echo off
+rem -----------------------------------------------------------------------------
+rem start.bat - Setup virtualenv, generate .env from config.ini, install deps,
+rem and start docker services. Flags: -r/--restart, -o/--softstart.
+rem -----------------------------------------------------------------------------
 
 rem Parse optional action flags: -r/--restart, -o/--softstart
 set ACTION=%1
