@@ -66,6 +66,7 @@ class DBMS(DatabasePort):
             return {}
         
         index = int(np.random.randint(0, size))
+        # Use skip+limit to fetch a single random document efficiently.
         cursor = self._table(table_name).find(query).skip(index).limit(1)
 
         for document in cursor:

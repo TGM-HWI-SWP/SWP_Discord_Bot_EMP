@@ -17,6 +17,7 @@ class Translator(Model, TranslatePort):
         if user_id and self.dbms:
             user_data = self.dbms.get_data("users", {"user_id": user_id})
             if user_data:
+                # Prefer the user's saved target language.
                 target_language = user_data[0].get("target_language", target_language)
         
         for attempt in range(10):

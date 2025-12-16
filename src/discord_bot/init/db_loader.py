@@ -8,6 +8,7 @@ from discord_bot.adapters.db import DBMS
 from discord_bot.init.config_loader import DBConfigLoader
 
 class DBLoader:
+    """Load initial data from CSV files into MongoDB-backed tables."""
     def __init__(self):
         self.cv_dbms = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
         self.discord_dbms = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
@@ -27,6 +28,7 @@ class DBLoader:
             if not force_reload:
                 existing_count = self.cv_dbms.get_table_size(table_name)
                 if existing_count > 0:
+                    # Skip populated tables unless a force reload is explicitly requested.
                     print(f'Skipping "{table_name}" - already contains {existing_count} documents')
                     continue
 
@@ -68,6 +70,7 @@ class DBLoader:
                 "connected_guilds": 0,
                 "command_breakdown": {},
             }
+            # Seed a baseline statistics row so counters can be incremented safely.
             self.discord_dbms.insert_data("statistics", initial_stats)
             print(f'Initialized statistics for {today}')
         

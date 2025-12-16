@@ -20,6 +20,7 @@ class LogLoader:
         for filename in business_logic_files:
             log_file = self.log_dir / f'{filename}.log'
             if not log_file.exists():
+                # Touch files so downstream logging can append without errors.
                 log_file.touch()
 
         print("Log files setup complete.")
@@ -38,6 +39,7 @@ class LogLoader:
             filename = name if name.endswith(".log") else f'{name}.log'
             return self.log_dir / filename
 
+        # Convert CamelCase class names to snake_case filenames for log files.
         filename = re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
         return self.log_dir / f'{filename}.log'
 

@@ -150,5 +150,6 @@ if __name__ == "__main__":
         translator=translator
     )
 
+    # Run the bot in a background thread so the admin panel can stay responsive.
     threading.Thread(target=start_bot, daemon=True).start()
     panel.launch()

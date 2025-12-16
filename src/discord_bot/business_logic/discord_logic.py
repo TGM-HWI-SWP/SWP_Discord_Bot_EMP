@@ -213,6 +213,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             guild_count = len(self.client.guilds)
             self.guild_count = guild_count
 
+            # Persist live guild count so admin panels reflect current state.
             self.dbms.update_data("statistics", {}, {"connected_guilds": guild_count})
             self.logging(f'Connected guilds updated: {guild_count}')
 
