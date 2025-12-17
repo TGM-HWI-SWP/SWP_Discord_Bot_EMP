@@ -170,13 +170,13 @@ class AdminPanel(ViewPort):
                                             
                     def switch_section(section):
                         if section == "Guild Management":
-                            return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+                            return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
                         elif section == "Custom Messages":
-                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
+                            return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
                         elif section == "Bot Settings":
-                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
                         else:
-                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
                     
                     gr.on(
                         triggers=[section_selector.change],
