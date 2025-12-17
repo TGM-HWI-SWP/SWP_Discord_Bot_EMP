@@ -259,11 +259,11 @@ class AdminPanel(ViewPort):
                             def delete_dish(dish_id):
                                 if not dish_id or dish_id <= 0:
                                     return "Error: Invalid ID"
-                                success = self.dbms.delete_data("dishes", {"id": int(dish_id)})
+                                success = self.dbms.delete_data("dishes", {"id": int(dish_id)}) # broken
                                 return f'Success: Deleted ID {int(dish_id)}' if success else "Error: Failed"
                             
                             def reset_dishes():
-                                self.dbms.delete_data("dishes", {})
+                                self.dbms.delete_data() # broken 
                                 self.db_loader.import_tables(force_reload=True, specific_table="dishes")
                                 return "Dish table reset to initial data"
                             

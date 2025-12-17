@@ -7,7 +7,7 @@ notification if dc bot gets message
 view should have buttons for reseting fun facts and dish tables simply delete the table and then call import_tables from db_loader and also add entry buttons dont work yet
 
 ^
-tried to do this for dishes but now the db is soemhow broken probably because of import_tables not working as intended but i dont know why
+tried to do this for dishes but now the db is soemhow broken probably because of delete_data not wrking since it doesnt accout for the database correctly only tries to look for table but not specified in which db that table should be 
 
 
 implement update_log_messages function in discord_logic but no idea what it should do ask mateja

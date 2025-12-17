@@ -88,8 +88,8 @@ class DBMS(DatabasePort):
     def update_data(self, table_name: str, query: dict, data: dict) -> bool:
         return self._table(table_name).update_many(query, {"$set": data}).acknowledged
 
-    def delete_data(self, table_name: str, query: dict) -> bool:
-        return self._table(table_name).delete_many(query).acknowledged
+    def delete_data(self, db_name: str, query: dict) -> bool:
+        return self._table(db_name).delete_many(query).acknowledged
 
     def upload_table(self, db_name: str, table_name: str, data: list[dict], drop_existing: bool = True) -> bool:
         if self.client is None:

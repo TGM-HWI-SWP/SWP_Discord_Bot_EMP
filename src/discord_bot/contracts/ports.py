@@ -85,11 +85,11 @@ class DatabasePort(ABC):
         ...
 
     @abstractmethod
-    def delete_data(self, table_name: str, query: dict) -> bool:
+    def delete_data(self, db_name: str, query: dict) -> bool:
         """Delete rows from a table based on a query.
 
         Args:
-            table_name (str): Name of the table to delete data from.
+            db_name (str): Name of the database containing the table to delete data from.
             query (dict): Filter specifying which rows to delete.
 
         Returns:
