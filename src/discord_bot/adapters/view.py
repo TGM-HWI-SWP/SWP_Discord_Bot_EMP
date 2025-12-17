@@ -55,17 +55,17 @@ class AdminPanel(ViewPort):
                                 label="Guilds", value="Loading...", interactive=False)
                         with gr.Column():
                             user_count = gr.Textbox(label="Total Users", value="Loading...", interactive=False)
-                    
+
                     def load_bot_status():
                         if not self.check_available():
                             return "Unavailable", "0", "0"
-                        
+
                         try:
                             stats = self.discord_bot.get_bot_stats()
-                            return stats["status"], str(stats["Guilds"]), f'{stats['users']:,}'
-                        except Exception as error:
+                            return stats.get("status", "Offline"), str(stats.get("guilds", 0)), f"{stats.get('users', 0):,}"
+                        except Exception:
                             return "Error", "0", "0"
-                    
+
                     refresh_btn.click(fn=load_bot_status, outputs=[bot_status, guild_count, user_count])
                     app.load(fn=load_bot_status, outputs=[bot_status, guild_count, user_count])
 
