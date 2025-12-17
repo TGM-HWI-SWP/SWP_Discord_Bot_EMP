@@ -40,9 +40,22 @@ class AdminPanel(ViewPort):
         return self.check_available() and getattr(self.discord_bot, 'is_connected', lambda: False)()  
     
     def build_interface(self) -> gr.Blocks:
-        with gr.Blocks(title="Discord Bot Admin Panel") as app:        
+        with gr.Blocks(title="Discord Bot Admin Panel") as app:    
+                
             with gr.Tabs():
+                
                 with gr.Tab("Overview"):
+                    
+                    gr.HTML("""
+                        <div style="width:100%;margin-bottom:18px;display:flex;justify-content:center;">
+                            <div style="width:calc(100% - 48px);max-width:1200px;background:#2F71F0;color:white;border-radius:14px;padding:18px 24px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(47,113,240,0.18);">
+                                <div style="text-align:center;font-size:32px;font-weight:700;letter-spacing:0.4px;">
+                                    Leberkas Larry Admin Panel
+                                </div>
+                            </div>
+                        </div>
+                    """)
+
                     gr.Markdown("### Bot Status")
 
                     refresh_btn = gr.Button("Refresh", variant="primary")
