@@ -4,6 +4,7 @@ import gradio as gr
 
 from discord_bot.business_logic.discord_logic import DiscordLogic
 from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort, ControllerPort
+from discord_bot.init.db_loader import DBLoader
 
 class AdminPanel(ViewPort):
     def __init__(
@@ -14,6 +15,7 @@ class AdminPanel(ViewPort):
         fun_fact_selector: FunFactPort | None = None,
         translator: TranslatePort | None = None,
         controller: ControllerPort | None = None,
+        db_loader: DBLoader | None = None,
         host: str = "0.0.0.0",
         port: int = 7860
     ):
@@ -23,6 +25,7 @@ class AdminPanel(ViewPort):
         self.fun_fact_selector = fun_fact_selector
         self.translator = translator
         self.controller = controller
+        self.db_loader = db_loader
         self.host = host
         self.port = port
         self.app = None
@@ -192,7 +195,7 @@ class AdminPanel(ViewPort):
 
                     send_message_btn.click(fn=send_custom_message, inputs=[channel_id_input, message_input], outputs=[message_status])
                     
-                    save_settings_btn.click(fn=save_bot_settings, inputs=[log_messages_checkbox], outputs=[settings_status]) # auto_translate_checkbox, input_translate_language, 
+                    save_settings_btn.click(fn=save_bot_settings, inputs=[log_messages_checkbox], outputs=[settings_status])
 
                 with gr.Tab("Database"):
                     with gr.Tabs():
@@ -209,6 +212,10 @@ class AdminPanel(ViewPort):
                                     )
                                     search_btn = gr.Button("Search")
                                     results = gr.Dataframe(headers=["ID", "Category", "Dish"])
+
+                                    gr.Markdown("### Reset Dishes Table")
+                                    reset_btn = gr.Button("Reset to Initial Data")
+                                    reset_status = gr.Markdown("")
                                 
                                 with gr.Column():
                                     gr.Markdown("### Add New Dish")
@@ -255,6 +262,11 @@ class AdminPanel(ViewPort):
                                 success = self.dbms.delete_data("dishes", {"id": int(dish_id)})
                                 return f'Success: Deleted ID {int(dish_id)}' if success else "Error: Failed"
                             
+                            def reset_dishes():
+                                self.dbms.delete_data("dishes", {})
+                                self.db_loader.import_tables(force_reload=True, specific_table="dishes")
+                                return "Dish table reset to initial data"
+                            
                             def test_dish(cat):
                                 if self.controller:
                                     return self.controller.get_dish_suggestion(cat)
@@ -264,6 +276,7 @@ class AdminPanel(ViewPort):
                             add_btn.click(fn=add_dish, inputs=[new_cat, new_name], outputs=add_status)
                             del_btn.click(fn=delete_dish, inputs=del_id, outputs=del_status)
                             test_btn.click(fn=test_dish, inputs=test_cat, outputs=test_result)
+                            reset_btn.click(fn=reset_dishes, outputs=reset_status)
                         
                         with gr.Tab("Fun Facts"):
                             with gr.Row():
@@ -393,6 +406,7 @@ class AdminPanel(ViewPort):
         )
 
 if __name__ == "__main__":
+    # Outdated test code - ignore
     from discord_bot.adapters.db import DBMS
     from discord_bot.business_logic.dish_selector import DishSelector
     from discord_bot.business_logic.fun_fact_selector import FunFactSelector

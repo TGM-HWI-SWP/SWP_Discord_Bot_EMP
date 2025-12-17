@@ -10,6 +10,7 @@ from discord_bot.adapters.db import DBMS
 from discord_bot.business_logic.translator import Translator
 from discord_bot.business_logic.discord_logic import DiscordLogic
 from discord_bot.init.config_loader import DBConfigLoader
+from discord_bot.init.db_loader import DBLoader
 from discord_bot.adapters.view import AdminPanel
 from discord_bot.adapters.controller.controller import Controller
 
@@ -137,6 +138,8 @@ if __name__ == "__main__":
     discord_bot = DiscordLogic(dbms=discord_db)
     discord_bot.set_translator(translator)
 
+    db_loader = DBLoader()
+
     controller = Controller(
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
@@ -149,7 +152,8 @@ if __name__ == "__main__":
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
         translator=translator,
-        controller=controller 
+        controller=controller,
+        db_loader=db_loader
     )
 
     threading.Thread(target=start_bot, args=(cv_db, fun_fact_selector, dish_selector, translator, discord_bot), daemon=False).start()

@@ -14,17 +14,23 @@ class DBLoader:
         self.discord_dbms = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
         self.db_data_path = Path(__file__).parent / "db_data"
     
-    def import_tables(self, force_reload: bool = False) -> None:
+    def import_tables(self, force_reload: bool = False, specific_table: str | None = None) -> None:
         """Import constant-value tables from CSV files into the CV database.
 
         Args:
             force_reload (bool): If True, always reload all tables even when data exists.
+            specific_table (str | None): If provided, only load this specific table.
         """
         self.cv_dbms.connect()
 
-        for csv_file in self.db_data_path.glob("*.csv"):
-            table_name = csv_file.stem
+        tables: list[str] = []
+        if specific_table:
+            tables.append(specific_table)
+        else:
+            for csv_file in self.db_data_path.glob("*.csv"):
+                tables.append(csv_file.stem)
 
+        for table_name in tables:
             if not force_reload:
                 existing_count = self.cv_dbms.get_table_size(table_name)
                 if existing_count > 0:
@@ -41,7 +47,7 @@ class DBLoader:
 
             self.cv_dbms.upload_table(DBConfigLoader.CV_DB_NAME, table_name, data)
             print(f'Imported "{table_name}" - {len(data)} documents')
-        
+    
         print("Constant values database initialization complete")
     
     def initialize_discord_tables(self) -> None:

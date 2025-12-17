@@ -6,6 +6,10 @@ notification if dc bot gets message
 # high priority
 view should have buttons for reseting fun facts and dish tables simply delete the table and then call import_tables from db_loader and also add entry buttons dont work yet
 
+^
+tried to do this for dishes but now the db is soemhow broken probably because of import_tables not working as intended but i dont know why
+
+
 implement update_log_messages function in discord_logic but no idea what it should do ask mateja
 
 # optional
