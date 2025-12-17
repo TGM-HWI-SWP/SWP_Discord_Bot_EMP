@@ -18,6 +18,7 @@ class DiscordLogic(Model, DiscordLogicPort):
         intents.members = True
         self.client = discord.Client(intents=intents)
         self.tree = app_commands.CommandTree(self.client)
+        self.loop = None
         self.guild_count = 0
         self.commands = {}
         self.unread_dms = []
@@ -29,7 +30,8 @@ class DiscordLogic(Model, DiscordLogicPort):
         
         @self.client.event
         async def on_ready():
-            await self.on_ready()
+            self.loop = asyncio.get_running_loop()
+            await self._on_ready()
         
         @self.client.event
         async def on_message(message):
@@ -62,7 +64,7 @@ class DiscordLogic(Model, DiscordLogicPort):
     def set_translator(self, translator: TranslatePort) -> None:
         self.translator = translator
 
-    async def on_ready(self) -> None:
+    async def _on_ready(self) -> None:
         self.logging(f'Logged in as {self.client.user}')
         
         await self.tree.sync()
@@ -161,9 +163,9 @@ class DiscordLogic(Model, DiscordLogicPort):
     def get_guilds(self) -> list[dict]:
         return [{"id": guild.id, "name": guild.name} for guild in self.client.guilds]
     
-    def get_guild_info(self, server_id: int) -> dict | None:
+    def get_guild_info(self, guild_id: int) -> dict | None:
         
-        guild = self.client.get_guild(server_id)
+        guild = self.client.get_guild(guild_id)
         if guild:
             return {
                 "id": guild.id,
@@ -172,47 +174,23 @@ class DiscordLogic(Model, DiscordLogicPort):
             }
         return None
 
-    def leave_server(self, server_id: int) -> bool:
-        try:
-            guild = self.client.get_guild(server_id)
-            if not guild:
-                return False
-            
-            async def _leave():
-                await guild.leave()
-            
-            asyncio.create_task(_leave())
-            return True
-        except Exception:
+    def leave_guild(self, guild_id: int) -> bool:
+        if not self.client or not self.client.is_ready():
             return False
 
-    def block_user(self, user_id: int) -> bool:
-        try:
-            user = self.client.get_user(user_id)
-            if not user:
-                return False
-            
-            async def _block():
-                await user.block()
-            
-            asyncio.create_task(_block())
-            return True
-        except Exception:
+        if not self.loop:
             return False
-    
-    def unblock_user(self, user_id: int) -> bool:
-        try:
-            user = self.client.get_user(user_id)
-            if not user:
-                return False
-            
-            async def _unblock():
-                await user.unblock()
-            
-            asyncio.create_task(_unblock())
-            return True
-        except Exception:
+
+        guild = self.client.get_guild(guild_id)
+        if not guild:
             return False
+
+        async def _leave():
+            await guild.leave()
+
+        asyncio.run_coroutine_threadsafe(_leave(), self.loop)
+        self.logging(f'Leaving guild: {guild_id}')
+        return True
 
     def get_channels(self, guild_id: int) -> list[dict]:
         guild = self.client.get_guild(guild_id)
@@ -224,20 +202,20 @@ class DiscordLogic(Model, DiscordLogicPort):
         return self.client.is_ready()
     
     def get_bot_stats(self) -> dict:
-        """Get bot statistics: status, server count, and total user count"""
+        """Get bot statistics: status, guild count, and total user count"""
         if not self.is_connected():
-            return {"status": "Offline", "servers": 0, "users": 0}
+            return {"status": "Offline", "guilds": 0, "users": 0}
         
         try:
             total_members = sum(guild.member_count for guild in self.client.guilds)
             return {
                 "status": "Online",
-                "servers": len(self.client.guilds),
+                "guilds": len(self.client.guilds),
                 "users": total_members
             }
         except Exception as e:
             self.logging(f"Error getting bot stats: {e}")
-            return {"status": "Error", "servers": 0, "users": 0}
+            return {"status": "Error", "guilds": 0, "users": 0}
 
     def update_settings(self, prefix: str, status_text: str, auto_reply: bool, log_messages: bool) -> bool:
         

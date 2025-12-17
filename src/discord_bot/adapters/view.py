@@ -1,14 +1,15 @@
 """This File contains the gradio Web-Interface."""
 
 import gradio as gr
-import discord
+
+from discord_bot.business_logic.discord_logic import DiscordLogic
 from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFactPort, TranslatePort, ControllerPort
 
 class AdminPanel(ViewPort):
     def __init__(
         self,
         dbms: DatabasePort,
-        discord_bot: discord.Client | None = None,
+        discord_bot: DiscordLogic | None = None,
         dish_selector: DishPort | None = None,
         fun_fact_selector: FunFactPort | None = None,
         translator: TranslatePort | None = None,
@@ -36,8 +37,7 @@ class AdminPanel(ViewPort):
         return self.check_available() and getattr(self.discord_bot, 'is_connected', lambda: False)()  
     
     def build_interface(self) -> gr.Blocks:
-
-        with gr.Blocks(title="Leberkas Larry Admin Panel") as app:        
+        with gr.Blocks(title="Discord Bot Admin Panel") as app:        
             with gr.Tabs():
                 with gr.Tab("Overview"):
                     gr.Markdown("### Bot Status")
@@ -48,8 +48,8 @@ class AdminPanel(ViewPort):
                         with gr.Column():
                             bot_status = gr.Textbox(label="Status", value="Loading...", interactive=False)
                         with gr.Column():
-                            server_count = gr.Textbox(
-                                label="Servers", value="Loading...", interactive=False)
+                            guild_count = gr.Textbox(
+                                label="Guilds", value="Loading...", interactive=False)
                         with gr.Column():
                             user_count = gr.Textbox(label="Total Users", value="Loading...", interactive=False)
                     
@@ -59,126 +59,54 @@ class AdminPanel(ViewPort):
                         
                         try:
                             stats = self.discord_bot.get_bot_stats()
-                            return stats["status"], str(stats["servers"]), f'{stats['users']:,}'
-                        except Exception as e:
+                            return stats["status"], str(stats["Guilds"]), f'{stats['users']:,}'
+                        except Exception as error:
                             return "Error", "0", "0"
                     
-                    refresh_btn.click(fn=load_bot_status, outputs=[bot_status, server_count, user_count])
-                    app.load(fn=load_bot_status, outputs=[bot_status, server_count, user_count])
+                    refresh_btn.click(fn=load_bot_status, outputs=[bot_status, guild_count, user_count])
+                    app.load(fn=load_bot_status, outputs=[bot_status, guild_count, user_count])
 
                 with gr.Tab("Control Panel"):
-                    section_selector = gr.Dropdown(label="Select Section", choices=["Server Management", "User Management", "Custom Messages", "Bot Settings"], value="Server Management",interactive=True)
+                    section_selector = gr.Dropdown(label="Select Section", choices=["Guild Management", "Custom Messages", "Bot Settings"], value="Guild Management",interactive=True)
                    
-                    with gr.Row(visible=True) as server_mgmt_section:
+                    with gr.Row(visible=True) as guild_mgmt_section:
                         with gr.Column():
-                            gr.Markdown("## Server Management")
-                            server_view = gr.Dropdown(label="Select Server to Leave", choices=[], interactive=True)
-                            leave_btn = gr.Button("Leave Server", size="lg", interactive=True)
-                            refresh_btn = gr.Button("Refresh Servers", size="lg", interactive=True)
-                            server_status = gr.Markdown("")
+                            gr.Markdown("## Guild Management")
+                            guild_view = gr.Dropdown(label="Select Guild to Leave", choices=[], interactive=True)
+                            leave_btn = gr.Button("Leave Guild", size="lg", interactive=True)
+                            refresh_btn = gr.Button("Refresh Guilds", size="lg", interactive=True)
+                            guild_status = gr.Markdown("")
                             
-                            def leave_server(server_selection):
+                            def leave_guild(guild_selection):
                                 if not self.check_available():
                                     return "No discord bot instance"
                                 if not self.check_connection():
                                     return "Bot offline"
-                                if not server_selection:
-                                    return "Please select a server"
+                                if not guild_selection:
+                                    return "Please select a guild"
                                 try:
-                                    server_id = int(server_selection.split("ID: ")[1].rstrip(")"))
-                                    success = self.discord_bot.leave_server(server_id)
+                                    guild_id = int(guild_selection.split("ID: ")[1].rstrip(")"))
+                                    success = self.discord_bot.leave_guild(guild_id)
                                     if success:
-                                        return "Successfully left server"
+                                        return "Successfully left guild"
                                     else:
-                                        return "Failed to leave server"
+                                        return "Failed to leave guild"
                                 except (ValueError, IndexError):
-                                    return "Invalid server selection"
+                                    return "Invalid guild selection"
                             
-                            def refresh_server_list():
+                            def refresh_guild_list():
                                 if not self.check_available():
                                     return gr.update(choices=[]), "No discord bot instance"
                                 if not self.check_connection():
                                     return gr.update(choices=[]), "Bot offline"
                                 
-                                servers = self.discord_bot.get_servers()
-                                if not servers:
-                                    return gr.update(choices=[]), "No servers found"
+                                guilds = self.discord_bot.get_guilds()
+                                if not guilds:
+                                    return gr.update(choices=[]), "No guilds found"
                                 
-                                choices = [f'{server['name']} (ID: {server['id']})' for server in servers]
-                                return gr.update(choices=choices), f'Found {len(servers)} servers'
-                
-                    with gr.Row(visible=False) as user_mgmt_section:
-                        with gr.Column():
-                            gr.Markdown("## User Management")
-                            user_search = gr.Textbox(label="Search User", placeholder="Enter username to search")
-                            search_user_btn = gr.Button("Search User", size="lg", interactive=True)
-                            user_dropdown = gr.Dropdown(label="Select User to Block/Unblock", choices=[], interactive=True)
-                            block_btn = gr.Button("Block User", size="lg", interactive=True)
-                            unblock_btn = gr.Button("Unblock User", size="lg", interactive=True)
-                            user_status = gr.Markdown("")
+                                choices = [f'{guild['name']} (ID: {guild['id']})' for guild in guilds]
+                                return gr.update(choices=choices), f'Found {len(guilds)} guilds'
 
-                            def search_users(username):
-                                if not self.check_available():
-                                    return gr.update(choices=[]), "No discord bot instance"
-                                if not self.check_connection():
-                                    return gr.update(choices=[]), "Bot offline"
-                                if not username:
-                                    return gr.update(choices=[]), "Please enter a username"
-                                
-                                try:
-                                    servers = self.discord_bot.get_servers()
-                                    matching_users = []
-                                    
-                                    for server in servers:
-                                        guild = self.discord_bot.client.get_guild(server['id'])
-                                        if guild:
-                                            for member in guild.members:
-                                                if username.lower() in member.name.lower() or username.lower() in str(member.display_name).lower():
-                                                    user_entry = f'{member.name}#{member.discriminator} (ID: {member.id})'
-                                                    if user_entry not in matching_users:
-                                                        matching_users.append(user_entry)
-                                    
-                                    if not matching_users:
-                                        return gr.update(choices=[]), "No users found"
-                                    
-                                    return gr.update(choices=matching_users), f'Found {len(matching_users)} user(s)'
-                                except Exception as e:
-                                    return gr.update(choices=[]), f'Error searching users: {str(e)}'
-                            
-                            def block_user(user_selection):
-                                if not self.check_available():
-                                    return "No discord bot instance"
-                                if not self.check_connection():
-                                    return "Bot offline"
-                                if not user_selection:
-                                    return "Please select a user"
-                                try:
-                                    user_id = int(user_selection.split("ID: ")[1].rstrip(")"))
-                                    success = self.discord_bot.block_user(user_id)
-                                    if success:
-                                        return "Successfully blocked user"
-                                    else:
-                                        return "Failed to block user"
-                                except (ValueError, IndexError):
-                                    return "Invalid user selection"
-                            
-                            def unblock_user(user_selection):
-                                if not self.check_available():
-                                    return "No discord bot instance"
-                                if not self.check_connection():
-                                    return "Bot offline"
-                                if not user_selection:
-                                    return "Please select a user"
-                                try:
-                                    user_id = int(user_selection.split("ID: ")[1].rstrip(")"))
-                                    success = self.discord_bot.unblock_user(user_id)
-                                    if success:
-                                        return "Successfully unblocked user"
-                                    else:
-                                        return "Failed to unblock user"
-                                except (ValueError, IndexError):
-                                    return "Invalid user selection"
-                    
                     with gr.Row(visible=False) as custom_msg_section:
                         with gr.Column():
                             gr.Markdown("## Custom Messages")
@@ -209,46 +137,26 @@ class AdminPanel(ViewPort):
                             gr.Markdown("## Bot Settings")
                             
                             with gr.Group():
-                                gr.Markdown("### Translation Settings")
-                                auto_translate_checkbox = gr.Checkbox(label="Auto Translate", value=False, interactive=True, info="Automatically translate all incoming messages")
-                                input_translate_language = gr.Dropdown(label="Target Language", choices=["en", "de", "es", "fr", "it", "ja", "zh-CN"], value="de", interactive=True,info="Language to translate messages to")
-                            
-                            with gr.Group():
                                 gr.Markdown("### Command Settings")
                                 log_messages_checkbox = gr.Checkbox(label="Log Messages", value=True, interactive=True)
                                 
                             save_settings_btn = gr.Button("Save Settings", variant="primary", size="lg", interactive=True)
                             settings_status = gr.Markdown("")
                             
-                            def save_bot_settings(auto_translate_enabled, target_language, log_messages):
+                            def save_bot_settings(log_messages):
                                 if not self.check_available():
                                     return "No discord bot instance"
                                 if not self.check_connection():
                                     return "Bot offline"
                                 
                                 success = True
-                                if hasattr(self.discord_bot, 'update_auto_translate'):
-                                    success = self.discord_bot.update_auto_translate(auto_translate_enabled, target_language)
-                                
                                 if hasattr(self.discord_bot, 'update_log_messages'):
                                     log_success = self.discord_bot.update_log_messages(log_messages)
                                     success = success and log_success
-                             
-                                try:
-                                    from discord_bot.init.config_loader import DiscordConfigLoader
-                                                
-                                    DiscordConfigLoader.TARGET_LANGUAGE = target_language
-                                    
-                                    self.logging(f'Updated DiscordConfigLoader.TARGET_LANGUAGE = {target_language}')
-                                except Exception as e:
-                                    self.logging(f'Error updating config_loader: {e}')
-                                    success = False
-                                
+                            
                                 if success:
                                     status_parts = [
                                         f'**Settings saved successfully!**',
-                                        f'\n- Auto Translate: **{'ON' if auto_translate_enabled else 'OFF'}**',
-                                        f'\n- Target Language: **{target_language.upper()}**" if auto_translate_enabled else "',
                                         f'\n- Log Messages: **{'ON' if log_messages else 'OFF'}**',
                                     ]
                                     status_message = "".join(status_parts)
@@ -258,10 +166,8 @@ class AdminPanel(ViewPort):
                                     return "**Failed to save settings.**\n\nPlease check the bot connection."
                                             
                     def switch_section(section):
-                        if section == "Server Management":
+                        if section == "Guild Management":
                             return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
-                        elif section == "User Management":
-                            return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
                         elif section == "Custom Messages":
                             return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
                         elif section == "Bot Settings":
@@ -274,24 +180,19 @@ class AdminPanel(ViewPort):
                         fn=switch_section,
                         inputs=section_selector,
                         outputs=[
-                            server_mgmt_section,
-                            user_mgmt_section,
+                            guild_mgmt_section,
                             custom_msg_section,
-                            bot_settings_section,
+                            bot_settings_section
                         ],
                     )
                     
                     # Event handlers AFTER all sections are closed
-                    refresh_btn.click(fn=refresh_server_list, outputs=[server_view, server_status])
-                    leave_btn.click(fn=leave_server, inputs=[server_view], outputs=[server_status])
-                    
-                    search_user_btn.click(fn=search_users, inputs=[user_search], outputs=[user_dropdown, user_status])
-                    block_btn.click(fn=block_user, inputs=[user_dropdown], outputs=[user_status])
-                    unblock_btn.click(fn=unblock_user, inputs=[user_dropdown], outputs=[user_status])
-                    
+                    refresh_btn.click(fn=refresh_guild_list, outputs=[guild_view, guild_status])
+                    leave_btn.click(fn=leave_guild, inputs=[guild_view], outputs=[guild_status])
+
                     send_message_btn.click(fn=send_custom_message, inputs=[channel_id_input, message_input], outputs=[message_status])
                     
-                    save_settings_btn.click(fn=save_bot_settings, inputs=[auto_translate_checkbox, input_translate_language, log_messages_checkbox], outputs=[settings_status])
+                    save_settings_btn.click(fn=save_bot_settings, inputs=[log_messages_checkbox], outputs=[settings_status]) # auto_translate_checkbox, input_translate_language, 
 
                 with gr.Tab("Database"):
                     with gr.Tabs():
@@ -450,10 +351,7 @@ class AdminPanel(ViewPort):
                             stats_json = gr.JSON(label="Detailed Statistics")
                             
                             def load_stats():
-                                categories = ["Italian", "German", "Austrian", "Mexican", "Chinese", 
-                                            "Japanese", "Indian", "American", "French", "Spanish", 
-                                            "Greek", "Turkish", "Thai", "Korean", "British", "African",
-                                            "Middle Eastern", "Vegan", "Dessert", "Seafood"]
+                                categories = dish_categories
                                 
                                 stats = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
                                 
@@ -476,7 +374,7 @@ class AdminPanel(ViewPort):
             
             gr.HTML("""
                 <div style="text-align: center; padding: 20px; color: #99AAB5; margin-top: 20px;">
-                    <p>Discord Bot Admin Panel v1.0</p>
+                    <p>Discord Bot Admin Panel v1.1</p>
                 </div>
             """)
         

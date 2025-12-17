@@ -426,12 +426,4 @@ class DiscordLogicPort(ABC):
             message: The Discord message object.
         """
         ...
-
-    @abstractmethod
-    async def on_ready(self) -> None:
-        """Handle the bot ready event.
-        
-        Called when the bot has successfully connected to Discord.
-        """
-        ...
     

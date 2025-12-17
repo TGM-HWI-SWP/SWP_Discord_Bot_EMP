@@ -6,7 +6,7 @@ notification if dc bot gets message
 # high priority
 view should have buttons for reseting fun facts and dish tables simply delete the table and then call import_tables from db_loader and also add entry buttons dont work yet
 
-Remove User management entirely and remove everything inside bot management but leave log messages (make sure it works)
+implement update_log_messages function in discord_logic but no idea what it should do ask mateja
 
 # optional
 maybe a dark and light mode toggle in view.py

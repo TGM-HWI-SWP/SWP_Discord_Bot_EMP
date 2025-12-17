@@ -3,7 +3,6 @@
 import discord
 import runpy
 import threading
-import asyncio
 
 from discord_bot.business_logic.fun_fact_selector import FunFactSelector
 from discord_bot.business_logic.dish_selector import DishSelector
@@ -14,20 +13,8 @@ from discord_bot.init.config_loader import DBConfigLoader
 from discord_bot.adapters.view import AdminPanel
 from discord_bot.adapters.controller.controller import Controller
 
-def start_bot() -> None:
-    """Create database connections, initialize logic, and start the Discord bot."""
-    cv_db = DBMS(db_name=DBConfigLoader.CV_DB_NAME)
-    cv_db.connect()
-
-    fun_fact_selector = FunFactSelector(dbms=cv_db)
-    dish_selector = DishSelector(dbms=cv_db)
-
-    discord_db = DBMS(db_name=DBConfigLoader.DISCORD_DB_NAME)
-    discord_db.connect()
-
-    translator = Translator(dbms=discord_db)
-    discord_bot = DiscordLogic(dbms=discord_db)
-    discord_bot.set_translator(translator)
+def start_bot(cv_db: DBMS, fun_fact_selector: FunFactSelector, dish_selector: DishSelector, translator: Translator, discord_bot: DiscordLogic) -> None:
+    """Start the Discord bot."""
 
     async def funfact_command(interaction: discord.Interaction) -> None:
         """Handle the `/funfact` command and send a random fun fact response.
@@ -130,18 +117,6 @@ def start_bot() -> None:
 
     discord_bot.run()
 
-    # # test
-    # # BLOCK until shutdown requested
-    # shutdown_event.wait()
-
-    # # Now shut Discord down cleanly
-    # if discord_bot.client and not discord_bot.client.is_closed():
-    #     fut = asyncio.run_coroutine_threadsafe(
-    #         discord_bot.client.close(),
-    #         discord_bot.client.loop,
-    #     )
-    #     fut.result(timeout=10)
-
 if __name__ == "__main__":
     runpy.run_module("discord_bot.init.log_loader", run_name="__main__")
     runpy.run_module("discord_bot.init.db_loader", run_name="__main__")
@@ -159,6 +134,9 @@ if __name__ == "__main__":
     fun_fact_selector = FunFactSelector(dbms=cv_db)
     translator = Translator(dbms=discord_db)
 
+    discord_bot = DiscordLogic(dbms=discord_db)
+    discord_bot.set_translator(translator)
+
     controller = Controller(
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
@@ -167,21 +145,12 @@ if __name__ == "__main__":
 
     panel = AdminPanel(
         dbms=general_db,
+        discord_bot=discord_bot,
         dish_selector=dish_selector,
         fun_fact_selector=fun_fact_selector,
         translator=translator,
         controller=controller 
     )
 
-    #shutdown_event = threading.Event() # test
-
-    # Run the bot in a background thread so the admin panel can stay responsive.
-    threading.Thread(target=start_bot, daemon=False).start()
-    # bot_thread = threading.Thread(target=start_bot, args=(shutdown_event,), daemon=False)
-    # bot_thread.start()
+    threading.Thread(target=start_bot, args=(cv_db, fun_fact_selector, dish_selector, translator, discord_bot), daemon=False).start()
     panel.launch()
-    # try:
-    #     panel.launch()
-    # finally:
-    #     shutdown_event.set()
-    #     bot_thread.join(timeout=15)
