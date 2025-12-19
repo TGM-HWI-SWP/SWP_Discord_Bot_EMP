@@ -115,7 +115,7 @@ class AdminPanel(ViewPort):
                     app.load(fn=load_bot_status, outputs=[bot_status, guild_count, user_count])
 
                 with gr.Tab("Control Panel"):
-                    section_selector = gr.Dropdown(label="Select Section", choices=["Guild Management", "Custom Messages", "Bot Settings"], value="Guild Management",interactive=True)
+                    section_selector = gr.Dropdown(label="Select Section", choices=["Guild Management", "Custom Messages"], value="Guild Management",interactive=True)
                    
                     with gr.Row(visible=True) as guild_mgmt_section:
                         with gr.Column():
@@ -172,41 +172,14 @@ class AdminPanel(ViewPort):
                                     return "Channel ID and message required"
 
                                 return "Message sent successfully" if self.discord_bot.send_message(0, channel_id_int, message_text) else "Failed to send message"
-                    
-                    with gr.Row(visible=False) as bot_settings_section:
-                        with gr.Column():
-                            gr.Markdown("## Bot Settings")
-                            
-                            with gr.Group():
-                                gr.Markdown("### Command Settings")
-                                log_messages_checkbox = gr.Checkbox(label="Log Messages", value=True, interactive=True)
-                                
-                            save_settings_btn = gr.Button("Save Settings", variant="primary", size="lg", interactive=True)
-                            settings_status = gr.Markdown("")
-                            
-                            def save_bot_settings(log_messages):
-                                guard = _bot_guard()
-                                if guard:
-                                    return guard
-
-                                if hasattr(self.discord_bot, "update_log_messages"):
-                                    if not self.discord_bot.update_log_messages(bool(log_messages)):
-                                        return "**Failed to save settings.**\n\nPlease check the bot connection."
-
-                                return "".join([
-                                    "**Settings saved successfully!**",
-                                    f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
-                                ])
                                             
                     def switch_section(section):
                         if section == "Guild Management":
-                            return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+                            return gr.update(visible=True), gr.update(visible=False)
                         elif section == "Custom Messages":
-                            return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
-                        elif section == "Bot Settings":
-                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+                            return gr.update(visible=False), gr.update(visible=True)
                         else:
-                            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+                            return gr.update(visible=False), gr.update(visible=False)
                     
                     gr.on(
                         triggers=[section_selector.change],
@@ -214,8 +187,7 @@ class AdminPanel(ViewPort):
                         inputs=section_selector,
                         outputs=[
                             guild_mgmt_section,
-                            custom_msg_section,
-                            bot_settings_section
+                            custom_msg_section
                         ],
                     )
                     
@@ -224,8 +196,6 @@ class AdminPanel(ViewPort):
                     leave_btn.click(fn=leave_guild, inputs=[guild_view], outputs=[guild_status])
 
                     send_message_btn.click(fn=send_custom_message, inputs=[channel_id_input, message_input], outputs=[message_status])
-                    
-                    save_settings_btn.click(fn=save_bot_settings, inputs=[log_messages_checkbox], outputs=[settings_status])
 
                 with gr.Tab("Database"):
                     with gr.Tabs():
@@ -480,34 +450,3 @@ class AdminPanel(ViewPort):
             share=share,
             theme=gr.themes.Soft(primary_hue="blue")
         )
-
-if __name__ == "__main__":
-    # Outdated test code - ignore
-    from discord_bot.adapters.db import DBMS
-    from discord_bot.business_logic.dish_selector import DishSelector
-    from discord_bot.business_logic.fun_fact_selector import FunFactSelector
-    from discord_bot.business_logic.translator import Translator
-    from discord_bot.adapters.controller.controller import Controller
-    
-    db = DBMS()
-    db.connect()
-    
-    dish_selector = DishSelector(dbms=db)
-    fun_fact_selector = FunFactSelector(dbms=db)
-    translator = Translator()
-    
-    controller = Controller(
-        dish_selector=dish_selector,
-        fun_fact_selector=fun_fact_selector,
-        translator=translator
-    )
-    
-    panel = AdminPanel(
-        dbms=db,
-        dish_selector=dish_selector,
-        fun_fact_selector=fun_fact_selector,
-        translator=translator,
-        controller=controller,  
-    )
-
-    panel.launch()

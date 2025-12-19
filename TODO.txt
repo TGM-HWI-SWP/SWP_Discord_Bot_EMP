@@ -1,16 +1,12 @@
 TODO:
 
-#urgent
+# urgent
 notification if dc bot gets message
 
-# high priority
-view should have buttons for reseting fun facts and dish tables simply delete the table and then call import_tables from db_loader and also add entry buttons dont work yet
-
-^
-tried to do this for dishes but now the db is soemhow broken probably because of delete_data not wrking since it doesnt accout for the database correctly only tries to look for table but not specified in which db that table should be 
-
-
-implement update_log_messages function in discord_logic but no idea what it should do ask mateja
+# urgent
+add return message for refresh button in overview tab and statistics tab in view.py
+reorder statistics to following order: total dishes, dish categories, total fun facts
+on custom messgages add dropdown to channel id so select from saved channels (e.g. channel_name (channel_id))
 
 # optional
 maybe a dark and light mode toggle in view.py
@@ -24,4 +20,4 @@ make sure tha variable names are consistent with the other files like e is in ev
 remove discord token from config.ini and replace it with a placeholder token that is not valid and will not work and run it so the .env file gets updated
 
 # at the end
-readme and license need to be updated including a comprehensive guide to set up the bot (copy from other repo hihi)
+readme and license need to be updated including links to the discord bot creation docs and to the rest of the simple installation insctructions as a first tab
