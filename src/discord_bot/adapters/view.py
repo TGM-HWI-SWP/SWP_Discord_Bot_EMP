@@ -75,7 +75,7 @@ class AdminPanel(ViewPort):
 
                         try:
                             stats = self.discord_bot.get_bot_stats()
-                            return stats.get("status", "Offline"), str(stats.get("guilds", 0)), f"{stats.get('users', 0):,}"
+                            return stats.get("status", "Offline"), str(stats.get("guilds", 0)), "{:,}".format(stats.get('users', 0))
                         except Exception:
                             return "Error", "0", "0"
 
@@ -120,8 +120,8 @@ class AdminPanel(ViewPort):
                                 if not guilds:
                                     return gr.update(choices=[]), "No guilds found"
                                 
-                                choices = [f'{guild['name']} (ID: {guild['id']})' for guild in guilds]
-                                return gr.update(choices=choices), f'Found {len(guilds)} guilds'
+                                choices = ["{} (ID: {})".format(guild['name'], guild['id']) for guild in guilds]
+                                return gr.update(choices=choices), "Found {} guilds".format(len(guilds))
 
                     with gr.Row(visible=False) as custom_msg_section:
                         with gr.Column():
@@ -269,11 +269,11 @@ class AdminPanel(ViewPort):
                                     next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
                                     success = self.dbms.insert_data("dishes", {"id": next_id, "category": str(cat), "dish": str(name)})
                                     if success:
-                                        return "Success: Added " + str(name)
+                                        return "Success: Added {}".format(name)
                                     else:
                                         return "Error: Failed to insert"
                                 except Exception as error:
-                                    return "Error: " + repr(error)
+                                    return "Error: {}".format(repr(error))
                             
                             def delete_dish(dish_id):
                                 try:
@@ -284,11 +284,11 @@ class AdminPanel(ViewPort):
                                         return "Error: Invalid ID"
                                     success = self.dbms.delete_data("dishes", {"id": dish_id_int})
                                     if success:
-                                        return "Success: Deleted ID " + str(dish_id_int)
+                                        return "Success: Deleted ID {}".format(dish_id_int)
                                     else:
                                         return "Error: Failed to delete"
                                 except Exception as error:
-                                    return "Error: " + repr(error)
+                                    return "Error: {}".format(repr(error))
                             
                             def reset_dishes():
                                 try:
@@ -298,7 +298,7 @@ class AdminPanel(ViewPort):
                                     self.db_loader.import_tables(force_reload=True, specific_table="dishes")
                                     return "Dish table reset to initial data"
                                 except Exception as error:
-                                    return "Error: " + repr(error)
+                                    return "Error: {}".format(repr(error))
                             
                             def test_dish(cat):
                                 if self.controller:
@@ -352,7 +352,7 @@ class AdminPanel(ViewPort):
                                 if not fact_id or fact_id <= 0:
                                     return "Error: Invalid ID"
                                 success = self.dbms.delete_data("fun_facts", {"id": int(fact_id)})
-                                return f'Success: Deleted ID {int(fact_id)}' if success else "Error: Failed"
+                                return "Success: Deleted ID {}".format(int(fact_id)) if success else "Error: Failed"
                             
                             def test_fact():
                                 if self.controller:
@@ -409,9 +409,9 @@ class AdminPanel(ViewPort):
                                 
                                 stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
 
-                                dishes_md = f'<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{stats["total_dishes"]}</div></div>'
-                                facts_md = f'<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{stats["total_fun_facts"]}</div></div>'
-                                cats_md = f'<div class="stat-card"><div class="stat-label">Categories</div><div class="stat-number">{len(stats["dishes"])}</div></div>'
+                                dishes_md = '<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{}</div></div>'.format(stats["total_dishes"])
+                                facts_md = '<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{}</div></div>'.format(stats["total_fun_facts"])
+                                cats_md = '<div class="stat-card"><div class="stat-label">Categories</div><div class="stat-number">{}</div></div>'.format(len(stats["dishes"]))
                                 
                                 return dishes_md, facts_md, cats_md, stats
                             
