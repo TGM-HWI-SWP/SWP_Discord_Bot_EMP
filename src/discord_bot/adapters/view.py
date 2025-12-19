@@ -280,9 +280,12 @@ class AdminPanel(ViewPort):
                                     if not dish_id or dish_id <= 0:
                                         return "Error: Invalid ID"
                                     success = self.dbms.delete_data("dishes", {"id": int(dish_id)})
-                                    return f'Success: Deleted ID {int(dish_id)}' if success else "Error: Failed to delete"
+                                    if success:
+                                        return "Success: Deleted ID " + str(int(dish_id))
+                                    else:
+                                        return "Error: Failed to delete"
                                 except Exception as error:
-                                    return f'Error: {str(error)}'
+                                    return "Error: " + repr(error)
                             
                             def reset_dishes():
                                 try:
@@ -292,7 +295,7 @@ class AdminPanel(ViewPort):
                                     self.db_loader.import_tables(force_reload=True, specific_table="dishes")
                                     return "Dish table reset to initial data"
                                 except Exception as error:
-                                    return f'Error: {str(error)}'
+                                    return "Error: " + repr(error)
                             
                             def test_dish(cat):
                                 if self.controller:
