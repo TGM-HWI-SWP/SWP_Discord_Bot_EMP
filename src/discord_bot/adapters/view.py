@@ -262,23 +262,34 @@ class AdminPanel(ViewPort):
                                 return [[d.get("id"), d.get("category"), d.get("dish")] for d in data]
                             
                             def add_dish(cat, name):
-                                if not name:
-                                    return "Error: Enter a dish name"
-                                all_dishes = self.dbms.get_data("dishes", {})
-                                next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
-                                success = self.dbms.insert_data("dishes", {"id": next_id, "category": cat, "dish": name})
-                                return f'Success: Added {name}' if success else "Error: Failed"
+                                try:
+                                    if not name:
+                                        return "Error: Enter a dish name"
+                                    all_dishes = self.dbms.get_data("dishes", {})
+                                    next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
+                                    success = self.dbms.insert_data("dishes", {"id": next_id, "category": cat, "dish": name})
+                                    return f'Success: Added {name}' if success else "Error: Failed to insert"
+                                except Exception as error:
+                                    return f'Error: {str(error)}'
                             
                             def delete_dish(dish_id):
-                                if not dish_id or dish_id <= 0:
-                                    return "Error: Invalid ID"
-                                success = self.dbms.delete_data("dishes", {"id": int(dish_id)}) # broken
-                                return f'Success: Deleted ID {int(dish_id)}' if success else "Error: Failed"
+                                try:
+                                    if not dish_id or dish_id <= 0:
+                                        return "Error: Invalid ID"
+                                    success = self.dbms.delete_data("dishes", {"id": int(dish_id)})
+                                    return f'Success: Deleted ID {int(dish_id)}' if success else "Error: Failed to delete"
+                                except Exception as error:
+                                    return f'Error: {str(error)}'
                             
                             def reset_dishes():
-                                self.dbms.delete_data() # broken 
-                                self.db_loader.import_tables(force_reload=True, specific_table="dishes")
-                                return "Dish table reset to initial data"
+                                try:
+                                    if not self.db_loader:
+                                        return "Error: DB loader not available"
+                                    self.dbms.delete_data("dishes", {})
+                                    self.db_loader.import_tables(force_reload=True, specific_table="dishes")
+                                    return "Dish table reset to initial data"
+                                except Exception as error:
+                                    return f'Error: {str(error)}'
                             
                             def test_dish(cat):
                                 if self.controller:
