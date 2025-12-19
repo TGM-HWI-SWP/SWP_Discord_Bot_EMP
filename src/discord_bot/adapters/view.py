@@ -267,7 +267,7 @@ class AdminPanel(ViewPort):
                                         return "Error: Enter a dish name"
                                     all_dishes = self.dbms.get_data("dishes", {})
                                     next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
-                                    success = self.dbms.insert_data("dishes", {"id": next_id, "category": cat, "dish": name})
+                                    success = self.dbms.insert_data("dishes", {"id": next_id, "category": str(cat), "dish": str(name)})
                                     if success:
                                         return "Success: Added " + str(name)
                                     else:
@@ -277,11 +277,14 @@ class AdminPanel(ViewPort):
                             
                             def delete_dish(dish_id):
                                 try:
-                                    if not dish_id or dish_id <= 0:
+                                    if dish_id is None or dish_id == "":
                                         return "Error: Invalid ID"
-                                    success = self.dbms.delete_data("dishes", {"id": int(dish_id)})
+                                    dish_id_int = int(float(dish_id))
+                                    if dish_id_int <= 0:
+                                        return "Error: Invalid ID"
+                                    success = self.dbms.delete_data("dishes", {"id": dish_id_int})
                                     if success:
-                                        return "Success: Deleted ID " + str(int(dish_id))
+                                        return "Success: Deleted ID " + str(dish_id_int)
                                     else:
                                         return "Error: Failed to delete"
                                 except Exception as error:
