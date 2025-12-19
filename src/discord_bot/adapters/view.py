@@ -171,13 +171,12 @@ class AdminPanel(ViewPort):
                                     success = success and log_success
                             
                                 if success:
-                                    status_parts = [
-                                        f'**Settings saved successfully!**',
-                                        f'\n- Log Messages: **{'ON' if log_messages else 'OFF'}**',
-                                    ]
-                                    status_message = "".join(status_parts)
-                                    
-                                    return f'**Settings saved successfully!**\n\n{status_message}'
+                                    status_message = "".join([
+                                        "**Settings saved successfully!**",
+                                        f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
+                                    ])
+
+                                    return status_message
                                 else:
                                     return "**Failed to save settings.**\n\nPlease check the bot connection."
                                             
@@ -266,8 +265,20 @@ class AdminPanel(ViewPort):
                                     if not name:
                                         return "Error: Enter a dish name"
                                     all_dishes = self.dbms.get_data("dishes", {})
-                                    next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
-                                    success = self.dbms.insert_data("dishes", {"id": next_id, "category": str(cat), "dish": str(name)})
+
+                                    existing_ids: list[int] = []
+                                    for dish in all_dishes:
+                                        raw_id = dish.get("id")
+                                        try:
+                                            existing_ids.append(int(raw_id))
+                                        except (TypeError, ValueError):
+                                            continue
+
+                                    next_id = max(existing_ids, default=0) + 1
+                                    success = self.dbms.insert_data(
+                                        "dishes",
+                                        {"id": int(next_id), "category": str(cat), "dish": str(name)},
+                                    )
                                     if success:
                                         return "Success: Added {}".format(name)
                                     else:
@@ -282,11 +293,20 @@ class AdminPanel(ViewPort):
                                     dish_id_int = int(float(dish_id))
                                     if dish_id_int <= 0:
                                         return "Error: Invalid ID"
-                                    success = self.dbms.delete_data("dishes", {"id": dish_id_int})
-                                    if success:
-                                        return "Success: Deleted ID {}".format(dish_id_int)
-                                    else:
+
+                                    query = {"$or": [{"id": dish_id_int}, {"id": str(dish_id_int)}]}
+                                    existing = self.dbms.get_data("dishes", query)
+                                    if not existing:
+                                        return "Error: ID not found"
+
+                                    success = self.dbms.delete_data("dishes", query)
+                                    if not success:
                                         return "Error: Failed to delete"
+
+                                    remaining = self.dbms.get_data("dishes", query)
+                                    if remaining:
+                                        return "Error: Failed to delete"
+                                    return "Success: Deleted ID {}".format(dish_id_int)
                                 except Exception as error:
                                     return "Error: {}".format(repr(error))
                             
@@ -344,15 +364,43 @@ class AdminPanel(ViewPort):
                                 if not text:
                                     return "Error: Enter a fun fact"
                                 all_facts = self.dbms.get_data("fun_facts", {})
-                                next_id = max([f.get("id", 0) for f in all_facts], default=0) + 1
-                                success = self.dbms.insert_data("fun_facts", {"id": next_id, "fun_fact": text})
+
+                                existing_ids: list[int] = []
+                                for fact in all_facts:
+                                    raw_id = fact.get("id")
+                                    try:
+                                        existing_ids.append(int(raw_id))
+                                    except (TypeError, ValueError):
+                                        continue
+
+                                next_id = max(existing_ids, default=0) + 1
+                                success = self.dbms.insert_data(
+                                    "fun_facts",
+                                    {"id": int(next_id), "fun_fact": text},
+                                )
                                 return "Success: Added" if success else "Error: Failed"
                             
                             def delete_fact(fact_id):
-                                if not fact_id or fact_id <= 0:
+                                if fact_id is None or fact_id == "":
                                     return "Error: Invalid ID"
-                                success = self.dbms.delete_data("fun_facts", {"id": int(fact_id)})
-                                return "Success: Deleted ID {}".format(int(fact_id)) if success else "Error: Failed"
+                                try:
+                                    fact_id_int = int(float(fact_id))
+                                except (TypeError, ValueError):
+                                    return "Error: Invalid ID"
+                                if fact_id_int <= 0:
+                                    return "Error: Invalid ID"
+
+                                query = {"$or": [{"id": fact_id_int}, {"id": str(fact_id_int)}]}
+                                existing = self.dbms.get_data("fun_facts", query)
+                                if not existing:
+                                    return "Error: ID not found"
+
+                                success = self.dbms.delete_data("fun_facts", query)
+                                if not success:
+                                    return "Error: Failed"
+
+                                remaining = self.dbms.get_data("fun_facts", query)
+                                return "Success: Deleted ID {}".format(fact_id_int) if not remaining else "Error: Failed"
                             
                             def test_fact():
                                 if self.controller:

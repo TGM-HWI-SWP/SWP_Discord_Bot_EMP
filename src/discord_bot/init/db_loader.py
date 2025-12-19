@@ -41,10 +41,22 @@ class DBLoader:
             csv_file = self.db_data_path / f'{table_name}.csv'
             with open(csv_file, "r", encoding="utf-8") as file:
                 reader = csv.DictReader(file)
-                data = [
-                    {key: value for key, value in row.items() if key != "_id"}
-                    for row in reader
-                ]
+                data: list[dict] = []
+                for row in reader:
+                    cleaned: dict = {key: value for key, value in row.items() if key != "_id"}
+
+                    # CSV values are strings by default; coerce numeric IDs to int
+                    # so UI logic (max(id)+1) and deletes match reliably.
+                    raw_id = cleaned.get("id")
+                    if raw_id is not None:
+                        raw_id_str = str(raw_id).strip()
+                        try:
+                            cleaned["id"] = int(raw_id_str)
+                        except (ValueError, TypeError):
+                            # Keep original if it can't be converted.
+                            pass
+
+                    data.append(cleaned)
 
             self.cv_dbms.upload_table(DBConfigLoader.CV_DB_NAME, table_name, data)
             print(f'Imported "{table_name}" - {len(data)} documents')
