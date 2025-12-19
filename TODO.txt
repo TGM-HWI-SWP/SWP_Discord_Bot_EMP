@@ -21,3 +21,4 @@ remove discord token from config.ini and replace it with a placeholder token tha
 
 # at the end
 readme and license need to be updated including links to the discord bot creation docs and to the rest of the simple installation insctructions as a first tab
+NO PROJECT STATUS IN README
