@@ -268,9 +268,12 @@ class AdminPanel(ViewPort):
                                     all_dishes = self.dbms.get_data("dishes", {})
                                     next_id = max([d.get("id", 0) for d in all_dishes], default=0) + 1
                                     success = self.dbms.insert_data("dishes", {"id": next_id, "category": cat, "dish": name})
-                                    return f'Success: Added {name}' if success else "Error: Failed to insert"
+                                    if success:
+                                        return "Success: Added " + str(name)
+                                    else:
+                                        return "Error: Failed to insert"
                                 except Exception as error:
-                                    return f'Error: {str(error)}'
+                                    return "Error: " + repr(error)
                             
                             def delete_dish(dish_id):
                                 try:
