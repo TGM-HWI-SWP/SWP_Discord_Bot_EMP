@@ -41,6 +41,38 @@ class AdminPanel(ViewPort):
     
     def build_interface(self) -> gr.Blocks:
         with gr.Blocks(title="Discord Bot Admin Panel") as app:    
+
+            def _bot_guard() -> str | None:
+                if not self.check_available():
+                    return "No discord bot instance"
+                if not self.check_connection():
+                    return "Bot offline"
+                return None
+
+            def _parse_positive_int(value) -> int | None:
+                if value is None:
+                    return None
+                raw = str(value).strip()
+                if raw == "":
+                    return None
+                try:
+                    parsed = int(float(raw))
+                except (TypeError, ValueError):
+                    return None
+                return parsed if parsed > 0 else None
+
+            def _next_numeric_id(table_name: str) -> int:
+                docs = self.dbms.get_data(table_name, {})
+                ids: list[int] = []
+                for doc in docs:
+                    try:
+                        ids.append(int(doc.get("id")))
+                    except (TypeError, ValueError):
+                        continue
+                return max(ids, default=0) + 1
+
+            def _id_query(id_value: int) -> dict:
+                return {"$or": [{"id": id_value}, {"id": str(id_value)}]}
                 
             with gr.Tabs():
                 
@@ -94,21 +126,19 @@ class AdminPanel(ViewPort):
                             guild_status = gr.Markdown("")
                             
                             def leave_guild(guild_selection):
-                                if not self.check_available():
-                                    return "No discord bot instance"
-                                if not self.check_connection():
-                                    return "Bot offline"
                                 if not guild_selection:
                                     return "Please select a guild"
+
+                                guard = _bot_guard()
+                                if guard:
+                                    return guard
+
                                 try:
                                     guild_id = int(guild_selection.split("ID: ")[1].rstrip(")"))
-                                    success = self.discord_bot.leave_guild(guild_id)
-                                    if success:
-                                        return "Successfully left guild"
-                                    else:
-                                        return "Failed to leave guild"
                                 except (ValueError, IndexError):
                                     return "Invalid guild selection"
+
+                                return "Successfully left guild" if self.discord_bot.leave_guild(guild_id) else "Failed to leave guild"
                             
                             def refresh_guild_list():
                                 if not self.check_available():
@@ -132,21 +162,16 @@ class AdminPanel(ViewPort):
                             message_status = gr.Markdown("")
                             
                             def send_custom_message(channel_id, message):
-                                if not self.check_available():
-                                    return "No discord bot instance"
-                                if not self.check_connection():
-                                    return "Bot offline"
-                                if not channel_id or not message:
+                                guard = _bot_guard()
+                                if guard:
+                                    return guard
+
+                                channel_id_int = _parse_positive_int(channel_id)
+                                message_text = (message or "").strip()
+                                if channel_id_int is None or not message_text:
                                     return "Channel ID and message required"
-                                try:
-                                    channel_id_int = int(channel_id)
-                                    success = self.discord_bot.send_message(0, channel_id_int, message)
-                                    if success:
-                                        return "Message sent successfully"
-                                    else:
-                                        return "Failed to send message"
-                                except ValueError:
-                                    return "Invalid channel ID (must be a number)"
+
+                                return "Message sent successfully" if self.discord_bot.send_message(0, channel_id_int, message_text) else "Failed to send message"
                     
                     with gr.Row(visible=False) as bot_settings_section:
                         with gr.Column():
@@ -160,25 +185,18 @@ class AdminPanel(ViewPort):
                             settings_status = gr.Markdown("")
                             
                             def save_bot_settings(log_messages):
-                                if not self.check_available():
-                                    return "No discord bot instance"
-                                if not self.check_connection():
-                                    return "Bot offline"
-                                
-                                success = True
-                                if hasattr(self.discord_bot, 'update_log_messages'):
-                                    log_success = self.discord_bot.update_log_messages(log_messages)
-                                    success = success and log_success
-                            
-                                if success:
-                                    status_message = "".join([
-                                        "**Settings saved successfully!**",
-                                        f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
-                                    ])
+                                guard = _bot_guard()
+                                if guard:
+                                    return guard
 
-                                    return status_message
-                                else:
-                                    return "**Failed to save settings.**\n\nPlease check the bot connection."
+                                if hasattr(self.discord_bot, "update_log_messages"):
+                                    if not self.discord_bot.update_log_messages(bool(log_messages)):
+                                        return "**Failed to save settings.**\n\nPlease check the bot connection."
+
+                                return "".join([
+                                    "**Settings saved successfully!**",
+                                    f"\n- Log Messages: **{'ON' if log_messages else 'OFF'}**",
+                                ])
                                             
                     def switch_section(section):
                         if section == "Guild Management":
@@ -226,8 +244,8 @@ class AdminPanel(ViewPort):
                                     results = gr.Dataframe(headers=["ID", "Category", "Dish"])
 
                                     gr.Markdown("### Reset Dishes Table")
-                                    reset_btn = gr.Button("Reset to Initial Data")
-                                    reset_status = gr.Markdown("")
+                                    dishes_reset_btn = gr.Button("Reset to Initial Data")
+                                    dishes_reset_status = gr.Markdown("")
                                 
                                 with gr.Column():
                                     gr.Markdown("### Add New Dish")
@@ -261,64 +279,44 @@ class AdminPanel(ViewPort):
                                 return [[d.get("id"), d.get("category"), d.get("dish")] for d in data]
                             
                             def add_dish(cat, name):
+                                dish_name = (name or "").strip()
+                                if not dish_name:
+                                    return "Error: Enter a dish name"
+                                if not cat:
+                                    return "Error: Select a category"
+
                                 try:
-                                    if not name:
-                                        return "Error: Enter a dish name"
-                                    all_dishes = self.dbms.get_data("dishes", {})
-
-                                    existing_ids: list[int] = []
-                                    for dish in all_dishes:
-                                        raw_id = dish.get("id")
-                                        try:
-                                            existing_ids.append(int(raw_id))
-                                        except (TypeError, ValueError):
-                                            continue
-
-                                    next_id = max(existing_ids, default=0) + 1
-                                    success = self.dbms.insert_data(
+                                    next_id = _next_numeric_id("dishes")
+                                    ok = self.dbms.insert_data(
                                         "dishes",
-                                        {"id": int(next_id), "category": str(cat), "dish": str(name)},
+                                        {"id": next_id, "category": str(cat), "dish": dish_name},
                                     )
-                                    if success:
-                                        return "Success: Added {}".format(name)
-                                    else:
-                                        return "Error: Failed to insert"
+                                    return f"Success: Added {dish_name}" if ok else "Error: Failed to insert"
                                 except Exception as error:
-                                    return "Error: {}".format(repr(error))
+                                    return f"Error: {error}"
                             
                             def delete_dish(dish_id):
+                                dish_id_int = _parse_positive_int(dish_id)
+                                if dish_id_int is None:
+                                    return "Error: Invalid ID"
+
                                 try:
-                                    if dish_id is None or dish_id == "":
-                                        return "Error: Invalid ID"
-                                    dish_id_int = int(float(dish_id))
-                                    if dish_id_int <= 0:
-                                        return "Error: Invalid ID"
-
-                                    query = {"$or": [{"id": dish_id_int}, {"id": str(dish_id_int)}]}
-                                    existing = self.dbms.get_data("dishes", query)
-                                    if not existing:
+                                    query = _id_query(dish_id_int)
+                                    if not self.dbms.get_data("dishes", query):
                                         return "Error: ID not found"
-
-                                    success = self.dbms.delete_data("dishes", query)
-                                    if not success:
-                                        return "Error: Failed to delete"
-
-                                    remaining = self.dbms.get_data("dishes", query)
-                                    if remaining:
-                                        return "Error: Failed to delete"
-                                    return "Success: Deleted ID {}".format(dish_id_int)
+                                    return f"Success: Deleted ID {dish_id_int}" if self.dbms.delete_data("dishes", query) else "Error: Failed to delete"
                                 except Exception as error:
-                                    return "Error: {}".format(repr(error))
+                                    return f"Error: {error}"
                             
                             def reset_dishes():
+                                if not self.db_loader:
+                                    return "Error: DB loader not available"
                                 try:
-                                    if not self.db_loader:
-                                        return "Error: DB loader not available"
                                     self.dbms.delete_data("dishes", {})
                                     self.db_loader.import_tables(force_reload=True, specific_table="dishes")
                                     return "Dish table reset to initial data"
                                 except Exception as error:
-                                    return "Error: {}".format(repr(error))
+                                    return f"Error: {error}"
                             
                             def test_dish(cat):
                                 if self.controller:
@@ -329,7 +327,7 @@ class AdminPanel(ViewPort):
                             add_btn.click(fn=add_dish, inputs=[new_cat, new_name], outputs=add_status)
                             del_btn.click(fn=delete_dish, inputs=del_id, outputs=del_status)
                             test_btn.click(fn=test_dish, inputs=test_cat, outputs=test_result)
-                            reset_btn.click(fn=reset_dishes, outputs=reset_status)
+                            dishes_reset_btn.click(fn=reset_dishes, outputs=dishes_reset_status)
                         
                         with gr.Tab("Fun Facts"):
                             with gr.Row():
@@ -340,8 +338,8 @@ class AdminPanel(ViewPort):
                                     fact_results = gr.Dataframe(headers=["ID", "Fun Fact"])
 
                                     gr.Markdown("### Reset Fun Facts Table")
-                                    reset_btn = gr.Button("Reset to Initial Data")
-                                    reset_status = gr.Markdown("")
+                                    funfacts_reset_btn = gr.Button("Reset to Initial Data")
+                                    funfacts_reset_status = gr.Markdown("")
                                 
                                 with gr.Column():
                                     gr.Markdown("### Add New")
@@ -365,56 +363,38 @@ class AdminPanel(ViewPort):
                                 return [[f.get("id"), f.get("fun_fact")] for f in data]
                             
                             def add_fact(text):
-                                if not text:
+                                fact_text = (text or "").strip()
+                                if not fact_text:
                                     return "Error: Enter a fun fact"
-                                all_facts = self.dbms.get_data("fun_facts", {})
-
-                                existing_ids: list[int] = []
-                                for fact in all_facts:
-                                    raw_id = fact.get("id")
-                                    try:
-                                        existing_ids.append(int(raw_id))
-                                    except (TypeError, ValueError):
-                                        continue
-
-                                next_id = max(existing_ids, default=0) + 1
-                                success = self.dbms.insert_data(
-                                    "fun_facts",
-                                    {"id": int(next_id), "fun_fact": text},
-                                )
-                                return "Success: Added" if success else "Error: Failed"
+                                try:
+                                    next_id = _next_numeric_id("fun_facts")
+                                    ok = self.dbms.insert_data("fun_facts", {"id": next_id, "fun_fact": fact_text})
+                                    return "Success: Added" if ok else "Error: Failed"
+                                except Exception as error:
+                                    return f"Error: {error}"
                             
                             def delete_fact(fact_id):
-                                if fact_id is None or fact_id == "":
+                                fact_id_int = _parse_positive_int(fact_id)
+                                if fact_id_int is None:
                                     return "Error: Invalid ID"
+
                                 try:
-                                    fact_id_int = int(float(fact_id))
-                                except (TypeError, ValueError):
-                                    return "Error: Invalid ID"
-                                if fact_id_int <= 0:
-                                    return "Error: Invalid ID"
-
-                                query = {"$or": [{"id": fact_id_int}, {"id": str(fact_id_int)}]}
-                                existing = self.dbms.get_data("fun_facts", query)
-                                if not existing:
-                                    return "Error: ID not found"
-
-                                success = self.dbms.delete_data("fun_facts", query)
-                                if not success:
-                                    return "Error: Failed"
-
-                                remaining = self.dbms.get_data("fun_facts", query)
-                                return "Success: Deleted ID {}".format(fact_id_int) if not remaining else "Error: Failed"
+                                    query = _id_query(fact_id_int)
+                                    if not self.dbms.get_data("fun_facts", query):
+                                        return "Error: ID not found"
+                                    return f"Success: Deleted ID {fact_id_int}" if self.dbms.delete_data("fun_facts", query) else "Error: Failed"
+                                except Exception as error:
+                                    return f"Error: {error}"
                             
                             def reset_fun_facts():
+                                if not self.db_loader:
+                                    return "Error: DB loader not available"
                                 try:
-                                    if not self.db_loader:
-                                        return "Error: DB loader not available"
                                     self.dbms.delete_data("fun_facts", {})
                                     self.db_loader.import_tables(force_reload=True, specific_table="fun_facts")
                                     return "Fun facts table reset to initial data"
                                 except Exception as error:
-                                    return "Error: {}".format(repr(error))
+                                    return f"Error: {error}"
 
                             def test_fact():
                                 if self.controller:
@@ -424,7 +404,7 @@ class AdminPanel(ViewPort):
                             fact_search_btn.click(fn=search_facts, inputs=fact_query, outputs=fact_results)
                             fact_add_btn.click(fn=add_fact, inputs=new_fact, outputs=fact_add_status)
                             fact_del_btn.click(fn=delete_fact, inputs=fact_del_id, outputs=fact_del_status)
-                            reset_btn.click(fn=reset_fun_facts, outputs=fact_add_status)
+                            funfacts_reset_btn.click(fn=reset_fun_facts, outputs=funfacts_reset_status)
                             fact_test_btn.click(fn=test_fact, outputs=fact_test_result)
                         
                         with gr.Tab("Translator"):
