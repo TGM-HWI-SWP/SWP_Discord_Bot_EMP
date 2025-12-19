@@ -338,6 +338,10 @@ class AdminPanel(ViewPort):
                                     fact_query = gr.Textbox(label="Search", placeholder="Keywords...")
                                     fact_search_btn = gr.Button("Search")
                                     fact_results = gr.Dataframe(headers=["ID", "Fun Fact"])
+
+                                    gr.Markdown("### Reset Fun Facts Table")
+                                    reset_btn = gr.Button("Reset to Initial Data")
+                                    reset_status = gr.Markdown("")
                                 
                                 with gr.Column():
                                     gr.Markdown("### Add New")
@@ -402,6 +406,16 @@ class AdminPanel(ViewPort):
                                 remaining = self.dbms.get_data("fun_facts", query)
                                 return "Success: Deleted ID {}".format(fact_id_int) if not remaining else "Error: Failed"
                             
+                            def reset_fun_facts():
+                                try:
+                                    if not self.db_loader:
+                                        return "Error: DB loader not available"
+                                    self.dbms.delete_data("fun_facts", {})
+                                    self.db_loader.import_tables(force_reload=True, specific_table="fun_facts")
+                                    return "Fun facts table reset to initial data"
+                                except Exception as error:
+                                    return "Error: {}".format(repr(error))
+
                             def test_fact():
                                 if self.controller:
                                     return self.controller.get_fun_fact()
@@ -410,6 +424,7 @@ class AdminPanel(ViewPort):
                             fact_search_btn.click(fn=search_facts, inputs=fact_query, outputs=fact_results)
                             fact_add_btn.click(fn=add_fact, inputs=new_fact, outputs=fact_add_status)
                             fact_del_btn.click(fn=delete_fact, inputs=fact_del_id, outputs=fact_del_status)
+                            reset_btn.click(fn=reset_fun_facts, outputs=fact_add_status)
                             fact_test_btn.click(fn=test_fact, outputs=fact_test_result)
                         
                         with gr.Tab("Translator"):
