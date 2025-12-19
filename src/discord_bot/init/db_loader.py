@@ -38,6 +38,7 @@ class DBLoader:
                     print(f'Skipping "{table_name}" - already contains {existing_count} documents')
                     continue
 
+            csv_file = self.db_data_path / f"{table_name}.csv"
             with open(csv_file, "r", encoding="utf-8") as file:
                 reader = csv.DictReader(file)
                 data = [
