@@ -216,7 +216,6 @@ class DishPort(ModelPort):
             Suggested dish name.
         """
 
-
 class ControllerPort(ABC):
     """Abstract interface for a high-level application controller."""
 
