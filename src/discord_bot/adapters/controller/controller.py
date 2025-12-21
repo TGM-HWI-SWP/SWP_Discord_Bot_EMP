@@ -1,6 +1,9 @@
+"""This module contains the Controller class for coordinating dish suggestions, fun facts, and translations."""
+
 from discord_bot.contracts.ports import ControllerPort, DishPort, FunFactPort, TranslatePort
 
 class Controller(ControllerPort):
+    """Controller class coordinating dish suggestions, fun facts, and translations."""
     def __init__(self, dish_selector: DishPort, fun_fact_selector: FunFactPort, translator: TranslatePort):
         self.dish_selector = dish_selector
         self.fun_fact_selector = fun_fact_selector

@@ -257,6 +257,19 @@ class ControllerPort(ABC):
             Translated text.
         """
         ...
+    
+    @abstractmethod
+    def auto_translate_text(self, text: str, user_id: int) -> str:
+        """Auto-translate text using a user's preferred language.
+
+        Args:
+            text (str): Text to translate.
+            user_id (int): User ID whose language preference should be used.
+        
+        Returns:
+            str: Translated text.
+        """
+        ...
 
 class ViewPort(ABC):
     """Abstract interface for UI view adapters."""
