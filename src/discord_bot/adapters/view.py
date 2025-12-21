@@ -423,10 +423,11 @@ class AdminPanel(ViewPort):
                                 stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
 
                                 dishes_md = '<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{}</div></div>'.format(stats["total_dishes"])
-                                facts_md = '<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{}</div></div>'.format(stats["total_fun_facts"])
                                 cats_md = '<div class="stat-card"><div class="stat-label">Categories</div><div class="stat-number">{}</div></div>'.format(len(stats["dishes"]))
+                                facts_md = '<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{}</div></div>'.format(stats["total_fun_facts"])
+                               
                                 
-                                return dishes_md, facts_md, cats_md, stats
+                                return dishes_md, cats_md, facts_md,  stats
                             
                             refresh_stats_btn.click(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
                             app.load(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
