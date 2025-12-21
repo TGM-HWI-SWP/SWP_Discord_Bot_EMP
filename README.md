@@ -2,13 +2,19 @@
 
 A Discord bot built with Python, using Docker for easy deployment. Features include fun facts, dish suggestions, translation, and more.
 
-This is a school project made by student of the TGM in Vienna (2025)
+This is a school project made by students of the TGM in Vienna (2025)
 
 - Mateja Gvozdenac
 - Emir Keser
 - Paul Hinterbauer
 
 ## Installation
+
+### Prerequisites
+
+- Python 3.13 Interpreter (Download at https://www.python.org/downloads/release/python-3130/ or via the Microsoft store)
+- Docker Desktop (See instructions below)
+- Discord Bot (See instructions below)
 
 1. **Download the code**: Clone this repository from GitHub.
    ```
@@ -49,5 +55,4 @@ The Database can be accessed at http://localhost:8081 but this is only needed fo
 
 ## License
 
-See LICENSE file
-(Also see EDUCATIONAL PROJECT NOTICE in LICENSE file).
+See LICENSE file (Also see EDUCATIONAL PROJECT NOTICE in LICENSE file).
