@@ -10,6 +10,7 @@ from discord_bot.contracts.ports import DatabasePort
 from discord_bot.init.config_loader import DBConfigLoader
 
 class DBMS(DatabasePort):
+    """MongoDB-backed implementation of the `DatabasePort` interface."""
     def __init__(self, uri: str | None = None, db_name: str | None = None) -> None:
         self.uri = uri or DBConfigLoader.MONGO_URI
         self.db_name = db_name or DBConfigLoader.CV_DB_NAME

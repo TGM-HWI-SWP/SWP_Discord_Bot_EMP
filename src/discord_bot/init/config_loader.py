@@ -11,6 +11,7 @@ config = configparser.ConfigParser()
 files_read = config.read(config_path)
 
 class DBConfigLoader:
+    """Load database configuration values from `config.ini` and environment variables."""
     IN_DOCKER = os.path.exists("/.dockerenv")
 
     TIMEZONE = config.get("docker", "timezone", fallback="Europe/Vienna")
@@ -65,10 +66,12 @@ DEV_MODE={str(SettingsConfigLoader.DEV_MODE).lower()}
         print(f'Generated .env from config.ini at {env_path}')
 
 class DiscordConfigLoader:
+    """Load Discord configuration values from `config.ini` and environment variables."""
     TARGET_LANGUAGE = os.getenv("TARGET_LANGUAGE", config.get("discord", "target_language", fallback="en"))
     DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", config.get("discord", "discord_token", fallback=""))
 
 class SettingsConfigLoader:
+    """Load runtime settings from `config.ini` and environment variables."""
     DEV_MODE = os.getenv("DEV_MODE", config.getboolean("settings", "dev_mode", fallback=True))
 
 if __name__ == "__main__":

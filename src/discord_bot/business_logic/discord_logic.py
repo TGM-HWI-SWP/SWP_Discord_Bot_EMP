@@ -10,6 +10,7 @@ from discord_bot.init.config_loader import DiscordConfigLoader
 from discord_bot.business_logic.model import Model
 
 class DiscordLogic(Model, DiscordLogicPort):
+    """Discord bot logic using `discord.py` library."""
     def __init__(self, dbms: DatabasePort | None = None):
         super().__init__()
         intents = discord.Intents.default()
@@ -30,6 +31,7 @@ class DiscordLogic(Model, DiscordLogicPort):
         
         @self.client.event
         async def on_ready():
+            """Event handler for when the bot is ready."""
             self.loop = asyncio.get_running_loop()
             await self._on_ready()
         
@@ -39,17 +41,18 @@ class DiscordLogic(Model, DiscordLogicPort):
 
         @self.client.event
         async def on_guild_join(guild: discord.Guild):
+            """Event handler for when the bot joins a guild."""
             self.logging(f'Joined guild: {guild.name} ({guild.id})')
             self._update_connected_guilds()
 
         @self.client.event
         async def on_guild_remove(guild: discord.Guild):
+            """Event handler for when the bot leaves a guild."""
             self.logging(f'Left guild: {guild.name} ({guild.id})')
             self._update_connected_guilds()
 
     async def _on_ready(self) -> None:
         """"Handle bot readiness: sync commands and update guild stats."""
-
         self.logging(f'Logged in as {self.client.user}')
         
         await self.tree.sync()
@@ -102,6 +105,7 @@ class DiscordLogic(Model, DiscordLogicPort):
                 translated = self.translator.execute_function(text_content, user_id=subscriber_id)
                 try:
                     await message.channel.send(f'**Auto-translate** for <@{subscriber_id}> from <@{message.author.id}>:\n**Translated**: {translated}')
+                
                 except Exception as error:
                     self.logging(f'Failed to send auto-translation in channel: {error}', log_file_name="translator")
 
@@ -164,14 +168,9 @@ class DiscordLogic(Model, DiscordLogicPort):
         return [{"id": guild.id, "name": guild.name} for guild in self.client.guilds]
     
     def get_guild_info(self, guild_id: int) -> dict | None:
-        
         guild = self.client.get_guild(guild_id)
         if guild:
-            return {
-                "id": guild.id,
-                "name": guild.name,
-                "member_count": guild.member_count
-            }
+            return {"id": guild.id, "name": guild.name, "member_count": guild.member_count}
         return None
 
     def leave_guild(self, guild_id: int) -> bool:
@@ -202,23 +201,18 @@ class DiscordLogic(Model, DiscordLogicPort):
         return self.client.is_ready()
     
     def get_bot_stats(self) -> dict:
-        """Get bot statistics: status, guild count, and total user count"""
         if not self.is_connected():
             return {"status": "Offline", "guilds": 0, "users": 0}
         
         try:
             total_members = sum(guild.member_count for guild in self.client.guilds)
-            return {
-                "status": "Online",
-                "guilds": len(self.client.guilds),
-                "users": total_members
-            }
-        except Exception as e:
-            self.logging(f"Error getting bot stats: {e}")
+            return {"status": "Online", "guilds": len(self.client.guilds), "users": total_members}
+        
+        except Exception as error:
+            self.logging(f"Error getting bot stats: {error}")
             return {"status": "Error", "guilds": 0, "users": 0}
 
     def update_settings(self, prefix: str, status_text: str, auto_reply: bool, log_messages: bool) -> bool:
-        
         if not self.dbms:
             return False
         

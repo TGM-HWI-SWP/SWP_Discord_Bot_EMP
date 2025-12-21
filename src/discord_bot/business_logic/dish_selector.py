@@ -4,6 +4,7 @@ from discord_bot.contracts.ports import DatabasePort, DishPort
 from discord_bot.business_logic.model import Model
 
 class DishSelector(Model, DishPort):
+    """Select a random dish from the database based on category."""
     def __init__(self, dbms: DatabasePort, **kwargs):
         super().__init__(**kwargs)
         self.dbms = dbms

@@ -7,6 +7,7 @@ from discord_bot.init.log_loader import LogLoader
 
 
 class Model(ModelPort):
+    """Base model class with logging capabilities."""
     def __init__(self) -> None:
         self.log_loader = LogLoader()
 

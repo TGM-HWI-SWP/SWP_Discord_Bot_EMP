@@ -7,6 +7,7 @@ from discord_bot.business_logic.model import Model
 from discord_bot.init.config_loader import DiscordConfigLoader
 
 class Translator(Model, TranslatePort):
+    """Translate text using Google Translate with optional user-specific target languages."""
     def __init__(self, dbms: DatabasePort | None = None, **kwargs):
         super().__init__(**kwargs)
         self.dbms = dbms
@@ -29,8 +30,10 @@ class Translator(Model, TranslatePort):
                 else:
                     self.logging(f'Successfully translated: \'{text}\' -> \'{result}\' (target: {target_language})')
                 return result
+            
             except Exception as error:
                 self.logging(f'Translation error (attempt {attempt + 1}/10): {error}')
+        
         self.logging(f'Translation failed after 10 attempts, returning original text: \'{text}\'')
         return text
 

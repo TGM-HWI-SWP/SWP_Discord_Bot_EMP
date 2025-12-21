@@ -4,6 +4,7 @@ from discord_bot.contracts.ports import DatabasePort, FunFactPort
 from discord_bot.business_logic.model import Model
 
 class FunFactSelector(Model, FunFactPort):
+    """Select a random fun fact from the database."""
     def __init__(self, dbms: DatabasePort, **kwargs):
         super().__init__(**kwargs)
         self.dbms = dbms

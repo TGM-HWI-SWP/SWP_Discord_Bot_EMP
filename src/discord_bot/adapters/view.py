@@ -7,6 +7,7 @@ from discord_bot.contracts.ports import ViewPort, DatabasePort, DishPort, FunFac
 from discord_bot.init.db_loader import DBLoader
 
 class AdminPanel(ViewPort):
+    """Admin panel for managing the Discord bot via a web interface."""
     def __init__(
         self,
         dbms: DatabasePort,
@@ -43,6 +44,11 @@ class AdminPanel(ViewPort):
         with gr.Blocks(title="Discord Bot Admin Panel") as app:    
 
             def _bot_guard() -> str | None:
+                """Check if the Discord bot instance is available and online.
+
+                Returns:
+                    str | None: An error message if the bot is unavailable or offline, otherwise None.
+                """
                 if not self.check_available():
                     return "No discord bot instance"
                 if not self.check_connection():
@@ -50,6 +56,14 @@ class AdminPanel(ViewPort):
                 return None
 
             def _parse_positive_int(value) -> int | None:
+                """Parse a value into a positive integer.
+
+                Args:
+                    value (Any): The value to parse.
+
+                Returns:
+                    int | None: The parsed positive integer, or None if parsing fails or value is not positive.
+                """
                 if value is None:
                     return None
                 raw = str(value).strip()
@@ -62,6 +76,14 @@ class AdminPanel(ViewPort):
                 return parsed if parsed > 0 else None
 
             def _next_numeric_id(table_name: str) -> int:
+                """Generate the next numeric ID for a given database table.
+
+                Args:
+                    table_name (str): The name of the database table.
+
+                Returns:
+                    int: The next available numeric ID.
+                """
                 docs = self.dbms.get_data(table_name, {})
                 ids: list[int] = []
                 for doc in docs:
@@ -72,6 +94,14 @@ class AdminPanel(ViewPort):
                 return max(ids, default=0) + 1
 
             def _id_query(id_value: int) -> dict:
+                """Create a query to match a document by ID, allowing both int and string formats.
+
+                Args:
+                    id_value (int): The ID value to query.
+
+                Returns:
+                    dict: A MongoDB-style query dictionary to match the ID.
+                """
                 return {"$or": [{"id": id_value}, {"id": str(id_value)}]}
                 
             with gr.Tabs():
@@ -101,6 +131,15 @@ class AdminPanel(ViewPort):
                             user_count = gr.Textbox(label="Total Users", value="Loading...", interactive=False)
 
                     def load_bot_status_initial():
+                        """Load the initial status of the Discord bot.
+
+                        Returns:
+                            tuple[str, str, str, str]: A tuple containing:
+                                - Bot status as a string.
+                                - Number of guilds as a string.
+                                - Number of users formatted with commas as a string.
+                                - An additional info message as a string.
+                        """
                         if not self.check_available():
                             return ("No discord bot instance", "0", "0", "")
                         try:
@@ -110,6 +149,15 @@ class AdminPanel(ViewPort):
                             return ( "Error", "0", "0", "")
 
                     def load_bot_status():
+                        """Refresh and load the current status of the Discord bot.
+
+                        Returns:
+                            tuple[gr.update | str, gr.update | str, gr.update | str, str]: A tuple containing:
+                                - Bot status (string or Gradio update object).
+                                - Number of guilds (string or Gradio update object).
+                                - Number of users formatted with commas (string or Gradio update object).
+                                - A message indicating success or error of the refresh.
+                        """
                         if not self.check_available():
                             return (gr.update(value="No discord bot instance"), gr.update(value="0"), gr.update(value="0"), "No discord bot instance")
 
@@ -134,6 +182,16 @@ class AdminPanel(ViewPort):
                             guild_status = gr.Markdown("")
                             
                             def leave_guild(guild_selection):
+                                """Leave a selected Discord guild.
+
+                                Args:
+                                    guild_selection (str): The selected guild string, expected in the format "Name (ID: 123456)".
+
+                                Returns:
+                                    str: A message indicating the result of the operation:
+                                        - Error messages if no selection, invalid format, or bot issues occur.
+                                        - Success or failure message after attempting to leave the guild.
+                                """
                                 if not guild_selection:
                                     return "Please select a guild"
 
@@ -146,20 +204,27 @@ class AdminPanel(ViewPort):
                                 except (ValueError, IndexError):
                                     return "Invalid guild selection"
 
-                                return "Successfully left guild" if self.discord_bot.leave_guild(guild_id) else "Failed to leave guild"
+                                return ("Successfully left guild" if self.discord_bot.leave_guild(guild_id) else "Failed to leave guild")
                             
                             def refresh_guild_list():
+                                """Refresh the list of Discord guilds for the bot.
+
+                                Returns:
+                                    tuple[gr.update, str]: 
+                                        - gr.update: Updated choices for the guild selection component.
+                                        - str: A message indicating the result of the refresh, such as errors or the number of guilds found.
+                                """
                                 if not self.check_available():
-                                    return gr.update(choices=[]), "No discord bot instance"
+                                    return (gr.update(choices=[]), "No discord bot instance")
                                 if not self.check_connection():
-                                    return gr.update(choices=[]), "Bot offline"
+                                    return (gr.update(choices=[]), "Bot offline")
                                 
                                 guilds = self.discord_bot.get_guilds()
                                 if not guilds:
-                                    return gr.update(choices=[]), "No guilds found"
+                                    return (gr.update(choices=[]), "No guilds found")
                                 
                                 choices = ["{} (ID: {})".format(guild['name'], guild['id']) for guild in guilds]
-                                return gr.update(choices=choices), "Found {} guilds".format(len(guilds))
+                                return (gr.update(choices=choices), "Found {} guilds".format(len(guilds)))
 
                     with gr.Row(visible=False) as custom_msg_section:
                         with gr.Column():
@@ -172,6 +237,13 @@ class AdminPanel(ViewPort):
                             channel_status = gr.Markdown("")
                             
                             def refresh_channel_list():
+                                """Refresh the list of Discord channels for the bot.
+
+                                Returns:
+                                    tuple[gr.update, str]: 
+                                        - gr.update: Updated choices for the channel selection component.
+                                        - str: A message indicating the result of the refresh, such as errors or the number of channels found.
+                                """
                                 if not self.check_available():
                                     return (gr.update(choices=[]), "No discord bot instance")
 
@@ -188,7 +260,18 @@ class AdminPanel(ViewPort):
 
                                 return (gr.update(choices=channels), f'Loaded {len(channels)} channels')
 
-                            def send_custom_message(channel_selection, message):
+                            def send_custom_message(channel_selection: str, message: str) -> str:
+                                """Send a custom message to a selected Discord channel.
+
+                                Args:
+                                    channel_selection (str): The selected channel string, expected in the format "Name (ID: 123456)".
+                                    message (str): The message text to send.
+
+                                Returns:
+                                    str: A message indicating the result of the operation:
+                                        - Error messages if the bot is unavailable, the channel is invalid, or the message is empty.
+                                        - Success or failure message after attempting to send the message.
+                                """
                                 guard = _bot_guard()
                                 if guard:
                                     return guard
@@ -212,7 +295,19 @@ class AdminPanel(ViewPort):
                                 success = self.discord_bot.send_message(guild_id, channel_id, message_text)
                                 return ("Message sent successfully" if success else "Failed to send message")
                    
-                    def switch_section(section):
+                    def switch_section(section: str):
+                        """Switch visibility between different UI sections in the app.
+
+                        Args:
+                            section (str): The name of the section to display. Supported values:
+                                - "Guild Management"
+                                - "Custom Messages"
+
+                        Returns:
+                            tuple[gr.update, gr.update]: Two Gradio update objects controlling visibility of:
+                                - The Guild Management section.
+                                - The Custom Messages section.
+                        """
                         if section == "Guild Management":
                             return (gr.update(visible=True), gr.update(visible=False))
                         elif section == "Custom Messages":
@@ -283,14 +378,32 @@ class AdminPanel(ViewPort):
                             test_btn = gr.Button("Get Random")
                             test_result = gr.Textbox(label="Result", interactive=False)
                     
-                            def search_dishes(query, cat):
+                            def search_dishes(query: str, cat: str) -> list[list]:
+                                """Search for dishes in the database, optionally filtering by category and query text.
+
+                                Args:
+                                    query (str): A search string to filter dish names. Empty string means no filtering.
+                                    cat (str): The category to filter by. Use "All" to include all categories.
+
+                                Returns:
+                                    list[list]: A list of dishes matching the search, each represented as [id, category, dish name].
+                                """
                                 filter_query = {} if cat == "All" else {"category": cat}
                                 data = self.dbms.get_data("dishes", filter_query)
                                 if query:
                                     data = [d for d in data if query.lower() in d.get("dish", "").lower()]
                                 return [[d.get("id"), d.get("category"), d.get("dish")] for d in data]
                             
-                            def add_dish(cat, name):
+                            def add_dish(cat: str, name: str) -> str:
+                                """Add a new dish to the database.
+
+                                Args:
+                                    cat (str): The category of the dish.
+                                    name (str): The name of the dish.
+
+                                Returns:
+                                    str: A message indicating success or failure of the operation.
+                                """
                                 dish_name = (name or "").strip()
                                 if not dish_name:
                                     return "Error: Enter a dish name"
@@ -299,15 +412,21 @@ class AdminPanel(ViewPort):
 
                                 try:
                                     next_id = _next_numeric_id("dishes")
-                                    ok = self.dbms.insert_data(
-                                        "dishes",
-                                        {"id": next_id, "category": str(cat), "dish": dish_name},
-                                    )
-                                    return f"Success: Added {dish_name}" if ok else "Error: Failed to insert"
+                                    ok = self.dbms.insert_data("dishes", {"id": next_id, "category": str(cat), "dish": dish_name})
+                                    return (f'Success: Added {dish_name}' if ok else "Error: Failed to insert")
+                                
                                 except Exception as error:
-                                    return f"Error: {error}"
+                                    return f'Error: {error}'
                             
-                            def delete_dish(dish_id):
+                            def delete_dish(dish_id: int) -> str:
+                                """Delete a dish from the database by its ID.
+
+                                Args:
+                                    dish_id (int): The ID of the dish to delete.
+
+                                Returns:
+                                    str: A message indicating success or failure of the deletion.
+                                """
                                 dish_id_int = _parse_positive_int(dish_id)
                                 if dish_id_int is None:
                                     return "Error: Invalid ID"
@@ -316,24 +435,39 @@ class AdminPanel(ViewPort):
                                     query = _id_query(dish_id_int)
                                     if not self.dbms.get_data("dishes", query):
                                         return "Error: ID not found"
-                                    return f"Success: Deleted ID {dish_id_int}" if self.dbms.delete_data("dishes", query) else "Error: Failed to delete"
+                                    return f'Success: Deleted ID {dish_id_int}' if self.dbms.delete_data("dishes", query) else "Error: Failed to delete"
+                                
                                 except Exception as error:
-                                    return f"Error: {error}"
+                                    return f'Error: {error}'
                             
-                            def reset_dishes():
+                            def reset_dishes() -> str:
+                                """Reset the dishes table to its initial data using the database loader.
+
+                                Returns:
+                                    str: A message indicating success or any errors that occurred.
+                                """
                                 if not self.db_loader:
                                     return "Error: DB loader not available"
                                 try:
                                     self.dbms.delete_data("dishes", {})
                                     self.db_loader.import_tables(force_reload=True, specific_table="dishes")
                                     return "Dish table reset to initial data"
+                                
                                 except Exception as error:
-                                    return f"Error: {error}"
+                                    return f'Error: {error}'
                             
-                            def test_dish(cat):
+                            def test_dish(cat: str) -> str:
+                                """Get a dish suggestion for a given category.
+
+                                Args:
+                                    cat (str): The category to get a dish suggestion from.
+
+                                Returns:
+                                    str: The suggested dish, or "N/A" if no controller or selector is available.
+                                """
                                 if self.controller:
                                     return self.controller.get_dish_suggestion(cat)
-                                return self.dish_selector.execute_function(cat) if self.dish_selector else "N/A"
+                                return (self.dish_selector.execute_function(cat) if self.dish_selector else "N/A")
                             
                             search_btn.click(fn=search_dishes, inputs=[search_query, search_cat], outputs=results)
                             add_btn.click(fn=add_dish, inputs=[new_cat, new_name], outputs=add_status)
@@ -368,24 +502,49 @@ class AdminPanel(ViewPort):
                             fact_test_btn = gr.Button("Get Random")
                             fact_test_result = gr.Textbox(label="Result", interactive=False, lines=3)
                     
-                            def search_facts(query):
+                            def search_facts(query: str) -> list[list]:
+                                """Search for fun facts in the database, optionally filtering by a query string.
+
+                                Args:
+                                    query (str): A search string to filter fun facts. Empty string means no filtering.
+
+                                Returns:
+                                    list[list]: A list of fun facts matching the search, each represented as [id, fun_fact].
+                                """
                                 data = self.dbms.get_data("fun_facts", {})
                                 if query:
                                     data = [f for f in data if query.lower() in f.get("fun_fact", "").lower()]
                                 return [[f.get("id"), f.get("fun_fact")] for f in data]
                             
-                            def add_fact(text):
+                            def add_fact(text: str) -> str:
+                                """Add a new fun fact to the database.
+
+                                Args:
+                                    text (str): The text of the fun fact.
+
+                                Returns:
+                                    str: A message indicating success or failure of the insertion.
+                                """
                                 fact_text = (text or "").strip()
                                 if not fact_text:
                                     return "Error: Enter a fun fact"
                                 try:
                                     next_id = _next_numeric_id("fun_facts")
                                     ok = self.dbms.insert_data("fun_facts", {"id": next_id, "fun_fact": fact_text})
-                                    return "Success: Added" if ok else "Error: Failed"
+                                    return ("Success: Added" if ok else "Error: Failed")
+                               
                                 except Exception as error:
-                                    return f"Error: {error}"
+                                    return f'Error: {error}'
                             
-                            def delete_fact(fact_id):
+                            def delete_fact(fact_id: int) -> str:
+                                """Delete a fun fact from the database by its ID.
+
+                                Args:
+                                    fact_id (int): The ID of the fun fact to delete.
+
+                                Returns:
+                                    str: A message indicating success or failure of the deletion.
+                                """
                                 fact_id_int = _parse_positive_int(fact_id)
                                 if fact_id_int is None:
                                     return "Error: Invalid ID"
@@ -394,24 +553,36 @@ class AdminPanel(ViewPort):
                                     query = _id_query(fact_id_int)
                                     if not self.dbms.get_data("fun_facts", query):
                                         return "Error: ID not found"
-                                    return f"Success: Deleted ID {fact_id_int}" if self.dbms.delete_data("fun_facts", query) else "Error: Failed"
+                                    return (f'Success: Deleted ID {fact_id_int}' if self.dbms.delete_data("fun_facts", query) else "Error: Failed")
+                                
                                 except Exception as error:
-                                    return f"Error: {error}"
+                                    return f'Error: {error}'
                             
-                            def reset_fun_facts():
+                            def reset_fun_facts() -> str:
+                                """Reset the fun facts table to its initial data using the database loader.
+
+                                Returns:
+                                    str: A message indicating success or any errors that occurred.
+                                """
                                 if not self.db_loader:
                                     return "Error: DB loader not available"
                                 try:
                                     self.dbms.delete_data("fun_facts", {})
                                     self.db_loader.import_tables(force_reload=True, specific_table="fun_facts")
                                     return "Fun facts table reset to initial data"
+                                
                                 except Exception as error:
-                                    return f"Error: {error}"
+                                    return f'Error: {error}'
 
-                            def test_fact():
+                            def test_fact() -> str:
+                                """Get a fun fact suggestion.
+
+                                Returns:
+                                    str: A fun fact retrieved from the controller or selector, or "N/A" if unavailable.
+                                """
                                 if self.controller:
                                     return self.controller.get_fun_fact()
-                                return self.fun_fact_selector.execute_function() if self.fun_fact_selector else "N/A"
+                                return (self.fun_fact_selector.execute_function() if self.fun_fact_selector else "N/A")
                             
                             fact_search_btn.click(fn=search_facts, inputs=fact_query, outputs=fact_results)
                             fact_add_btn.click(fn=add_fact, inputs=new_fact, outputs=fact_add_status)
@@ -428,7 +599,15 @@ class AdminPanel(ViewPort):
                             
                             trans_btn = gr.Button("Translate", size="lg")
                             
-                            def translate(text):
+                            def translate(text: str) -> str:
+                                """Translate a given text using the controller or translator component.
+
+                                Args:
+                                    text (str): The text to translate.
+
+                                Returns:
+                                    str: The translated text, or an error message if text is empty or no translation component is available.
+                                """
                                 if not text:
                                     return "Enter text"
                                 if self.controller:
@@ -452,7 +631,17 @@ class AdminPanel(ViewPort):
                             
                             stats_json = gr.JSON(label="Detailed Statistics")
                             
-                            def load_stats_initial():
+                            def load_stats_initial() -> tuple[str, str, str, dict, str]:
+                                """Load initial statistics for dishes and fun facts.
+
+                                Returns:
+                                    tuple[str, str, str, dict, str]: A tuple containing:
+                                        - HTML string for total dishes.
+                                        - HTML string for number of dish categories.
+                                        - HTML string for total fun facts.
+                                        - A dictionary with detailed statistics.
+                                        - An additional info message (empty string initially).
+                                """
                                 categories = dish_categories
 
                                 stats = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
@@ -471,7 +660,17 @@ class AdminPanel(ViewPort):
                                 
                                 return (dishes_md, cats_md, facts_md, stats, "")
                         
-                            def load_stats():
+                            def load_stats() -> tuple[str, str, str, dict, str]:
+                                """Refresh and load the current statistics for dishes and fun facts.
+
+                                Returns:
+                                    tuple[str, str, str, dict, str]: A tuple containing:
+                                        - HTML string for total dishes.
+                                        - HTML string for number of dish categories.
+                                        - HTML string for total fun facts.
+                                        - A dictionary with detailed statistics.
+                                        - A message indicating success or error of the refresh.
+                                """
                                 try:
                                     categories = dish_categories
 

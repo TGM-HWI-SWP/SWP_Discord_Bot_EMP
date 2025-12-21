@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 
 class LogLoader:
+    """Utilities for locating and preparing log files for models."""
     def __init__(self):
         self.log_dir = Path(__file__).parent.parent / "logs"
         self.business_logic_dir = Path(__file__).parent.parent / "business_logic"

@@ -161,10 +161,12 @@ class ModelPort(ABC):
             message (str): Message to log.
             log_file_name (str | None): Optional explicit log file name; if omitted, the class name is used.
         """
+        ...
 
     @abstractmethod
     def execute_function(self, *args, **kwargs):
         """Execute the primary domain-specific function of the model."""
+        ...
 
 class TranslatePort(ModelPort):
     """Abstract interface for translation models."""
@@ -192,15 +194,18 @@ class TranslatePort(ModelPort):
             Translated message.
         """
         ...
-    
 
 class FunFactPort(ModelPort):
     """Abstract interface for fun-fact providers."""
 
     @abstractmethod
     def execute_function(self) -> str:
-        """Return a single fun fact as a string."""
+        """Return a random fun fact.
 
+        Returns:
+            str: Random fun fact as a string.
+        """
+        ...
 
 class DishPort(ModelPort):
     """Abstract interface for dish suggestion providers."""
@@ -215,6 +220,7 @@ class DishPort(ModelPort):
         Returns:
             Suggested dish name.
         """
+        ...
 
 class ControllerPort(ABC):
     """Abstract interface for a high-level application controller."""
@@ -226,6 +232,7 @@ class ControllerPort(ABC):
         Returns:
             str: Random fun fact as a string.
         """
+        ...
 
     @abstractmethod
     def get_dish_suggestion(self, category: str) -> str:
@@ -237,6 +244,7 @@ class ControllerPort(ABC):
         Returns:
             Suggested dish name.
         """
+        ...
 
     @abstractmethod
     def translate_text(self, text: str) -> str:
@@ -248,6 +256,7 @@ class ControllerPort(ABC):
         Returns:
             Translated text.
         """
+        ...
 
 class ViewPort(ABC):
     """Abstract interface for UI view adapters."""
@@ -262,10 +271,30 @@ class ViewPort(ABC):
         Returns:
             User input as a string.
         """
+        ...
+
+    @abstractmethod
+    def check_available(self) -> bool:
+        """Check if the Discord Bot is available.
+
+        Returns:
+            bool: True if the Discord Bot is available, False otherwise.
+        """
+        ...
+
+    @abstractmethod
+    def check_connection(self) -> bool:
+        """Check if the Discord Bot is connected and available.
+
+        Returns:
+            bool: True if connected, False otherwise.
+        """
+        ...
 
     @abstractmethod
     def build_interface(self):
         """Build and return the view's UI components."""
+        ...
 
     @abstractmethod
     def launch(self, share: bool = False) -> None:
@@ -274,6 +303,7 @@ class ViewPort(ABC):
         Args:
             share (bool): Whether to expose the UI publicly using Gradio's share feature.
         """
+        ...
 
 class DiscordLogicPort(ABC):
     """Abstract interface for Discord bot logic and integration."""
@@ -314,6 +344,55 @@ class DiscordLogicPort(ABC):
                 Each dictionary should include at least 'id' and 'name' keys.
         """
         ...
+    
+    @abstractmethod
+    def get_guild_info(self, guild_id: int) -> dict | None:
+        """Get information about a specific guild.
+
+        Args:
+            guild_id (int): ID of the Discord guild.
+
+        Returns:
+            dict | None: A dictionary containing guild information including 'id', 'name', and 'member_count',
+                or None if the guild is not found.
+        """
+        ...
+    
+    @abstractmethod
+    def leave_guild(self, guild_id: int) -> bool:
+        """Make the bot leave a specific guild.
+
+        Args:
+            guild_id (int): ID of the Discord guild to leave.
+
+        Returns:
+            bool: True if the bot successfully left the guild, False otherwise.
+        """
+        ...
+    
+    @abstractmethod
+    def update_settings(self, prefix: str, status_text: str, auto_reply: bool, log_messages: bool) -> bool:
+        """Update the bot's settings.
+
+        Args:
+            prefix (str): Command prefix to set.
+            status_text (str): Status text to display.
+            auto_reply (bool): Whether to enable auto-reply.
+            log_messages (bool): Whether to log messages.
+
+        Returns:
+            bool: True if settings were updated successfully, False otherwise.
+        """
+        ...
+    
+    @abstractmethod
+    def get_bot_stats(self) -> dict:
+        """Get bot statistics: status, guild count, and total user count.
+
+        Returns:
+            dict: A dictionary containing 'status', 'guilds', and 'users' keys.
+        """
+        ...
 
     @abstractmethod
     def get_channels(self, guild_id: int) -> list[dict]:
@@ -344,10 +423,16 @@ class DiscordLogicPort(ABC):
         Args:
             translator (TranslatePort): Translator to use for auto-translation.
         """
+        ...
 
     @abstractmethod
     def get_unread_dms(self) -> list[dict]:
-        """Return all unread direct messages recorded by the bot."""
+        """Get a list of unread direct messages (DMs).
+
+        Returns:
+            list[dict]: A list of dictionaries representing unread DMs.
+        """
+        ...
 
     @abstractmethod
     def mark_dm_as_read(self, dm_id: int) -> bool:
@@ -359,6 +444,7 @@ class DiscordLogicPort(ABC):
         Returns:
             bool: True if a DM was found and marked.
         """
+        ...
 
     @abstractmethod
     def mark_all_dms_as_read(self) -> int:
@@ -367,6 +453,7 @@ class DiscordLogicPort(ABC):
         Returns:
             int: Number of DMs that were marked as read.
         """
+        ...
 
     @abstractmethod
     def enable_auto_translate(self, target_user_id: int, subscriber_user_id: int, target_user_name: str | None = None, subscriber_user_name: str | None = None) -> None:
@@ -378,6 +465,7 @@ class DiscordLogicPort(ABC):
             target_user_name (str | None): Optional target display name.
             subscriber_user_name (str | None): Optional subscriber display name.
         """
+        ...
 
     @abstractmethod
     def disable_auto_translate(self, target_user_id: int, subscriber_user_id: int) -> None:
@@ -387,6 +475,7 @@ class DiscordLogicPort(ABC):
             target_user_id (int): ID of the target user.
             subscriber_user_id (int): ID of the subscriber.
         """
+        ...
 
     @abstractmethod
     def register_command(self, command: str, callback: callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None) -> bool:
@@ -412,4 +501,3 @@ class DiscordLogicPort(ABC):
             message: The Discord message object.
         """
         ...
-    
