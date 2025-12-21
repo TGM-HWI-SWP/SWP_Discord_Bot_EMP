@@ -49,5 +49,5 @@ The Database can be accessed at http://localhost:8081 but this is only needed fo
 
 ## License
 
-See LICENSE file.
-(Also see EDUCATIONAL PROJECT NOTICE in LICENSE file)
+See LICENSE file
+(Also see EDUCATIONAL PROJECT NOTICE in LICENSE file).
