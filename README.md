@@ -16,6 +16,8 @@ This is a school project made by students of the TGM in Vienna (2025)
 - Docker Desktop (See instructions below)
 - Discord Bot (See instructions below)
 
+### Guide
+
 1. **Download the code**: Clone this repository from GitHub.
    ```
    git clone https://github.com/your-repo/SWP_Discord_Bot_EMP.git
