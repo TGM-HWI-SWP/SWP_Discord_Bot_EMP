@@ -293,19 +293,6 @@ class DiscordLogicPort(ABC):
         ...
 
     @abstractmethod
-    def send_dm(self, user_id: int, message: str) -> bool:
-        """Send a direct message to the specified user.
-
-        Args:
-            user_id (int): ID of the user to send the direct message to.
-            message (str): Message to be sent.
-
-        Returns:
-            bool: True if the direct message was sent successfully, False otherwise.
-        """
-        ...
-
-    @abstractmethod
     def run(self) -> None:
         """Start the Discord bot and connect to Discord guilds.
         

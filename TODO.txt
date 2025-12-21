@@ -4,8 +4,6 @@ TODO:
 notification if dc bot gets message
 
 # urgent
-add return message for refresh button in overview tab and statistics tab in view.py
-reorder statistics to following order: total dishes, dish categories, total fun facts
 on custom messgages add dropdown to channel id so select from saved channels (e.g. channel_name (channel_id))
 
 # optional

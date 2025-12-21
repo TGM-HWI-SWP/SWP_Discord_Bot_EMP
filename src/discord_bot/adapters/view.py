@@ -75,7 +75,6 @@ class AdminPanel(ViewPort):
                 return {"$or": [{"id": id_value}, {"id": str(id_value)}]}
                 
             with gr.Tabs():
-                
                 with gr.Tab("Overview"):
                     
                     gr.HTML("""
@@ -89,8 +88,8 @@ class AdminPanel(ViewPort):
                     """)
 
                     gr.Markdown("### Bot Status")
-
                     refresh_btn = gr.Button("Refresh", variant="primary")
+                    refresh_status = gr.Markdown("")
 
                     with gr.Row():
                         with gr.Column():
@@ -101,18 +100,27 @@ class AdminPanel(ViewPort):
                         with gr.Column():
                             user_count = gr.Textbox(label="Total Users", value="Loading...", interactive=False)
 
+                    def load_bot_status_initial():
+                        if not self.check_available():
+                            return ("No discord bot instance", "0", "0", "")
+                        try:
+                            stats = self.discord_bot.get_bot_stats()
+                            return (stats.get("status", "Offline"), str(stats.get("guilds", 0)), "{:,}".format(stats.get("users", 0)), "")
+                        except Exception:
+                            return ( "Error", "0", "0", "")
+
                     def load_bot_status():
                         if not self.check_available():
-                            return "Unavailable", "0", "0"
+                            return (gr.update(value="No discord bot instance"), gr.update(value="0"), gr.update(value="0"), "No discord bot instance")
 
                         try:
                             stats = self.discord_bot.get_bot_stats()
-                            return stats.get("status", "Offline"), str(stats.get("guilds", 0)), "{:,}".format(stats.get('users', 0))
+                            return (stats.get("status", "Offline"), str(stats.get("guilds", 0)), "{:,}".format(stats.get("users", 0)), "Refresh successful")
                         except Exception:
-                            return "Error", "0", "0"
-
-                    refresh_btn.click(fn=load_bot_status, outputs=[bot_status, guild_count, user_count])
-                    app.load(fn=load_bot_status, outputs=[bot_status, guild_count, user_count])
+                            return (gr.update(value="Error"), gr.update(value="0"), gr.update(value="0"), "Error while refreshing")
+                        
+                    refresh_btn.click(fn=load_bot_status, outputs=[bot_status, guild_count, user_count, refresh_status])
+                    app.load(fn=load_bot_status_initial, outputs=[bot_status, guild_count, user_count, refresh_status])
 
                 with gr.Tab("Control Panel"):
                     section_selector = gr.Dropdown(label="Select Section", choices=["Guild Management", "Custom Messages"], value="Guild Management",interactive=True)
@@ -156,30 +164,61 @@ class AdminPanel(ViewPort):
                     with gr.Row(visible=False) as custom_msg_section:
                         with gr.Column():
                             gr.Markdown("## Custom Messages")
-                            channel_id_input = gr.Textbox(label="Channel ID", placeholder="Enter Discord Channel ID")
+                            channel_dropdown = gr.Dropdown(label="Select Channel", choices=[], interactive=True)
                             message_input = gr.Textbox(label="Message", placeholder="Enter message to send", lines=3)
                             send_message_btn = gr.Button("Send Message", size="lg", interactive=True)
+                            refresh_channels_btn = gr.Button("Refresh Channels")
                             message_status = gr.Markdown("")
+                            channel_status = gr.Markdown("")
                             
-                            def send_custom_message(channel_id, message):
+                            def refresh_channel_list():
+                                if not self.check_available():
+                                    return (gr.update(choices=[]), "No discord bot instance")
+
+                                channels = []
+
+                                for guild in self.discord_bot.client.guilds:
+                                    for channel in guild.text_channels:
+                                        perms = channel.permissions_for(guild.me)
+                                        if perms.send_messages:
+                                            channels.append(f'{guild.name} / #{channel.name} (ID: {channel.id})')
+
+                                if not channels:
+                                    return (gr.update(choices=[]), "No channels found")
+
+                                return (gr.update(choices=channels), f'Loaded {len(channels)} channels')
+
+                            def send_custom_message(channel_selection, message):
                                 guard = _bot_guard()
                                 if guard:
                                     return guard
 
-                                channel_id_int = _parse_positive_int(channel_id)
-                                message_text = (message or "").strip()
-                                if channel_id_int is None or not message_text:
-                                    return "Channel ID and message required"
+                                if not channel_selection:
+                                    return "Select a channel"
 
-                                return "Message sent successfully" if self.discord_bot.send_message(0, channel_id_int, message_text) else "Failed to send message"
-                                            
+                                try:
+                                    channel_id = int(channel_selection.split("ID: ")[1].rstrip(")"))
+                                    channel_obj = self.discord_bot.client.get_channel(channel_id)
+                                    if not channel_obj:
+                                        return "Channel not found"
+                                    guild_id = channel_obj.guild.id
+                                except (ValueError, IndexError):
+                                    return "Invalid channel selection"
+
+                                message_text = (message or "").strip()
+                                if not message_text:
+                                    return "Message required"
+
+                                success = self.discord_bot.send_message(guild_id, channel_id, message_text)
+                                return ("Message sent successfully" if success else "Failed to send message")
+                   
                     def switch_section(section):
                         if section == "Guild Management":
-                            return gr.update(visible=True), gr.update(visible=False)
+                            return (gr.update(visible=True), gr.update(visible=False))
                         elif section == "Custom Messages":
-                            return gr.update(visible=False), gr.update(visible=True)
+                            return (gr.update(visible=False), gr.update(visible=True))
                         else:
-                            return gr.update(visible=False), gr.update(visible=False)
+                            return (gr.update(visible=False), gr.update(visible=False))
                     
                     gr.on(
                         triggers=[section_selector.change],
@@ -188,14 +227,17 @@ class AdminPanel(ViewPort):
                         outputs=[
                             guild_mgmt_section,
                             custom_msg_section
-                        ],
+                        ]
                     )
                     
                     # Event handlers AFTER all sections are closed
                     refresh_btn.click(fn=refresh_guild_list, outputs=[guild_view, guild_status])
                     leave_btn.click(fn=leave_guild, inputs=[guild_view], outputs=[guild_status])
 
-                    send_message_btn.click(fn=send_custom_message, inputs=[channel_id_input, message_input], outputs=[message_status])
+                    refresh_channels_btn.click(fn=refresh_channel_list, outputs=[channel_dropdown, channel_status])
+                    send_message_btn.click(fn=send_custom_message, inputs=[channel_dropdown, message_input], outputs=[message_status])
+
+                    app.load(fn=refresh_channel_list, outputs=[channel_dropdown, channel_status])
 
                 with gr.Tab("Database"):
                     with gr.Tabs():
@@ -401,6 +443,7 @@ class AdminPanel(ViewPort):
                             gr.Markdown("### Database Statistics")
                             
                             refresh_stats_btn = gr.Button("Refresh Stats", size="lg")
+                            refresh_stats_status = gr.Markdown("")
                             
                             with gr.Row():
                                 dishes_stat = gr.Markdown("### Loading...")
@@ -409,32 +452,54 @@ class AdminPanel(ViewPort):
                             
                             stats_json = gr.JSON(label="Detailed Statistics")
                             
-                            def load_stats():
+                            def load_stats_initial():
                                 categories = dish_categories
-                                
+
                                 stats = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
-                                
+
                                 for cat in categories:
                                     count = self.dbms.get_table_size("dishes", cat)
                                     if count > 0:
                                         stats["dishes"][cat] = count
                                         stats["total_dishes"] += count
-                                
+
                                 stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
 
                                 dishes_md = '<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{}</div></div>'.format(stats["total_dishes"])
-                                cats_md = '<div class="stat-card"><div class="stat-label">Categories</div><div class="stat-number">{}</div></div>'.format(len(stats["dishes"]))
+                                cats_md = '<div class="stat-card"><div class="stat-label">Dish Categories</div><div class="stat-number">{}</div></div>'.format(len(stats["dishes"]))
                                 facts_md = '<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{}</div></div>'.format(stats["total_fun_facts"])
-                               
                                 
-                                return dishes_md, cats_md, facts_md,  stats
+                                return (dishes_md, cats_md, facts_md, stats, "")
+                        
+                            def load_stats():
+                                try:
+                                    categories = dish_categories
+
+                                    stats = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
+
+                                    for cat in categories:
+                                        count = self.dbms.get_table_size("dishes", cat)
+                                        if count > 0:
+                                            stats["dishes"][cat] = count
+                                            stats["total_dishes"] += count
+
+                                    stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
+
+                                    dishes_md = '<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{}</div></div>'.format(stats["total_dishes"])
+                                    cats_md = '<div class="stat-card"><div class="stat-label">Dish Categories</div><div class="stat-number">{}</div></div>'.format(len(stats["dishes"]))
+                                    facts_md = '<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{}</div></div>'.format(stats["total_fun_facts"])
+                                    
+                                    return (dishes_md, cats_md, facts_md, stats, "Refresh successful")
+                                
+                                except Exception:
+                                    return ("Error", "Error", "Error", {}, "Error while refreshing")
                             
-                            refresh_stats_btn.click(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
-                            app.load(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json])
+                            refresh_stats_btn.click(fn=load_stats, outputs=[dishes_stat, facts_stat, categories_stat, stats_json, refresh_stats_status])
+                            app.load(fn=load_stats_initial, outputs=[dishes_stat, facts_stat, categories_stat, stats_json, refresh_stats_status])
             
             gr.HTML("""
                 <div style="text-align: center; padding: 20px; color: #99AAB5; margin-top: 20px;">
-                    <p>Discord Bot Admin Panel v1.1</p>
+                    <p>Discord Bot Admin Panel v1.2</p>
                 </div>
             """)
         

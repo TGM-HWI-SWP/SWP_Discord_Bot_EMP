@@ -46,25 +46,10 @@ class DiscordLogic(Model, DiscordLogicPort):
         async def on_guild_remove(guild: discord.Guild):
             self.logging(f'Left guild: {guild.name} ({guild.id})')
             self._update_connected_guilds()
-    
-    def execute_function(self) -> None:
-        pass
-    
-    def run(self) -> None:
-        self.logging("Starting Discord bot...")
-        token = DiscordConfigLoader.DISCORD_TOKEN
-
-        token_preview = f'{token[:10]}...{token[-4:]}' if len(token) > 14 else "***"
-        self.logging(f'Starting Discord bot with token: {token_preview}')
-        self.client.run(token)
-
-    def stop(self) -> None:
-        asyncio.create_task(self.client.close())
-
-    def set_translator(self, translator: TranslatePort) -> None:
-        self.translator = translator
 
     async def _on_ready(self) -> None:
+        """"Handle bot readiness: sync commands and update guild stats."""
+
         self.logging(f'Logged in as {self.client.user}')
         
         await self.tree.sync()
@@ -119,6 +104,45 @@ class DiscordLogic(Model, DiscordLogicPort):
                     await message.channel.send(f'**Auto-translate** for <@{subscriber_id}> from <@{message.author.id}>:\n**Translated**: {translated}')
                 except Exception as error:
                     self.logging(f'Failed to send auto-translation in channel: {error}', log_file_name="translator")
+
+    def send_message(self, guild_id: int, channel_id: int, message: str) -> bool:
+        if not self.client.is_ready() or not self.loop:
+            return False
+
+        guild = self.client.get_guild(guild_id)
+        if not guild:
+            return False
+
+        channel = guild.get_channel(channel_id)
+        if not channel:
+            return False
+
+        # Schedule the coroutine in the Discord event loop
+        future = asyncio.run_coroutine_threadsafe(channel.send(message), self.loop)
+        try:
+            future.result(timeout=10)  # Block up to 10s for result
+            return True
+        
+        except Exception as error:
+            self.logging(f"Failed to send message: {error}")
+            return False
+    
+    def execute_function(self) -> None:
+        pass
+    
+    def run(self) -> None:
+        self.logging("Starting Discord bot...")
+        token = DiscordConfigLoader.DISCORD_TOKEN
+
+        token_preview = f'{token[:10]}...{token[-4:]}' if len(token) > 14 else "***"
+        self.logging(f'Starting Discord bot with token: {token_preview}')
+        self.client.run(token)
+
+    def stop(self) -> None:
+        asyncio.create_task(self.client.close())
+
+    def set_translator(self, translator: TranslatePort) -> None:
+        self.translator = translator
     
     def get_unread_dms(self) -> list[dict]:
         return [dm for dm in self.unread_dms if not dm["read"]]
@@ -135,30 +159,6 @@ class DiscordLogic(Model, DiscordLogicPort):
         for dm in self.unread_dms:
             dm["read"] = True
         return count
-
-    def send_message(self, guild_id: int, channel_id: int, message: str) -> bool:
-        try:
-            channel = self.client.get_channel(channel_id)
-            if channel and channel.guild.id == guild_id:
-                asyncio.create_task(channel.send(message))
-                return True
-            return False
-        except Exception:
-            return False
-
-    def send_dm(self, user_id: int, message: str) -> bool:
-        try:
-            user = self.client.get_user(user_id)
-            if not user:
-                return False
-            
-            async def _send():
-                await user.send(message)
-            
-            asyncio.create_task(_send())
-            return True
-        except Exception:
-            return False
 
     def get_guilds(self) -> list[dict]:
         return [{"id": guild.id, "name": guild.name} for guild in self.client.guilds]
@@ -243,6 +243,33 @@ class DiscordLogic(Model, DiscordLogicPort):
         except Exception as error:
             self.logging(f'Error updating settings: {error}')
             return False
+        
+    def enable_auto_translate(self, target_user_id: int, subscriber_user_id: int, target_user_name: str | None = None, subscriber_user_name: str | None = None) -> None:
+        self.auto_translate_targets.setdefault(target_user_id, set()).add(subscriber_user_id)
+        if not self.dbms:
+            return
+        exists = self.dbms.get_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
+        if exists:
+            return
+        self.dbms.insert_data(
+            "auto_translate",
+            {
+                "target_user_id": target_user_id,
+                "subscriber_user_id": subscriber_user_id,
+                "target_user_name": target_user_name,
+                "subscriber_user_name": subscriber_user_name,
+                "created_at": datetime.now().isoformat()
+            },
+        )
+
+    def disable_auto_translate(self, target_user_id: int, subscriber_user_id: int) -> None:
+        if target_user_id in self.auto_translate_targets:
+            self.auto_translate_targets[target_user_id].discard(subscriber_user_id)
+            if not self.auto_translate_targets[target_user_id]:
+                self.auto_translate_targets.pop(target_user_id)
+        if not self.dbms:
+            return
+        self.dbms.delete_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
 
     def register_command(self, command: str, callback: callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None, context_menu: bool = False, user_option: bool = False) -> bool:
         if command in self.commands or (context_menu and f'context_{command}' in self.commands):
@@ -433,33 +460,6 @@ class DiscordLogic(Model, DiscordLogicPort):
             self.auto_translate_targets = targets
         except Exception as error:
             self.logging(f'Error loading auto-translate targets: {error}')
-
-    def enable_auto_translate(self, target_user_id: int, subscriber_user_id: int, target_user_name: str | None = None, subscriber_user_name: str | None = None) -> None:
-        self.auto_translate_targets.setdefault(target_user_id, set()).add(subscriber_user_id)
-        if not self.dbms:
-            return
-        exists = self.dbms.get_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
-        if exists:
-            return
-        self.dbms.insert_data(
-            "auto_translate",
-            {
-                "target_user_id": target_user_id,
-                "subscriber_user_id": subscriber_user_id,
-                "target_user_name": target_user_name,
-                "subscriber_user_name": subscriber_user_name,
-                "created_at": datetime.now().isoformat()
-            },
-        )
-
-    def disable_auto_translate(self, target_user_id: int, subscriber_user_id: int) -> None:
-        if target_user_id in self.auto_translate_targets:
-            self.auto_translate_targets[target_user_id].discard(subscriber_user_id)
-            if not self.auto_translate_targets[target_user_id]:
-                self.auto_translate_targets.pop(target_user_id)
-        if not self.dbms:
-            return
-        self.dbms.delete_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
 
 if __name__ == "__main__":
     from discord_bot.adapters.db import DBMS
