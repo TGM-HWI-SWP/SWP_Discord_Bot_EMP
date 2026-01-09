@@ -1,7 +1,7 @@
 """Define abstract base classes (ports) for the Discord bot architecture."""
 
 from abc import ABC, abstractmethod
-from typing import overload
+from typing import overload, Callable
 
 class DatabasePort(ABC):
     """Abstract interface for database operations."""
@@ -192,6 +192,19 @@ class TranslatePort(ModelPort):
 
         Returns:
             Translated message.
+        """
+        ...
+    
+    @abstractmethod
+    def execute_function(self, text: str, user_id: int | None = None) -> str:
+        """Translate text, optionally using user-specific language preference.
+
+        Args:
+            text (str): Text to translate.
+            user_id (int | None): Optional user ID for language preference.
+
+        Returns:
+            str: Translated message.
         """
         ...
 
@@ -491,7 +504,7 @@ class DiscordLogicPort(ABC):
         ...
 
     @abstractmethod
-    def register_command(self, command: str, callback: callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None) -> bool:
+    def register_command(self, command: str, callback: Callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None) -> bool:
         """Register a slash command with optional parameters.
 
         Args:

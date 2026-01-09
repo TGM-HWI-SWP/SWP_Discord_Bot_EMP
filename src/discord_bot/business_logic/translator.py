@@ -1,6 +1,6 @@
 """Business-logic wrapper around `deep_translator` for Discord messages."""
 
-from deep_translator import GoogleTranslator
+from deep_translator import GoogleTranslator  # type: ignore[import-untyped]
 
 from discord_bot.contracts.ports import TranslatePort, DatabasePort
 from discord_bot.business_logic.model import Model

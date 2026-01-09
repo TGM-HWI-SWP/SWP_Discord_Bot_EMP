@@ -88,7 +88,9 @@ class AdminPanel(ViewPort):
                 ids: list[int] = []
                 for doc in docs:
                     try:
-                        ids.append(int(doc.get("id")))
+                        id_val = doc.get("id")
+                        if id_val is not None:
+                            ids.append(int(id_val))
                     except (TypeError, ValueError):
                         continue
                 return max(ids, default=0) + 1
@@ -140,7 +142,7 @@ class AdminPanel(ViewPort):
                                 - Number of users formatted with commas as a string.
                                 - An additional info message as a string.
                         """
-                        if not self.check_available():
+                        if not self.check_available() or not self.discord_bot:
                             return ("No discord bot instance", "0", "0", "")
                         try:
                             stats = self.discord_bot.get_bot_stats()
@@ -158,7 +160,7 @@ class AdminPanel(ViewPort):
                                 - Number of users formatted with commas (string or Gradio update object).
                                 - A message indicating success or error of the refresh.
                         """
-                        if not self.check_available():
+                        if not self.check_available() or not self.discord_bot:
                             return (gr.update(value="No discord bot instance"), gr.update(value="0"), gr.update(value="0"), "No discord bot instance")
 
                         try:
@@ -203,6 +205,9 @@ class AdminPanel(ViewPort):
                                     guild_id = int(guild_selection.split("ID: ")[1].rstrip(")"))
                                 except (ValueError, IndexError):
                                     return "Invalid guild selection"
+                                
+                                if not self.discord_bot:
+                                    return "Bot not available"
 
                                 return ("Successfully left guild" if self.discord_bot.leave_guild(guild_id) else "Failed to leave guild")
                             
@@ -214,7 +219,7 @@ class AdminPanel(ViewPort):
                                         - gr.update: Updated choices for the guild selection component.
                                         - str: A message indicating the result of the refresh, such as errors or the number of guilds found.
                                 """
-                                if not self.check_available():
+                                if not self.check_available() or not self.discord_bot:
                                     return (gr.update(choices=[]), "No discord bot instance")
                                 if not self.check_connection():
                                     return (gr.update(choices=[]), "Bot offline")
@@ -244,7 +249,7 @@ class AdminPanel(ViewPort):
                                         - gr.update: Updated choices for the channel selection component.
                                         - str: A message indicating the result of the refresh, such as errors or the number of channels found.
                                 """
-                                if not self.check_available():
+                                if not self.check_available() or not self.discord_bot:
                                     return (gr.update(choices=[]), "No discord bot instance")
 
                                 channels = []
@@ -279,12 +284,20 @@ class AdminPanel(ViewPort):
                                 if not channel_selection:
                                     return "Select a channel"
 
+                                if not self.discord_bot:
+                                    return "Bot not available"
+                                
                                 try:
                                     channel_id = int(channel_selection.split("ID: ")[1].rstrip(")"))
                                     channel_obj = self.discord_bot.client.get_channel(channel_id)
                                     if not channel_obj:
                                         return "Channel not found"
-                                    guild_id = channel_obj.guild.id
+                                    # Type guard: PrivateChannel has no guild attribute
+                                    if not hasattr(channel_obj, 'guild'):
+                                        return "Channel has no guild"
+                                    if not channel_obj.guild:  # type: ignore[union-attr]
+                                        return "Channel has no guild"
+                                    guild_id = channel_obj.guild.id  # type: ignore[union-attr]
                                 except (ValueError, IndexError):
                                     return "Invalid channel selection"
 
@@ -644,18 +657,20 @@ class AdminPanel(ViewPort):
                                 """
                                 categories = dish_categories
 
-                                stats = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
+                                stats: dict[str, int | dict[str, int]] = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
+                                dishes_dict: dict[str, int] = {}
 
                                 for cat in categories:
                                     count = self.dbms.get_table_size("dishes", cat)
                                     if count > 0:
-                                        stats["dishes"][cat] = count
-                                        stats["total_dishes"] += count
+                                        dishes_dict[cat] = count
+                                        stats["total_dishes"] = stats["total_dishes"] + count  # type: ignore[operator]
 
+                                stats["dishes"] = dishes_dict
                                 stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
 
                                 dishes_md = '<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{}</div></div>'.format(stats["total_dishes"])
-                                cats_md = '<div class="stat-card"><div class="stat-label">Dish Categories</div><div class="stat-number">{}</div></div>'.format(len(stats["dishes"]))
+                                cats_md = '<div class="stat-card"><div class="stat-label">Dish Categories</div><div class="stat-number">{}</div></div>'.format(len(dishes_dict))
                                 facts_md = '<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{}</div></div>'.format(stats["total_fun_facts"])
                                 
                                 return (dishes_md, cats_md, facts_md, stats, "")
@@ -674,18 +689,20 @@ class AdminPanel(ViewPort):
                                 try:
                                     categories = dish_categories
 
-                                    stats = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
+                                    stats: dict[str, int | dict[str, int]] = {"dishes": {}, "total_dishes": 0, "total_fun_facts": 0}
+                                    dishes_dict: dict[str, int] = {}
 
                                     for cat in categories:
                                         count = self.dbms.get_table_size("dishes", cat)
                                         if count > 0:
-                                            stats["dishes"][cat] = count
-                                            stats["total_dishes"] += count
+                                            dishes_dict[cat] = count
+                                            stats["total_dishes"] = stats["total_dishes"] + count  # type: ignore[operator]
 
+                                    stats["dishes"] = dishes_dict
                                     stats["total_fun_facts"] = self.dbms.get_table_size("fun_facts", None)
 
                                     dishes_md = '<div class="stat-card"><div class="stat-label">Total Dishes</div><div class="stat-number">{}</div></div>'.format(stats["total_dishes"])
-                                    cats_md = '<div class="stat-card"><div class="stat-label">Dish Categories</div><div class="stat-number">{}</div></div>'.format(len(stats["dishes"]))
+                                    cats_md = '<div class="stat-card"><div class="stat-label">Dish Categories</div><div class="stat-number">{}</div></div>'.format(len(dishes_dict))
                                     facts_md = '<div class="stat-card"><div class="stat-label">Fun Facts</div><div class="stat-number">{}</div></div>'.format(stats["total_fun_facts"])
                                     
                                     return (dishes_md, cats_md, facts_md, stats, "Refresh successful")
@@ -709,9 +726,10 @@ class AdminPanel(ViewPort):
         if not self.app:
             self.build_interface()
         
-        self.app.launch(
-            server_name=self.host,
-            server_port=self.port,
-            share=share,
-            theme=gr.themes.Soft(primary_hue="blue")
-        )
+        if self.app:  # Check again after build_interface
+            self.app.launch(
+                server_name=self.host,
+                server_port=self.port,
+                share=share,
+                theme=gr.themes.Soft(primary_hue="blue")
+            )

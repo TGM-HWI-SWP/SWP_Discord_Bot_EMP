@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime
+from typing import Callable
 import discord
 from discord import app_commands
 
@@ -21,8 +22,8 @@ class DiscordLogic(Model, DiscordLogicPort):
         self.tree = app_commands.CommandTree(self.client)
         self.loop = None
         self.guild_count = 0
-        self.commands = {}
-        self.unread_dms = []
+        self.commands: dict[str, Callable] = {}
+        self.unread_dms: list[dict] = []
         self.dbms = dbms
         self.translator: TranslatePort | None = None
         self.auto_translate_targets: dict[int, set[int]] = {}
@@ -120,6 +121,10 @@ class DiscordLogic(Model, DiscordLogicPort):
         channel = guild.get_channel(channel_id)
         if not channel:
             return False
+        
+        # Type check: only TextChannel has send method
+        if not isinstance(channel, (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread)):
+            return False
 
         # Schedule the coroutine in the Discord event loop
         future = asyncio.run_coroutine_threadsafe(channel.send(message), self.loop)
@@ -205,7 +210,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             return {"status": "Offline", "guilds": 0, "users": 0}
         
         try:
-            total_members = sum(guild.member_count for guild in self.client.guilds)
+            total_members = sum(guild.member_count for guild in self.client.guilds if guild.member_count is not None)
             return {"status": "Online", "guilds": len(self.client.guilds), "users": total_members}
         
         except Exception as error:
@@ -265,14 +270,14 @@ class DiscordLogic(Model, DiscordLogicPort):
             return
         self.dbms.delete_data("auto_translate", {"target_user_id": target_user_id, "subscriber_user_id": subscriber_user_id})
 
-    def register_command(self, command: str, callback: callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None, context_menu: bool = False, user_option: bool = False) -> bool:
+    def register_command(self, command: str, callback: Callable, description: str = "", option_name: str | None = None, choices: list[str] | None = None, context_menu: bool = False, user_option: bool = False) -> bool:
         if command in self.commands or (context_menu and f'context_{command}' in self.commands):
             return False
 
         if context_menu:
             @self.tree.context_menu(name=command)
             async def context_command(interaction: discord.Interaction, message: discord.Message):
-                await callback(interaction, message)
+                await callback(interaction, message)  # type: ignore[misc]
                 self._update_command_usage(command)
 
             self.commands[f'context_{command}'] = callback
@@ -283,7 +288,7 @@ class DiscordLogic(Model, DiscordLogicPort):
             @self.tree.command(name=command, description=description or f'{command} command')
             @app_commands.describe(target="Select a user")
             async def slash_command(interaction: discord.Interaction, target: discord.Member):
-                await callback(interaction, target)
+                await callback(interaction, target)  # type: ignore[misc]
                 self._update_command_usage(command)
         elif option_name and choices:
             trimmed_choices = [c for c in choices if c][:25]
@@ -293,13 +298,13 @@ class DiscordLogic(Model, DiscordLogicPort):
             @app_commands.describe(selection=f'Select {option_name}')
             @app_commands.choices(selection=[app_commands.Choice(name=choice, value=choice) for choice in trimmed_choices])
             async def slash_command(interaction: discord.Interaction, selection: app_commands.Choice[str]):
-                await callback(interaction, selection.value)
+                await callback(interaction, selection.value)  # type: ignore[misc]
                 self._update_command_usage(command)
         else:
 
             @self.tree.command(name=command, description=description or f'{command} command')
             async def slash_command(interaction: discord.Interaction):
-                await callback(interaction)
+                await callback(interaction)  # type: ignore[misc]
                 self._update_command_usage(command)
 
         self.commands[command] = callback
@@ -442,12 +447,18 @@ class DiscordLogic(Model, DiscordLogicPort):
 
     def _load_auto_translate_targets(self) -> None:
         """Load all auto-translate target subscriptions from the database."""
+        if not self.dbms:
+            return
         try:
             targets: dict[int, set[int]] = {}
             for record in self.dbms.get_data("auto_translate", {}):
                 try:
-                    target = int(record.get("target_user_id"))
-                    subscriber = int(record.get("subscriber_user_id"))
+                    target_val = record.get("target_user_id")
+                    subscriber_val = record.get("subscriber_user_id")
+                    if target_val is None or subscriber_val is None:
+                        continue
+                    target = int(target_val)
+                    subscriber = int(subscriber_val)
                 except (TypeError, ValueError):
                     continue
                 targets.setdefault(target, set()).add(subscriber)

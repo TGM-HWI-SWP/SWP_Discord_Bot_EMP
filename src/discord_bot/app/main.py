@@ -97,7 +97,9 @@ def start_bot(cv_db: DBMS, fun_fact_selector: FunFactSelector, dish_selector: Di
                 for sid in subscribers:
                     sub_records = discord_bot.dbms.get_data("auto_translate", {"target_user_id": target_id, "subscriber_user_id": sid})
                     if sub_records:
-                        subscriber_names[sid] = sub_records[0].get("subscriber_user_name")
+                        sub_name = sub_records[0].get("subscriber_user_name")
+                        if sub_name:
+                            subscriber_names[sid] = str(sub_name)
 
             target_label = f'<@{target_id}>'
             subscriber_labels = [f'<@{sid}>' for sid in subscribers]
