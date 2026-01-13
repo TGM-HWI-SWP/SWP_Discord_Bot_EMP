@@ -17,3 +17,4 @@ __pycache__/
 *.egg
 *.log
 uv.lock
+.mypy_cache/

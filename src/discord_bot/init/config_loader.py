@@ -68,7 +68,8 @@ DEV_MODE={str(SettingsConfigLoader.DEV_MODE).lower()}
 class DiscordConfigLoader:
     """Load Discord configuration values from `config.ini` and environment variables."""
     TARGET_LANGUAGE = os.getenv("TARGET_LANGUAGE", config.get("discord", "target_language", fallback="en"))
-    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", config.get("discord", "discord_token", fallback=""))
+    _token = config.get("discord", "discord_token", fallback="")
+    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", _token.split()[0] if _token else "")
 
 class SettingsConfigLoader:
     """Load runtime settings from `config.ini` and environment variables."""
